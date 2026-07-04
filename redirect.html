@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>正在前往...</title>
+<style>
+  :root {
+    --paper: #EEF1EF;
+    --ink: #1B2430;
+    --pine: #2F6F6B;
+    --mustard: #E3A94B;
+    --coral: #C1585B;
+    --line: #D8DBD6;
+    --muted: #6B716D;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--paper);
+    font-family: 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .card {
+    width: 100%;
+    max-width: 380px;
+    background: #FFFFFF;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 36px 28px;
+    text-align: center;
+  }
+  .spinner {
+    width: 34px;
+    height: 34px;
+    border: 3px solid var(--line);
+    border-top-color: var(--pine);
+    border-radius: 50%;
+    margin: 0 auto 20px;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  h1 {
+    font-family: 'Noto Serif TC', 'Songti TC', serif;
+    font-size: 17px;
+    font-weight: 700;
+    margin: 0 0 6px;
+  }
+  p {
+    font-size: 13px;
+    color: var(--muted);
+    margin: 0 0 22px;
+    line-height: 1.6;
+  }
+  .btn {
+    display: inline-block;
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    background: var(--ink);
+    color: #F5F3EC;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .btn:active { transform: scale(0.98); }
+  .error {
+    display: none;
+    font-size: 12px;
+    color: var(--coral);
+    background: #F6DEDD;
+    border-left: 3px solid var(--coral);
+    padding: 10px 12px;
+    border-radius: 4px;
+    text-align: left;
+    line-height: 1.6;
+  }
+  .error.show { display: block; }
+  .hide { display: none; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div id="loadingView">
+      <div class="spinner"></div>
+      <h1>正在為您開啟內容</h1>
+      <p>如果畫面沒有自動跳轉，請點下方按鈕</p>
+      <a class="btn" id="manualLink" href="#">手動開啟</a>
+    </div>
+    <div id="errorView" class="hide">
+      <h1>找不到目標網址</h1>
+      <div class="error show">
+        這個連結缺少要前往的目標網址。<br>
+        請確認網址格式為：<br>
+        本頁網址?to=目標網址
+      </div>
+    </div>
+  </div>
+
+<script>
+  function getTargetUrl() {
+    const params = new URLSearchParams(window.location.search);
+    const raw = params.get('to');
+    if (!raw) return null;
+    try {
+      const decoded = decodeURIComponent(raw);
+      if (/^https?:\/\/.+/i.test(decoded)) return decoded;
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  const target = getTargetUrl();
+
+  if (!target) {
+    document.getElementById('loadingView').classList.add('hide');
+    document.getElementById('errorView').classList.remove('hide');
+  } else {
+    document.getElementById('manualLink').href = target;
+    // 用 JS 轉址：多數手機系統不會像直接點擊 claude.ai 連結一樣攔截到 App
+    window.location.replace(target);
+  }
+</script>
+</body>
+</html>
