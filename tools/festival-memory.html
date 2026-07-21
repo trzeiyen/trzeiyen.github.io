@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>節日記憶大挑戰 - 配對遊戲</title>
+    <style>
+        body { font-family: "Microsoft JhengHei", sans-serif; background-color: #f0f4f8; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
+        h1 { color: #2c3e50; margin-bottom: 10px; }
+        #timer { font-size: 24px; color: #e74c3c; font-weight: bold; margin-bottom: 20px; background: white; padding: 10px 20px; border-radius: 50px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr); /* 8列 */
+            gap: 10px;
+            max-width: 1000px;
+        }
+
+        .card {
+            width: 110px;
+            height: 140px;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+
+        .card-inner {
+            width: 100%; height: 100%;
+            position: relative;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-radius: 10px;
+        }
+
+        .card.flipped .card-inner { transform: rotateY(180deg); }
+        .card.matched { visibility: hidden; pointer-events: none; }
+
+        .card-face {
+            position: absolute; width: 100%; height: 100%;
+            backface-visibility: hidden;
+            display: flex; align-items: center; justify-content: center;
+            text-align: center; padding: 10px; box-sizing: border-box;
+            border-radius: 10px; font-size: 14px; font-weight: bold;
+        }
+
+        .card-front { background-color: #3498db; color: white; font-size: 24px; } /* 卡片背面(蓋著時) */
+        .card-back { background-color: #ffffff; color: #333; transform: rotateY(180deg); border: 2px solid #3498db; }
+
+        /* 不同類型的卡片顏色區分 */
+        .type-desc { border-left: 5px solid #f1c40f; }
+        .type-ans { border-left: 5px solid #2ecc71; }
+
+        /* 回教材首頁按鈕 */
+        .back-to-home-btn {
+          position: fixed;
+          top: 12px;
+          left: 12px;
+          z-index: 99999;
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          padding: 8px 16px;
+          font-size: 14px;
+          font-weight: 600;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans TC", sans-serif;
+          color: #ffffff !important;
+          background: rgba(0, 0, 0, 0.45);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          border-radius: 50px;
+          text-decoration: none !important;
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+          transition: all 0.2s ease;
+          user-select: none;
+          -webkit-tap-highlight-color: transparent;
+          touch-action: manipulation;
+          cursor: pointer;
+        }
+        .back-to-home-btn:hover {
+          background: rgba(0, 0, 0, 0.75);
+          border-color: rgba(255, 255, 255, 0.6);
+          transform: translateY(-1px);
+          color: #ffffff !important;
+        }
+        .back-to-home-btn:active {
+          transform: translateY(0);
+          background: rgba(0, 0, 0, 0.85);
+        }
+        @media (max-width: 768px) {
+          .back-to-home-btn {
+            top: 10px;
+            left: 10px;
+            padding: 6px 12px;
+            font-size: 13px;
+          }
+        }
+    </style>
+</head>
+<body>
+<a href="../index.html" class="back-to-home-btn" aria-label="回教材首頁">⬅ 回教材首頁</a>
+
+    <h1>🧠 節日記憶配對大挑戰</h1>
+    <div id="timer">剩餘時間：10:00</div>
+
+    <div class="game-board" id="gameBoard"></div>
+
+    <script>
+        // 資料定義：16組配對 
+        const rawData = [
+            { id: 1, desc: "農曆一年中的最後一天，與家人團聚吃年夜飯、貼春聯、發壓歲錢。", ans: "農曆 12/29.12/30\n除夕" },
+            { id: 2, desc: "農曆新年的開始，到寺廟祈求平安順利，或拜訪親友互道恭喜。", ans: "農曆 1/1\n春節" },
+            { id: 3, desc: "被稱作「小過年」，吃元宵象徵幸福團圓，各地舉辦燈會慶祝。", ans: "農曆 1/15\n元宵節" },
+            { id: 4, desc: "為了懷念與感恩祖先，回到故鄉進行掃墓與祭拜儀式。", ans: "國曆 4/4. 4/5. 4/6\n清明節" },
+            { id: 5, desc: "吃粽子、划龍舟，在門口插艾草、配戴香包祈求健康。", ans: "農曆 5/5\n端午節" },
+            { id: 6, desc: "親友團聚賞月、吃月餅，現代則會團聚烤肉成為新文化。", ans: "農曆 8/15\n中秋節" },
+            { id: 7, desc: "邵族的新年，為該族最盛大的祭典，相信祖靈能賜予平安。", ans: "國曆 9月\n邵族 矮靈祭" },
+            { id: 8, desc: "阿美族新年，在小米收穫後為感謝神靈而舉辦的祭典。", ans: "國曆 7月~9月\n阿美族 豐年祭" },
+            { id: 9, desc: "慶祝耶穌誕生的節日，各教會舉辦活動，有布置與耶誕大餐。", ans: "國曆 12/25\n耶誕節" },
+            { id: 10, desc: "泰、緬傳統新年，透過潑水為彼此洗去壞運、祈求平安。", ans: "國曆 4月中旬\n泰、緬潑水節" },
+            { id: 11, desc: "中華民國建國紀念，總統府舉行升旗典禮、國歌領唱等活動。", ans: "國曆 1/1\n開國紀念日" },
+            { id: 12, desc: "中華民國的生日，總統府前舉行遊行、國軍儀隊表演等。", ans: "國曆 10/10\n國慶日" },
+            { id: 13, desc: "布袋戲是臺灣傳統藝術，這時會邀請國內外偶戲團體演出。", ans: "國曆 9月底~10月中旬\n國際戲偶節" },
+            { id: 14, desc: "因春季櫻花盛開美景，還能欣賞日出、雲海、森林等景觀。", ans: "國曆 3月中~4月中旬\n櫻花祭" },
+            { id: 15, desc: "感謝媽媽的日子。", ans: "5月第二個星期日\n母親節" },
+            { id: 16, desc: "感謝爸爸的日子。", ans: "國曆 8/8\n父親節" }
+        ];
+
+        let cards = [];
+        rawData.forEach(item => {
+            cards.push({ id: item.id, content: item.desc, type: 'desc' });
+            cards.push({ id: item.id, content: item.ans, type: 'ans' });
+        });
+
+        // 洗牌
+        cards.sort(() => Math.random() - 0.5);
+
+        const gameBoard = document.getElementById('gameBoard');
+        let flippedCards = [];
+        let matchedCount = 0;
+        let timeLeft = 600; // 10分鐘 = 600秒
+
+        // 建立卡片元素
+        cards.forEach((cardData, index) => {
+            const cardEl = document.createElement('div');
+            cardEl.classList.add('card');
+            cardEl.innerHTML = `
+                <div class="card-inner">
+                    <div class="card-face card-front">?</div>
+                    <div class="card-face card-back ${cardData.type === 'desc' ? 'type-desc' : 'type-ans'}">
+                        ${cardData.content.replace(/\n/g, '<br>')}
+                    </div>
+                </div>
+            `;
+            cardEl.addEventListener('click', () => flipCard(cardEl, cardData));
+            gameBoard.appendChild(cardEl);
+        });
+
+        function flipCard(el, data) {
+            if (flippedCards.length < 2 && !el.classList.contains('flipped')) {
+                el.classList.add('flipped');
+                flippedCards.push({ el, data });
+
+                if (flippedCards.length === 2) {
+                    checkMatch();
+                }
+            }
+        }
+
+        function checkMatch() {
+            const [card1, card2] = flippedCards;
+            if (card1.data.id === card2.data.id && card1.data.type !== card2.data.type) {
+                // 配對成功 
+                setTimeout(() => {
+                    card1.el.classList.add('matched');
+                    card2.el.classList.add('matched');
+                    matchedCount += 2;
+                    flippedCards = [];
+                    if (matchedCount === 32) {
+                        alert("恭喜挑戰成功！所有節日都配對完成了！");
+                        location.reload();
+                    }
+                }, 600);
+            } else {
+                // 配對失敗
+                setTimeout(() => {
+                    card1.el.classList.remove('flipped');
+                    card2.el.classList.remove('flipped');
+                    flippedCards = [];
+                }, 1000);
+            }
+        }
+
+        // 計時器功能
+        const timerEl = document.getElementById('timer');
+        const countdown = setInterval(() => {
+            timeLeft--;
+            let mins = Math.floor(timeLeft / 60);
+            let secs = timeLeft % 60;
+            timerEl.innerText = `剩餘時間：${mins}:${secs < 10 ? '0' : ''}${secs}`;
+
+            if (timeLeft <= 0) {
+                clearInterval(countdown);
+                alert("時間到！挑戰失敗，再試一次吧！");
+                location.reload();
+            }
+        }, 1000);
+
+    </script>
+</body>
+</html>

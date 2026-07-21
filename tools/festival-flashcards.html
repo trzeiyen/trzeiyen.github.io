@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>節日日期大挑戰</title>
+    <style>
+        body { font-family: "Microsoft JhengHei", sans-serif; display: flex; flex-direction: column; align-items: center; background-color: #eef2f3; padding-top: 30px; }
+        .info-bar { margin-bottom: 20px; font-size: 1.2rem; color: #333; }
+        
+        /* 3D 翻牌容器 */
+        .card-container { width: 350px; height: 400px; perspective: 1000px; cursor: pointer; }
+        .card { 
+            width: 100%; height: 100%; position: relative; 
+            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            transform-style: preserve-3d; 
+        }
+        /* 當點擊時增加 flipped 類別 */
+        .card.flipped { transform: rotateY(180deg); }
+
+        .face { 
+            position: absolute; width: 100%; height: 100%; 
+            backface-visibility: hidden; display: flex; align-items: center; 
+            justify-content: center; padding: 25px; box-sizing: border-box; 
+            border-radius: 20px; border: 5px solid #fff; box-shadow: 0 10px 20px rgba(0,0,0,0.1); 
+            text-align: center;
+        }
+
+        /* 正面：文字敘述 */
+        .front { background: linear-gradient(135deg, #fff9c4 0%, #fff176 100%); color: #444; font-size: 22px; line-height: 1.6; }
+        /* 背面：日期與節日 */
+        .back { background: linear-gradient(135deg, #bbdefb 0%, #64b5f6 100%); color: #0d47a1; transform: rotateY(180deg); flex-direction: column; }
+        
+        .date-label { font-size: 20px; color: #1565c0; margin-bottom: 15px; background: rgba(255,255,255,0.5); padding: 5px 15px; border-radius: 50px; }
+        .name-label { font-size: 36px; font-weight: bold; text-shadow: 1px 1px 2px rgba(255,255,255,0.8); }
+
+        button { 
+            margin-top: 40px; padding: 12px 30px; font-size: 20px; 
+            cursor: pointer; background-color: #2ecc71; color: white; 
+            border: none; border-radius: 50px; transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4);
+        }
+        /* 回教材首頁按鈕 */
+        .back-to-home-btn {
+          position: fixed;
+          top: 12px;
+          left: 12px;
+          z-index: 99999;
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          padding: 8px 16px;
+          font-size: 14px;
+          font-weight: 600;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans TC", sans-serif;
+          color: #ffffff !important;
+          background: rgba(0, 0, 0, 0.45);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          border-radius: 50px;
+          text-decoration: none !important;
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+          transition: all 0.2s ease;
+          user-select: none;
+          -webkit-tap-highlight-color: transparent;
+          touch-action: manipulation;
+          cursor: pointer;
+        }
+        .back-to-home-btn:hover {
+          background: rgba(0, 0, 0, 0.75);
+          border-color: rgba(255, 255, 255, 0.6);
+          transform: translateY(-1px);
+          color: #ffffff !important;
+        }
+        .back-to-home-btn:active {
+          transform: translateY(0);
+          background: rgba(0, 0, 0, 0.85);
+        }
+        @media (max-width: 768px) {
+          .back-to-home-btn {
+            top: 10px;
+            left: 10px;
+            padding: 6px 12px;
+            font-size: 13px;
+          }
+        }
+    </style>
+</head>
+<body>
+<a href="../index.html" class="back-to-home-btn" aria-label="回教材首頁">⬅ 回教材首頁</a>
+
+    <h1>🏮 節日日期大挑戰</h1>
+    <div class="info-bar">
+        進度：<span id="current">1</span> / 16 | 
+        時間：<span id="seconds">0</span> 秒
+    </div>
+
+    <div class="card-container" onclick="toggleFlip()">
+        <div class="card" id="cardElement">
+            <div class="face front" id="descDisplay">載入中...</div>
+            <div class="face back">
+                <div class="date-label" id="dateDisplay"></div>
+                <div class="name-label" id="nameDisplay"></div>
+                <p style="font-size: 14px; margin-top: 20px;">(點擊卡片翻回題目)</p>
+            </div>
+        </div>
+    </div>
+
+    <button onclick="nextQuestion()">下一題 ➡️</button>
+    <p class="hint">提示：點擊黃色卡片可查看答案，點擊綠色按鈕切換下一題</p>
+
+    <script>
+        const holidays = [
+            {d: "農曆一年中的最後一天，許多人會在除夕夜與家人團聚吃年夜飯，也有貼春聯、發壓歲錢的習俗。", n: "除夕", t: "農曆 12/29.12/30"},
+            {d: "農曆新年的開始，人們會到寺廟祈求新的一年平安順利，或拜訪親友、互道恭喜。", n: "春節", t: "農曆 1/1"},
+            {d: "被稱作「小過年」，人們吃著元宵，象徵幸福團圓，而各地也會舉辦燈會等慶祝活動。", n: "元宵節", t: "農曆 1/15"},
+            {d: "為了懷念與感恩祖先，許多人會回到故鄉，進行掃墓與祭拜祖先的儀式。", n: "清明節", t: "國曆 4/4. 4/5. 4/6"},
+            {d: "人們會吃粽子、划龍舟，也會在門口插艾草、配戴香包，祈求身體健康。", n: "端午節", t: "農曆 5/5"},
+            {d: "親友團聚的日子，大家會依同賞月、吃月餅。現在則會團聚烤肉，也成為新文化。", n: "中秋節", t: "農曆 8/15"},
+            {d: "是邵族的新年，為該族最盛大的祭典。邵族相信祖靈能賜予族人平安健康。", n: "邵族 矮靈祭", t: "國曆 9月"},
+            {d: "是阿美族新年，在小米收穫後，為感謝神靈而舉辦的祭典。常見的儀式有豐年舞等。", n: "阿美族 豐年祭", t: "國曆 7月~9月"},
+            {d: "慶祝耶穌誕生的節日，各地教會都會舉辦活動。歐美家庭會進行耶誕布置。", n: "耶誕節", t: "國曆 12/25"},
+            {d: "為當地國家傳統新年，代表展開新的一年。人們透過潑水為彼此洗去壞運氣。", n: "泰、緬潑水節", t: "國曆 4月中旬"},
+            {d: "中華民國建國，總統府會舉行元旦升旗典禮，現場有國歌領唱、音樂表演等活動。", n: "開國紀念日", t: "國曆 1/1"},
+            {d: "中華民國的生日，總統府前會舉行遊行、國軍儀隊表演等，各地也有慶祝活動。", n: "國慶日", t: "國曆 10/10"},
+            {d: "布袋戲是臺灣歷史悠久的傳統藝術。這時會邀請國內外偶戲團體演出。", n: "國際戲偶節", t: "國曆 9月底~10月中旬"},
+            {d: "因擁有春季櫻花盛開美景，還能欣賞日出、雲海、森林等景觀。", n: "櫻花祭", t: "國曆 3月中~4月中旬"},
+            {d: "感謝媽媽的日子。", n: "母親節", t: "5月第二個星期日"},
+            {d: "感謝爸爸的日子。", n: "父親節", t: "國曆 8/8"}
+        ];
+
+        let index = 0;
+        let timer = 0;
+        holidays.sort(() => Math.random() - 0.5);
+
+        // 計時器
+        setInterval(() => {
+            timer++;
+            document.getElementById('seconds').innerText = timer;
+        }, 1000);
+
+        // 翻牌功能
+        function toggleFlip() {
+            document.getElementById('cardElement').classList.toggle('flipped');
+        }
+
+        // 顯示內容
+        function render() {
+            const item = holidays[index];
+            document.getElementById('descDisplay').innerText = item.d;
+            document.getElementById('dateDisplay').innerText = item.t;
+            document.getElementById('nameDisplay').innerText = item.n;
+            document.getElementById('current').innerText = index + 1;
+            document.getElementById('cardElement').classList.remove('flipped');
+        }
+
+        // 下一題
+        function nextQuestion() {
+            if (index < holidays.length - 1) {
+                index++;
+                render();
+            } else {
+                alert("🎉 全數完成！總共耗時：" + timer + " 秒");
+                location.reload();
+            }
+        }
+
+        render();
+    </script>
+</body>
+</html>

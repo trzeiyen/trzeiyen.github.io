@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>17世紀臺灣歷史多米諾（強力特效版）</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', sans-serif;
+            background-color: #f0f4f8;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden; 
+        }
+
+        h1 { color: #2c3e50; }
+
+        .game-container {
+            width: 95%;
+            max-width: 1100px;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        /* --- 骨牌鏈放置區 --- */
+        .chain-container {
+            display: flex;
+            justify-content: center; /* 改為置中 */
+            align-items: flex-end; 
+            margin-bottom: 40px;
+            flex-wrap: nowrap; /* 不換行，確保骨牌一直線 */
+            gap: 2px; /* 讓骨牌靠得更近，倒下時才會碰到 */
+            padding: 20px 0;
+            background-color: #eef2f5;
+            border-radius: 10px;
+            min-height: 220px;
+            overflow: visible; /* 允許骨牌倒出框外 */
+        }
+
+        /* 骨牌插槽 (Slot) */
+        .slot {
+            width: 130px;
+            height: 170px;
+            border: 3px dashed #bdc3c7;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            position: relative;
+            background-color: rgba(255,255,255,0.5);
+            margin: 0 5px;
+        }
+
+        .slot::after {
+            content: attr(data-index);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3rem;
+            color: #dcdcdc;
+            z-index: -1;
+            font-weight: bold;
+        }
+
+        /* --- 關鍵修正：設定 Z-Index 讓左邊壓右邊 --- */
+        .slot:nth-child(1) { z-index: 12; }
+        .slot:nth-child(2) { z-index: 10; } /* arrow is child 2, slot is child 3? No, arrow is sibling */
+        /* 由於有 arrow div，我們用 CSS 選擇器小心處理 */
+        
+        /* 箭頭樣式 */
+        .arrow {
+            font-size: 20px;
+            color: #7f8c8d;
+            font-weight: bold;
+            margin-bottom: 75px;
+            z-index: 0;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* --- 卡片樣式 --- */
+        .card {
+            width: 130px;
+            height: 160px;
+            border-radius: 8px;
+            padding: 8px;
+            cursor: grab;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            font-size: 15px;
+            font-weight: bold;
+            box-shadow: 4px 4px 0px rgba(0,0,0,0.2);
+            position: relative;
+            transform-origin: bottom right; /* 設定旋轉支點在右下角 */
+            transition: transform 0.2s; /* 拖曳時的微效果 */
+        }
+
+        .card:active {
+            cursor: grabbing;
+            transform: scale(1.05);
+        }
+
+        /* --- 顏色設定 --- */
+        /* 明朝：紫色 */
+        .ming { background-color: #9b59b6; color: white; border: 2px solid #8e44ad; } 
+        /* 荷蘭：粉色 */
+        .dutch { background-color: #ff8fa3; color: white; border: 2px solid #ff4757; } 
+        /* 西班牙：黃色 */
+        .spanish { background-color: #f1c40f; color: #2c3e50; border: 2px solid #f39c12; } 
+        /* 鄭氏：綠色 */
+        .zheng { background-color: #2ecc71; color: white; border: 2px solid #27ae60; } 
+
+        .card small {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.8em;
+            opacity: 0.9;
+        }
+
+        /* --- 骨牌傾倒動畫 (強力版) --- */
+        @keyframes dominoFallAction {
+            0% { transform: rotate(0deg); }
+            20% { transform: rotate(-5deg); } /* 稍微往後 */
+            100% { transform: rotate(72deg); } /* 大力倒下 */
+        }
+
+        .falling {
+            /* 這裡使用 !important 確保覆蓋任何拖曳造成的 transform */
+            animation: dominoFallAction 0.6s ease-out forwards !important;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.3) !important;
+        }
+
+        /* 碎片區 */
+        .pool-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            padding: 20px;
+            border-top: 2px solid #eee;
+            min-height: 100px;
+        }
+
+        /* 按鈕區 */
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 18px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.1s;
+        }
+
+        button:active { transform: scale(0.95); }
+
+        .btn-check { background-color: #27ae60; color: white; }
+        .btn-reset { background-color: #95a5a6; color: white; }
+
+        #result {
+            margin-top: 15px;
+            font-size: 22px;
+            font-weight: bold;
+            height: 30px;
+            text-align: center;
+        }
+
+        /* 邊框提示 */
+        .correct-border { border: 3px solid #2ecc71 !important; background-color: rgba(46, 204, 113, 0.1); }
+        /* 回教材首頁按鈕 */
+        .back-to-home-btn {
+          position: fixed;
+          top: 12px;
+          left: 12px;
+          z-index: 99999;
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          padding: 8px 16px;
+          font-size: 14px;
+          font-weight: 600;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans TC", sans-serif;
+          color: #ffffff !important;
+          background: rgba(0, 0, 0, 0.45);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          border-radius: 50px;
+          text-decoration: none !important;
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+          transition: all 0.2s ease;
+          user-select: none;
+          -webkit-tap-highlight-color: transparent;
+          touch-action: manipulation;
+          cursor: pointer;
+        }
+        .back-to-home-btn:hover {
+          background: rgba(0, 0, 0, 0.75);
+          border-color: rgba(255, 255, 255, 0.6);
+          transform: translateY(-1px);
+          color: #ffffff !important;
+        }
+        .back-to-home-btn:active {
+          transform: translateY(0);
+          background: rgba(0, 0, 0, 0.85);
+        }
+        @media (max-width: 768px) {
+          .back-to-home-btn {
+            top: 10px;
+            left: 10px;
+            padding: 6px 12px;
+            font-size: 13px;
+          }
+        }
+    </style>
+</head>
+<body>
+<a href="../index.html" class="back-to-home-btn" aria-label="回教材首頁">⬅ 回教材首頁</a>
+
+    <h1>🏛️ 17世紀臺灣歷史多米諾</h1>
+    <p>拖曳碎片完成因果連鎖，答對後看看會發生什麼事！</p>
+
+    <div class="game-container">
+        <div class="chain-container">
+            <div class="slot" style="z-index: 20;" data-index="1" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div class="arrow">➔</div>
+            <div class="slot" style="z-index: 18;" data-index="2" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div class="arrow">➔</div>
+            <div class="slot" style="z-index: 16;" data-index="3" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div class="arrow">➔</div>
+            <div class="slot" style="z-index: 14;" data-index="4" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div class="arrow">➔</div>
+            <div class="slot" style="z-index: 12;" data-index="5" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div class="arrow">➔</div>
+            <div class="slot" style="z-index: 10;" data-index="6" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+        </div>
+
+        <div id="result"></div>
+
+        <div class="pool-container" id="pool"></div>
+
+        <div class="controls">
+            <button class="btn-check" onclick="checkOrder()">✅ 確認推倒骨牌</button>
+            <button class="btn-reset" onclick="resetGame()">🔄 重置遊戲</button>
+        </div>
+    </div>
+
+    <script>
+        // 資料設定 (包含顏色類型)
+        const cardsData = [
+            { id: "c1", order: 1, type: "ming", title: "沈有容 (明朝)", text: "態度堅決，諭退澎湖紅毛番" },
+            { id: "c2", order: 2, type: "dutch", title: "韋麻郎 (荷蘭)", text: "離開澎湖，轉往福爾摩沙" },
+            { id: "c3", order: 3, type: "dutch", title: "荷蘭人", text: "1624年佔領大員 (建立熱蘭遮城)" },
+            { id: "c4", order: 4, type: "spanish", title: "西班牙人", text: "為競爭利益，1626年佔領基隆" },
+            { id: "c5", order: 5, type: "dutch", title: "荷蘭人", text: "趁西班牙衰弱，1642年將其驅逐" },
+            { id: "c6", order: 6, type: "zheng", title: "鄭成功 (鄭氏)", text: "軍糧不足，聽何斌建議攻鹿耳門" }
+        ];
+
+        function initGame() {
+            const pool = document.getElementById('pool');
+            pool.innerHTML = '';
+            let shuffledCards = [...cardsData].sort(() => Math.random() - 0.5);
+
+            shuffledCards.forEach(card => {
+                let div = document.createElement('div');
+                div.className = `card ${card.type}`;
+                div.draggable = true;
+                div.id = card.id;
+                div.dataset.order = card.order;
+                div.innerHTML = `<small>${card.title}</small>${card.text}`;
+                div.ondragstart = drag;
+                // 強制重置動畫狀態
+                div.classList.remove('falling');
+                div.style.animation = 'none'; 
+                pool.appendChild(div);
+            });
+
+            document.querySelectorAll('.slot').forEach(slot => {
+                slot.innerHTML = '';
+                slot.className = 'slot'; // 清除邊框顏色
+                // 恢復 z-index 設定 (雖然 HTML inline 有寫，但保險起見)
+                let idx = parseInt(slot.dataset.index);
+                slot.style.zIndex = 22 - (idx * 2);
+            });
+            document.getElementById('result').innerText = '';
+        }
+
+        function allowDrop(ev) { ev.preventDefault(); }
+        function drag(ev) { ev.dataTransfer.setData("text", ev.target.id); }
+        function drop(ev) {
+            ev.preventDefault();
+            var data = ev.dataTransfer.getData("text");
+            var draggedElement = document.getElementById(data);
+            
+            // 允許放置到 slot 或放回 pool
+            if (ev.target.classList.contains('slot') && ev.target.children.length === 0) {
+                // 拖進 slot
+                draggedElement.style.position = 'static'; // 確保不是 absolute
+                ev.target.appendChild(draggedElement);
+            } else if (ev.target.id === 'pool' || ev.target.classList.contains('pool-container')) {
+                // 拖回 pool
+                document.getElementById('pool').appendChild(draggedElement);
+            }
+        }
+
+        function checkOrder() {
+            let slots = document.querySelectorAll('.slot');
+            let correctCount = 0;
+            let isFull = true;
+
+            // 1. 檢查邏輯
+            slots.forEach(slot => {
+                if (slot.children.length === 0) {
+                    isFull = false;
+                    return;
+                }
+                let card = slot.children[0];
+                // 先移除動畫，以防重複點擊
+                card.classList.remove('falling');
+                // 觸發 reflow 以重置動畫
+                void card.offsetWidth;
+
+                let slotIndex = parseInt(slot.dataset.index);
+                let cardOrder = parseInt(card.dataset.order);
+
+                if (slotIndex === cardOrder) {
+                    slot.classList.add('correct-border');
+                    slot.classList.remove('wrong-border');
+                    correctCount++;
+                } else {
+                    slot.classList.add('wrong-border');
+                    slot.classList.remove('correct-border');
+                }
+            });
+
+            let resultText = document.getElementById('result');
+            
+            if (!isFull) {
+                resultText.innerText = "⚠️ 請先填滿所有骨牌！";
+                resultText.style.color = "#e67e22";
+                return;
+            }
+
+            if (correctCount === 6) {
+                resultText.innerHTML = "🎉 歷史重演成功！骨牌效應啟動！";
+                resultText.style.color = "#27ae60";
+
+                // 2. 啟動骨牌動畫
+                slots.forEach((slot, index) => {
+                    let card = slot.children[0];
+                    if(card) {
+                        // 設定延遲：每張晚 0.15 秒
+                        card.style.animationDelay = `${index * 0.15}s`;
+                        card.classList.add('falling');
+                    }
+                });
+
+                // 3. 啟動彩帶
+                fireConfetti();
+            } else {
+                resultText.innerText = `❌ 還有 ${6 - correctCount} 個地方順序不對，骨牌推不動喔！`;
+                resultText.style.color = "#c0392b";
+            }
+        }
+
+        function fireConfetti() {
+            if (typeof confetti === 'function') {
+                var duration = 3 * 1000;
+                var animationEnd = Date.now() + duration;
+                var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 999 };
+
+                var random = function(min, max) { return Math.random() * (max - min) + min; }
+
+                var interval = setInterval(function() {
+                  var timeLeft = animationEnd - Date.now();
+                  if (timeLeft <= 0) return clearInterval(interval);
+                  var particleCount = 50 * (timeLeft / duration);
+                  confetti(Object.assign({}, defaults, { particleCount, origin: { x: random(0.1, 0.3), y: Math.random() - 0.2 } }));
+                  confetti(Object.assign({}, defaults, { particleCount, origin: { x: random(0.7, 0.9), y: Math.random() - 0.2 } }));
+                }, 250);
+            }
+        }
+
+        function resetGame() { initGame(); }
+        window.onload = initGame;
+    </script>
+</body>
+</html>

@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>南無警察大菩薩｜日治時期警察職權互動地圖</title>
+  <style>
+    /* ======================================
+       大正浪漫 × 日式古早味 視覺主題
+       ====================================== */
+    :root {
+      --indigo:      #16163c;
+      --deep-indigo: #0d0d28;
+      --crimson:     #8b1a1a;
+      --dark-red:    #5c0a0a;
+      --gold:        #c9a84c;
+      --light-gold:  #e8d5a3;
+      --cream:       #f5ead8;
+      --muted-cream: #c9b99a;
+      --shadow:      rgba(0,0,0,0.6);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--deep-indigo);
+      /* 和紙格紋背景 */
+      background-image:
+        repeating-linear-gradient(0deg,  transparent, transparent 28px,
+          rgba(201,168,76,0.06) 28px, rgba(201,168,76,0.06) 29px),
+        repeating-linear-gradient(90deg, transparent, transparent 28px,
+          rgba(201,168,76,0.06) 28px, rgba(201,168,76,0.06) 29px);
+      min-height: 100vh;
+      font-family: 'Noto Serif TC', 'PMingLiU', 'MingLiU', 'BiauKai', serif;
+      color: var(--cream);
+      padding: 16px 12px 40px;
+    }
+
+    /* ── 頂部裝飾橫幅 ── */
+    .header-band {
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto 6px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .header-band::before,
+    .header-band::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold));
+    }
+    .header-band::after {
+      background: linear-gradient(90deg, var(--gold), transparent);
+    }
+    .header-band-icon {
+      color: var(--gold);
+      font-size: 1.2rem;
+    }
+
+    header {
+      text-align: center;
+      padding: 8px 0 18px;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    header h1 {
+      font-size: clamp(1.5rem, 5vw, 2.4rem);
+      color: var(--gold);
+      letter-spacing: 6px;
+      text-shadow: 0 0 24px rgba(201,168,76,0.5), 0 2px 4px rgba(0,0,0,0.6);
+      margin-bottom: 6px;
+    }
+    .title-jp {
+      font-size: 0.75rem;
+      letter-spacing: 4px;
+      color: rgba(201,168,76,0.55);
+      margin-bottom: 10px;
+    }
+    header p {
+      font-size: clamp(0.8rem, 2vw, 0.95rem);
+      color: var(--muted-cream);
+    }
+
+    /* ── 操作提示 ── */
+    .hint {
+      text-align: center;
+      margin: 10px auto 16px;
+      max-width: 720px;
+      font-size: 0.88rem;
+      color: var(--light-gold);
+    }
+    .hint-inner {
+      display: inline-block;
+      border: 1px solid rgba(201,168,76,0.35);
+      padding: 6px 18px;
+      letter-spacing: 1px;
+      animation: hint-glow 3s ease-in-out infinite;
+    }
+    @keyframes hint-glow {
+      0%,100% { box-shadow: none; color: var(--muted-cream); }
+      50%      { box-shadow: 0 0 12px rgba(201,168,76,0.3); color: var(--light-gold); }
+    }
+
+    /* ======================================
+       海報容器
+       ====================================== */
+    .poster-frame {
+      max-width: 680px;
+      margin: 0 auto;
+      position: relative;
+      /* 仿古框線 */
+      border: 2px solid var(--gold);
+      box-shadow:
+        0 0 0 6px var(--deep-indigo),
+        0 0 0 8px var(--gold),
+        0 0 0 14px var(--deep-indigo),
+        0 0 40px rgba(201,168,76,0.25),
+        0 8px 30px rgba(0,0,0,0.5);
+    }
+    /* 四角裝飾 */
+    .corner {
+      position: absolute;
+      width: 22px; height: 22px;
+      border-color: var(--gold);
+      border-style: solid;
+      z-index: 5;
+    }
+    .corner.tl { top: -10px; left: -10px; border-width: 2px 0 0 2px; }
+    .corner.tr { top: -10px; right: -10px; border-width: 2px 2px 0 0; }
+    .corner.bl { bottom: -10px; left: -10px; border-width: 0 0 2px 2px; }
+    .corner.br { bottom: -10px; right: -10px; border-width: 0 2px 2px 0; }
+
+    .poster-img {
+      width: 100%;
+      display: block;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+    /* 圖片不存在時的替代畫面 */
+    .poster-img-fallback {
+      display: none;
+      min-height: 500px;
+      background: linear-gradient(160deg, #1a1a4e 0%, #2d1b69 60%, #1a0a1a 100%);
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 14px;
+      color: rgba(201,168,76,0.6);
+      font-size: 0.9rem;
+      text-align: center;
+      padding: 40px;
+    }
+    .poster-img-fallback .big-icon { font-size: 3rem; }
+
+    /* ======================================
+       熱點 (Hotspots)
+       ====================================== */
+    .hotspot {
+      position: absolute;
+      cursor: pointer;
+      z-index: 20;
+      /* 可點擊範圍比視覺圓點更大，方便平板操作 */
+      width: 54px;
+      height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: translate(-50%, -50%);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .hotspot:focus { outline: none; }
+    .hotspot:focus .hs-inner { box-shadow: 0 0 0 3px var(--cream), 0 0 20px rgba(201,168,76,0.9); }
+
+    .hs-ripple {
+      position: absolute;
+      width: 50px; height: 50px;
+      border: 2px solid rgba(201,168,76,0.7);
+      border-radius: 50%;
+      animation: ripple 2.2s ease-out infinite;
+      pointer-events: none;
+    }
+    @keyframes ripple {
+      0%   { transform: scale(0.6); opacity: 0.9; }
+      100% { transform: scale(1.7); opacity: 0; }
+    }
+
+    .hs-inner {
+      width: 38px; height: 38px;
+      background: radial-gradient(circle at 35% 35%, #a52020, var(--crimson));
+      border: 2px solid var(--gold);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;         /* emoji icon */
+      box-shadow: 0 0 10px rgba(201,168,76,0.5), 0 2px 6px rgba(0,0,0,0.5);
+      transition: transform 0.18s, box-shadow 0.18s;
+      animation: hs-pulse 2.5s ease-in-out infinite;
+      position: relative;
+      z-index: 1;
+    }
+    @keyframes hs-pulse {
+      0%,100% { box-shadow: 0 0 6px rgba(201,168,76,0.4), 0 2px 6px rgba(0,0,0,0.5); }
+      50%      { box-shadow: 0 0 18px rgba(201,168,76,0.85), 0 2px 6px rgba(0,0,0,0.5); }
+    }
+    .hotspot:hover .hs-inner,
+    .hotspot:focus .hs-inner {
+      transform: scale(1.25);
+      animation: none;
+      box-shadow: 0 0 22px rgba(201,168,76,0.95), 0 2px 8px rgba(0,0,0,0.6);
+    }
+    .hotspot:active .hs-inner {
+      transform: scale(0.95);
+    }
+
+    /* ── 熱點座標（百分比，相對圖片） ──
+       位置根據「南無警察大菩薩」海報中各手臂的視覺位置設定，
+       可依實際圖片微調 top / left 值。          */
+    .hs-traffic    { top: 32%; left: 22%; }   /* 左側通行  — 左上臂 */
+    .hs-disease    { top: 26%; left: 78%; }   /* 惡疫預防  — 右上臂 */
+    .hs-thought    { top: 48%; left: 16%; }   /* 思想取締  — 左中臂 */
+    .hs-indigenous { top: 52%; left: 80%; }   /* 蕃人授產  — 右中臂 */
+    .hs-arrest     { top: 65%; left: 24%; }   /* 犯人逮捕  — 左下臂 */
+    .hs-rescue     { top: 68%; left: 76%; }   /* 救助救護  — 右下臂 */
+
+    /* ── 熱點標籤 tooltip ── */
+    .hs-label {
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(10,10,30,0.92);
+      border: 1px solid rgba(201,168,76,0.5);
+      color: var(--light-gold);
+      font-size: 0.72rem;
+      letter-spacing: 1px;
+      padding: 3px 8px;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .hotspot:hover .hs-label,
+    .hotspot:focus .hs-label { opacity: 1; }
+
+    /* ======================================
+       Modal 彈窗
+       ====================================== */
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(8,8,25,0.88);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+    }
+    .overlay.open { display: flex; }
+
+    .modal {
+      background: linear-gradient(155deg, #1c105a 0%, #110830 60%, #0d0a2e 100%);
+      border: 2px solid var(--gold);
+      width: 100%;
+      max-width: 560px;
+      max-height: 92vh;
+      overflow-y: auto;
+      position: relative;
+      box-shadow:
+        0 0 0 1px rgba(201,168,76,0.15),
+        0 0 50px rgba(201,168,76,0.2),
+        0 20px 60px rgba(0,0,0,0.7);
+      animation: modal-in 0.22s ease;
+    }
+    @keyframes modal-in {
+      from { transform: translateY(14px) scale(0.97); opacity: 0; }
+      to   { transform: translateY(0)    scale(1);    opacity: 1; }
+    }
+    /* 內框裝飾 */
+    .modal::before {
+      content: '';
+      position: absolute;
+      top: 10px; left: 10px; right: 10px; bottom: 10px;
+      border: 1px solid rgba(201,168,76,0.18);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* 關閉按鈕 */
+    .modal-close {
+      position: absolute;
+      top: 11px; right: 13px;
+      background: none;
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      width: 34px; height: 34px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      font-size: 1rem;
+      z-index: 10;
+      transition: background 0.18s;
+      border-radius: 2px;
+    }
+    .modal-close:hover { background: rgba(201,168,76,0.18); }
+
+    /* 頭部 */
+    .modal-head {
+      background: linear-gradient(90deg, var(--crimson), var(--dark-red));
+      border-bottom: 2px solid var(--gold);
+      padding: 18px 52px 18px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      position: relative;
+      z-index: 1;
+    }
+    .modal-emoji { font-size: 2.2rem; flex-shrink: 0; }
+    .modal-head h2 {
+      font-size: clamp(1.1rem, 4vw, 1.5rem);
+      color: var(--gold);
+      letter-spacing: 3px;
+      line-height: 1.2;
+    }
+    .modal-head .sub {
+      font-size: 0.78rem;
+      color: rgba(232,213,163,0.7);
+      margin-top: 3px;
+      letter-spacing: 1px;
+    }
+
+    /* 內容區 */
+    .modal-body {
+      padding: 22px 22px 20px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .section { margin-bottom: 22px; }
+
+    .section-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.72rem;
+      color: var(--gold);
+      letter-spacing: 3px;
+      margin-bottom: 10px;
+    }
+    .section-label::before {
+      content: '';
+      display: inline-block;
+      width: 4px; height: 14px;
+      background: var(--gold);
+      border-radius: 2px;
+    }
+
+    .desc-text {
+      font-size: clamp(0.88rem, 2.5vw, 0.98rem);
+      line-height: 1.9;
+      color: var(--cream);
+    }
+
+    /* 歷史故事框 */
+    .story-box {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(201,168,76,0.28);
+      border-left: 4px solid var(--gold);
+      padding: 14px 16px;
+      border-radius: 0 4px 4px 0;
+    }
+    .story-tag {
+      font-size: 0.68rem;
+      letter-spacing: 2px;
+      color: var(--gold);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .story-tag::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(201,168,76,0.3);
+    }
+    .story-text {
+      font-size: clamp(0.85rem, 2.4vw, 0.93rem);
+      line-height: 1.9;
+      color: var(--light-gold);
+      font-style: italic;
+    }
+
+    /* 史料圖片區 */
+    .evidence-area {
+      border: 1px dashed rgba(201,168,76,0.4);
+      border-radius: 4px;
+      overflow: hidden;
+      min-height: 100px;
+    }
+    .evidence-area img {
+      width: 100%;
+      display: block;
+    }
+    .evidence-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 100px;
+      color: rgba(201,168,76,0.35);
+      font-size: 0.8rem;
+      letter-spacing: 1px;
+      padding: 16px;
+      text-align: center;
+    }
+    .evidence-placeholder .ph-icon { font-size: 1.8rem; }
+
+    /* 分隔線 */
+    .divider {
+      border: none;
+      border-top: 1px solid rgba(201,168,76,0.2);
+      margin: 0 0 20px;
+    }
+
+    /* ── 捲軸美化 ── */
+    .modal::-webkit-scrollbar { width: 5px; }
+    .modal::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
+    .modal::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 3px; }
+
+    /* ======================================
+       頁尾
+       ====================================== */
+    footer {
+      text-align: center;
+      margin-top: 28px;
+      font-size: 0.72rem;
+      color: rgba(201,168,76,0.3);
+      letter-spacing: 2px;
+      line-height: 1.8;
+      max-width: 720px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* ======================================
+       RWD 響應式
+       ====================================== */
+    @media (max-width: 420px) {
+      .hs-inner { width: 32px; height: 32px; font-size: 0.9rem; }
+      .hotspot { width: 48px; height: 48px; }
+      .hs-ripple { width: 42px; height: 42px; }
+    }
+    /* 回教材首頁按鈕 */
+    .back-to-home-btn {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      z-index: 99999;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans TC", sans-serif;
+      color: #ffffff !important;
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50px;
+      text-decoration: none !important;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      transition: all 0.2s ease;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      cursor: pointer;
+    }
+    .back-to-home-btn:hover {
+      background: rgba(0, 0, 0, 0.75);
+      border-color: rgba(255, 255, 255, 0.6);
+      transform: translateY(-1px);
+      color: #ffffff !important;
+    }
+    .back-to-home-btn:active {
+      transform: translateY(0);
+      background: rgba(0, 0, 0, 0.85);
+    }
+    @media (max-width: 768px) {
+      .back-to-home-btn {
+        top: 10px;
+        left: 10px;
+        padding: 6px 12px;
+        font-size: 13px;
+      }
+    }
+  </style>
+</head>
+<body>
+<a href="../index.html" class="back-to-home-btn" aria-label="回教材首頁">⬅ 回教材首頁</a>
+
+  <!-- ── 頂部裝飾 ── -->
+  <div class="header-band">
+    <span class="header-band-icon">❧</span>
+    <span class="header-band-icon">❧</span>
+  </div>
+
+  <header>
+    <p class="title-jp">NAMU KEISATSU DAIBOSATSU</p>
+    <h1>南無警察大菩薩</h1>
+    <p>日治時期警察六大職權｜互動探索地圖</p>
+  </header>
+
+  <p class="hint">
+    <span class="hint-inner">✦ 點擊圖中的金色光點，探索警察的神秘職權 ✦</span>
+  </p>
+
+  <!-- ======================================
+       海報互動區
+       ====================================== -->
+  <div class="poster-frame" id="posterFrame">
+    <!-- 四角裝飾 -->
+    <span class="corner tl"></span>
+    <span class="corner tr"></span>
+    <span class="corner bl"></span>
+    <span class="corner br"></span>
+
+    <!--
+      ╔══════════════════════════════════════════╗
+      ║  請將「南無警察大菩薩」海報圖片          ║
+      ║  存為 poster.jpg，放於此 HTML 同一資料夾  ║
+      ╚══════════════════════════════════════════╝
+    -->
+    <img class="poster-img"
+         id="posterImg"
+         src="poster0.jpg"
+         alt="南無警察大菩薩宣傳海報——日治時期臺灣總督府的警察職權示意圖">
+
+    <!-- 圖片不存在時的提示畫面 -->
+    <div class="poster-img-fallback" id="posterFallback">
+      <div class="big-icon">🖼️</div>
+      <p>請將海報圖片命名為 <strong style="color:var(--gold)">poster.jpg</strong></p>
+      <p>放置於此 HTML 檔案的同一資料夾中</p>
+      <p style="margin-top:10px;font-size:0.8rem;opacity:0.6">熱點仍可點擊進行預覽</p>
+    </div>
+
+    <!-- ══════════════════════════════
+         六個職權熱點
+         可調整 style 中的 top / left
+         來微調位置對齊圖中手臂
+         ══════════════════════════════ -->
+
+    <!-- 1. 左側通行（左上臂） -->
+    <div class="hotspot hs-traffic"
+         onclick="openModal('traffic')"
+         tabindex="0" role="button"
+         aria-label="左側通行：點擊了解交通管理職權">
+      <div class="hs-ripple"></div>
+      <div class="hs-inner">🚦</div>
+      <div class="hs-label">左側通行</div>
+    </div>
+
+    <!-- 2. 惡疫預防（右上臂） -->
+    <div class="hotspot hs-disease"
+         onclick="openModal('disease')"
+         tabindex="0" role="button"
+         aria-label="惡疫預防：點擊了解公共衛生職權">
+      <div class="hs-ripple"></div>
+      <div class="hs-inner">💉</div>
+      <div class="hs-label">惡疫預防</div>
+    </div>
+
+    <!-- 3. 思想取締（左中臂） -->
+    <div class="hotspot hs-thought"
+         onclick="openModal('thought')"
+         tabindex="0" role="button"
+         aria-label="思想取締：點擊了解言論監控職權">
+      <div class="hs-ripple"></div>
+      <div class="hs-inner">🧠</div>
+      <div class="hs-label">思想取締</div>
+    </div>
+
+    <!-- 4. 蕃人授產（右中臂） -->
+    <div class="hotspot hs-indigenous"
+         onclick="openModal('indigenous')"
+         tabindex="0" role="button"
+         aria-label="蕃人授產：點擊了解原住民族管理職權">
+      <div class="hs-ripple"></div>
+      <div class="hs-inner">🌾</div>
+      <div class="hs-label">蕃人授產</div>
+    </div>
+
+    <!-- 5. 犯人逮捕（左下臂） -->
+    <div class="hotspot hs-arrest"
+         onclick="openModal('arrest')"
+         tabindex="0" role="button"
+         aria-label="犯人逮捕：點擊了解治安司法職權">
+      <div class="hs-ripple"></div>
+      <div class="hs-inner">⛓️</div>
+      <div class="hs-label">犯人逮捕</div>
+    </div>
+
+    <!-- 6. 救助救護（右下臂） -->
+    <div class="hotspot hs-rescue"
+         onclick="openModal('rescue')"
+         tabindex="0" role="button"
+         aria-label="救助救護：點擊了解災害救援職權">
+      <div class="hs-ripple"></div>
+      <div class="hs-inner">❤️</div>
+      <div class="hs-label">救助救護</div>
+    </div>
+  </div>
+
+  <!-- ======================================
+       Modal 彈窗（內容由 JS 動態填入）
+       ====================================== -->
+  <div class="overlay" id="overlay" onclick="handleOverlayClick(event)">
+    <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+
+      <button class="modal-close" onclick="closeModal()" aria-label="關閉彈窗">✕</button>
+
+      <div class="modal-head">
+        <span class="modal-emoji" id="mEmoji">⚖️</span>
+        <div>
+          <h2 id="mTitle">職權名稱</h2>
+          <div class="sub" id="mSub">日治時期警察的其中一項職責</div>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <!-- 說明 -->
+        <div class="section">
+          <div class="section-label">這是什麼意思？</div>
+          <p class="desc-text" id="mDesc"></p>
+        </div>
+
+        <hr class="divider">
+
+        <!-- 歷史故事 -->
+        <div class="section">
+          <div class="section-label">歷史小故事</div>
+          <div class="story-box">
+            <div class="story-tag">📜 史料現場感</div>
+            <p class="story-text" id="mStory"></p>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <!-- 史料圖片 -->
+        <div class="section">
+          <div class="section-label">史料圖片</div>
+          <!--
+            ╔══════════════════════════════════════════════╗
+            ║  操作方式：                                   ║
+            ║  找到 id="mImgEl" 的 <img> 標籤              ║
+            ║  在 JS data 物件對應的 img 欄位填入圖片路徑   ║
+            ║  例如： img: './images/traffic_law.jpg'       ║
+            ╚══════════════════════════════════════════════╝
+          -->
+          <div class="evidence-area" id="mImgBox">
+            <div class="evidence-placeholder" id="mImgPlaceholder">
+              <span class="ph-icon">📷</span>
+              <span>請在代碼 JS 的 img 欄位填入史料圖片路徑</span>
+              <span style="font-size:0.7rem;opacity:0.6">（詳見操作指南）</span>
+            </div>
+            <img id="mImgEl" src="" alt="史料圖片" style="display:none;">
+          </div>
+        </div>
+      </div><!-- /.modal-body -->
+
+    </div><!-- /.modal -->
+  </div><!-- /.overlay -->
+
+  <footer>
+    <p>資料來源：《國民小學社會教師手冊（資料篇）》第六冊（5下）▪ 康軒版</p>
+    <p>本網頁供國小五年級社會科教學使用，請勿商業利用</p>
+  </footer>
+
+  <!-- ======================================
+       JavaScript
+       ====================================== -->
+  <script>
+  /* ════════════════════════════════════════
+     職權資料庫
+     根據《社會5下教冊（資料篇）》第66頁整理
+     ════════════════════════════════════════ */
+  const DATA = {
+    traffic: {
+      emoji: '🚦',
+      title: '左側通行',
+      sub:   '交通管理職權',
+      desc:  '日本統治臺灣後，規定所有車輛和行人都要靠左走。警察不只是抓壞人，連你走路的方向都要管！違規者當場被取締罰款，連推小攤車的小販、駕牛車的農夫都不例外。這和今天我們靠右行走剛好相反，可見統治者的規定能改變我們的日常生活習慣。',
+      story: '話說某天，阿明伯推著豆花攤，走著走著習慣靠右，忽然背後一聲「站住！」—— 警察大人瞪著他，嚴肅地說：「靠左！下次再犯就罰款！」阿明伯嚇得手腳發抖，豆花差點灑出來……這就是日治時期臺灣人的日常。課本插畫中也可以看到，行人及車輛都要遵守「左側通行」的規定。',
+      img:   ''   /* ← 在此填入史料圖片路徑，例如 './img/traffic.jpg' */
+    },
+    disease: {
+      emoji: '💉',
+      title: '惡疫預防',
+      sub:   '公共衛生職權',
+      desc:  '日治初期，臺灣鼠疫、瘧疾、霍亂盛行，死人無數。警察被賦予衛生稽查的任務，要挨家挨戶查看家裡環境是否衛生。積水、糞便沒處理好？警察就上門了！警察還要宣導注射疫苗，甚至可以強制隔離病患。',
+      story: '1896年臺南爆發嚴重鼠疫，警察奉命逐戶消毒、焚燒疫區物品。有位仕紳回憶：「那時候最怕的不是生病，是警察提著火把來清查，一不合格就把東西燒掉，哭都來不及。」透過這種嚴厲的手段，加上建設現代化下水道系統，日本確實逐漸壓制了臺灣的傳染病疫情。',
+      img:   ''
+    },
+    thought: {
+      emoji: '🧠',
+      title: '思想取締',
+      sub:   '言論監控職權',
+      desc:  '只要你說錯話、想錯事，警察就可能來抓你！任何批評日本統治、支持抗日的思想和言論，都受到嚴密監控。就連在路邊跟朋友聊天，也可能被保甲鄰居舉報。這讓當時的臺灣人說話要非常小心，深怕一不小心說錯話就惹禍上身。',
+      story: '1921年，臺灣文化協會舉辦演講活動，傳播民主新思想。但警察隨時潛伏在會場內外監視。某場在臺中的演講，講者才說了幾句話，警察就大步走上台：「解散！此場集會內容不當！」全場觀眾只能悻悻然離去。根據史料，當時不少演講活動「因內容不利總督府統治而被迫中止」，講者甚至被帶去「喝茶」接受問訊。',
+      img:   ''
+    },
+    indigenous: {
+      emoji: '🌾',
+      title: '蕃人授產',
+      sub:   '原住民族管理職權',
+      desc:  '警察還要深入山地，「教導」原住民改變傳統的耕作和生活方式，例如改種水稻、飼養牛豬。但對原住民族來說，這些「教導」往往是強迫，嚴重破壞了他們世代相傳的傳統農業文化與生活規範。「授產」兩字，聽起來是幫忙，實際上是文化霸凌。',
+      story: '賽德克族的長老事後回憶說：「警察來了，說我們的農法落後，要我們改種他們規定的東西。但我們祖先幾百年都這樣種，難道錯了嗎？」這種對傳統生活方式的強制干涉，以及要求族人繳交「勞役」（免費替日本人做工），正是1930年霧社事件爆發的重要遠因之一。莫那．魯道率領族人奮起反抗，震驚全世界。',
+      img:   ''
+    },
+    arrest: {
+      emoji: '⛓️',
+      title: '犯人逮捕',
+      sub:   '治安司法職權',
+      desc:  '犯了罪，警察來抓你！但日治時期更恐怖的是「連坐法」——如果你家隔壁鄰居犯法，而你「知情不報」，你也會被罰！保甲制度（十戶為一甲，十甲為一保）讓鄰居之間互相監視，使得人人自危，誰都不想惹麻煩。這種制度讓警察用很少的人力，就能管理很多人。',
+      story: '1915年西來庵事件後，日本警察展開大規模搜捕。被逮捕、判重刑的民眾多達一千多人，其中許多人只是「知情未報」就被連坐牽連。一位倖存者後來說：「那時候走在路上，只要被警察盯上，腿就軟了，根本不知道自己哪裡得罪人、會不會被抓走。」這場事件後，漢人的抗日方式也從武裝轉為非武裝。',
+      img:   ''
+    },
+    rescue: {
+      emoji: '❤️',
+      title: '救助救護',
+      sub:   '災害救援職權',
+      desc:  '警察也有「溫柔」的一面——颱風、水災、火災發生時，警察要帶頭救援受困民眾、分發物資、協助傷患就醫。但有趣的是，臺灣人半開玩笑地說：「平時怕死警察，颱風天還是得靠警察！」這種又怕又依賴的複雜心情，正好說明了殖民統治下人民的無奈處境。',
+      story: '這張「南無警察大菩薩」海報，正是日本政府刻意美化警察形象的宣傳工具，把警察畫成無所不能、慈悲為懷的千手觀音菩薩。教師手冊說得很清楚：「日治時期總督府賦予警察很大的權力，幾乎無所不管……如果村子裡某家發生違法事件，只要有人知情不報，全村都會遭受警察處分，所以當時的臺灣人都很怕警察。」這哪是菩薩，根本是讓人又怕又不得不服從的存在！',
+      img:   ''
+    }
+  };
+
+  /* ════════════════════════════════════════
+     Modal 開關
+     ════════════════════════════════════════ */
+  function openModal(key) {
+    const d = DATA[key];
+    if (!d) return;
+
+    document.getElementById('mEmoji').textContent  = d.emoji;
+    document.getElementById('mTitle').textContent  = d.title;
+    document.getElementById('mSub').textContent    = d.sub;
+    document.getElementById('mDesc').textContent   = d.desc;
+    document.getElementById('mStory').textContent  = d.story;
+
+    const img         = document.getElementById('mImgEl');
+    const placeholder = document.getElementById('mImgPlaceholder');
+    if (d.img) {
+      img.src          = d.img;
+      img.style.display = 'block';
+      placeholder.style.display = 'none';
+    } else {
+      img.src          = '';
+      img.style.display = 'none';
+      placeholder.style.display = 'flex';
+    }
+
+    /* 重置捲軸 */
+    document.getElementById('modal').scrollTop = 0;
+
+    document.getElementById('overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+
+    /* 將焦點移至 modal 供鍵盤使用者操作 */
+    document.getElementById('modal').focus();
+  }
+
+  function closeModal() {
+    document.getElementById('overlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function handleOverlayClick(e) {
+    if (e.target === document.getElementById('overlay')) closeModal();
+  }
+
+  /* 鍵盤支援 */
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeModal();
+  });
+
+  /* 熱點鍵盤支援（Enter / Space） */
+  document.querySelectorAll('.hotspot').forEach(el => {
+    el.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        el.click();
+      }
+    });
+  });
+
+  /* ════════════════════════════════════════
+     圖片載入失敗時的友善提示
+     ════════════════════════════════════════ */
+  const posterImg      = document.getElementById('posterImg');
+  const posterFallback = document.getElementById('posterFallback');
+
+  posterImg.addEventListener('error', function () {
+    this.style.display           = 'none';
+    posterFallback.style.display = 'flex';
+  });
+
+  /* 若圖片一開始就快取失敗 */
+  if (posterImg.complete && !posterImg.naturalWidth) {
+    posterImg.dispatchEvent(new Event('error'));
+  }
+  </script>
+
+</body>
+</html>

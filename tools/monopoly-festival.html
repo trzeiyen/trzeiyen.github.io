@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>社會大富翁-節慶生活版</title>
+    <style>
+        :root {
+            --chance-color: #ff9800;
+            --fate-color: #2196f3;
+            --bg-color: #fff9c4;
+        }
+        body {
+            font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        .container { text-align: center; width: 95%; max-width: 600px; }
+        
+        #card-display {
+            width: 100%;
+            height: 420px;
+            background: white;
+            border-radius: 40px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            box-sizing: border-box;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            border: 12px solid #fff;
+            outline: 5px solid #eee;
+        }
+        
+        .card-type { font-size: 32px; font-weight: bold; margin-bottom: 20px; letter-spacing: 10px; }
+        .card-title { font-size: 38px; color: #333; margin-bottom: 25px; font-weight: 900; line-height: 1.2; }
+        .card-desc { font-size: 24px; color: #555; line-height: 1.6; margin-bottom: 20px; }
+        .card-action { font-size: 28px; color: #ff5722; font-weight: bold; background: #fff3e0; padding: 10px 30px; border-radius: 50px; border: 3px solid #ff5722; }
+
+        .btn-group { display: flex; gap: 30px; margin-top: 50px; justify-content: center; width: 100%; }
+        button {
+            flex: 1;
+            padding: 25px;
+            font-size: 28px;
+            font-weight: bold;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            color: white;
+            transition: 0.2s;
+            max-width: 220px;
+        }
+        .btn-chance { background-color: var(--chance-color); box-shadow: 0 8px #ef6c00; }
+        .btn-fate { background-color: var(--fate-color); box-shadow: 0 8px #1565c0; }
+        button:active { transform: translateY(4px); box-shadow: 0 2px #ef6c00; }
+
+        .waiting-box { text-align: center; }
+        .waiting-icon { font-size: 100px; margin: 0; color: #ffd54f; animation: bounce 2s infinite; }
+        /* 回教材首頁按鈕 */
+        .back-to-home-btn {
+          position: fixed;
+          top: 12px;
+          left: 12px;
+          z-index: 99999;
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          padding: 8px 16px;
+          font-size: 14px;
+          font-weight: 600;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans TC", sans-serif;
+          color: #ffffff !important;
+          background: rgba(0, 0, 0, 0.45);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          border-radius: 50px;
+          text-decoration: none !important;
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+          transition: all 0.2s ease;
+          user-select: none;
+          -webkit-tap-highlight-color: transparent;
+          touch-action: manipulation;
+          cursor: pointer;
+        }
+        .back-to-home-btn:hover {
+          background: rgba(0, 0, 0, 0.75);
+          border-color: rgba(255, 255, 255, 0.6);
+          transform: translateY(-1px);
+          color: #ffffff !important;
+        }
+        .back-to-home-btn:active {
+          transform: translateY(0);
+          background: rgba(0, 0, 0, 0.85);
+        }
+        @media (max-width: 768px) {
+          .back-to-home-btn {
+            top: 10px;
+            left: 10px;
+            padding: 6px 12px;
+            font-size: 13px;
+          }
+        }
+    </style>
+</head>
+<body>
+<a href="../index.html" class="back-to-home-btn" aria-label="回教材首頁">⬅ 回教材首頁</a>
+
+    <div class="container">
+        <div id="card-display" onclick="resetCard()">
+            <div id="content" class="waiting-box">
+                <div class="waiting-icon">🎁</div>
+                <p style="font-size: 24px; color: #999; font-weight: bold;">點擊按鈕抽取驚喜</p>
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn-chance" onclick="draw('機會')">✨ 機會</button>
+            <button class="btn-fate" onclick="draw('命運')">💎 命運</button>
+        </div>
+    </div>
+
+    <script>
+        const data = {
+            "機會": [
+                { title: "過年領紅包", desc: "恭喜發財，心情愉快，走路都有風！", action: "前進 3 格" },
+                { title: "端午賽龍舟", desc: "你是最棒的奪標手，全隊衝刺！", action: "再擲一次骰子" },
+                { title: "地圖達人", desc: "你精通圖例與方向，絕對不會迷路。", action: "前進 2 格" },
+                { title: "稱讚老師成功", desc: "說出老師優點後，老師決定獎勵你。", action: "前進 4 格" },
+                { title: "潑水節洗禮", desc: "接受祝福，洗去疲勞，充滿活力！", action: "前進 3 格" },
+                { title: "異國美食展", desc: "品嚐了美味的異國料理，體力充沛。", action: "前進 2 格" },
+                { title: "找到地圖要素", desc: "你迅速找到了標題與比例尺，找到寶藏！", action: "再擲一次骰子" },
+                { title: "祖靈的祝福", desc: "尊重原住民文化，獲得部落長老的引導。", action: "前進 5 格" },
+                { title: "發現三峽特色", desc: "對老街文化瞭若指掌，帶領大家參觀。", action: "前進 3 格" },
+                { title: "人口增加獎勵", desc: "社區充滿朝氣，大家熱情地送你一程。", action: "前進 1 格" }
+            ],
+            "命運": [
+                { title: "過年大塞車", desc: "回鄉路上車子太多，動彈不得。", action: "暫停一回合" },
+                { title: "端午忘了帶粽子", desc: "划龍舟沒體力，只好先休息一下。", action: "後退 2 格" },
+                { title: "迷失在深山", desc: "地圖不小心拿反了，走錯了路。", action: "後退 3 格" },
+                { title: "人口減少危機", desc: "勞動力不足，大家搬家辛苦了。", action: "回到上一個問答格" },
+                { title: "三峽老街人擠人", desc: "人潮太多擠不過去，只好繞道。", action: "後退 2 格" },
+                { title: "異國料理太辣", desc: "不小心吃太辣，一直在找水喝。", action: "暫停一回合" },
+                { title: "忘記地圖比例尺", desc: "看錯距離，結果走得比預期遠。", action: "後退 4 格" },
+                { title: "錯過祖靈祭", desc: "時間記錯了，沒參加到最重要的慶典。", action: "回到起點" },
+                { title: "潑水節淋成落湯雞", desc: "全身濕透了，需要時間換衣服。", action: "後退 1 格" },
+                { title: "忘記導師優點", desc: "關鍵時刻想不出來，氣氛尷尬。", action: "暫停一回合" }
+            ]
+        };
+
+        function draw(type) {
+            const cardDisplay = document.getElementById('card-display');
+            const content = document.getElementById('content');
+            const list = data[type];
+            const result = list[Math.floor(Math.random() * list.length)];
+
+            // 翻轉特效
+            cardDisplay.style.transform = "rotateX(90deg)";
+            cardDisplay.style.opacity = "0";
+
+            setTimeout(() => {
+                cardDisplay.style.borderColor = type === '機會' ? 'var(--chance-color)' : 'var(--fate-color)';
+                content.innerHTML = `
+                    <div class="card-type" style="color:${type === '機會' ? 'var(--chance-color)' : 'var(--fate-color)'}">${type}</div>
+                    <div class="card-title">${result.title}</div>
+                    <div class="card-desc">${result.desc}</div>
+                    <div class="card-action">${result.action}</div>
+                `;
+                cardDisplay.style.transform = "rotateX(0deg)";
+                cardDisplay.style.opacity = "1";
+            }, 300);
+        }
+
+        function resetCard() {
+            const cardDisplay = document.getElementById('card-display');
+            cardDisplay.style.transform = "scale(0.95)";
+            setTimeout(() => {
+                cardDisplay.style.transform = "scale(1)";
+                document.getElementById('content').innerHTML = `
+                    <div class="waiting-icon">🎁</div>
+                    <p style="font-size: 24px; color: #999; font-weight: bold;">點擊按鈕抽取驚喜</p>
+                `;
+                cardDisplay.style.borderColor = '#fff';
+            }, 100);
+        }
+    </script>
+</body>
+</html>

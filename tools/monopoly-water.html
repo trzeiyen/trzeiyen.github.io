@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>社會大富翁-水資源篇</title>
+    <style>
+        :root {
+            --chance-color: #00bcd4;
+            --fate-color: #3f51b5;
+            --bg-color: #e0f7fa;
+        }
+        body {
+            font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
+            background-color: var(--bg-color);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100vh; margin: 0; overflow: hidden;
+        }
+        .container { text-align: center; width: 95%; max-width: 600px; }
+        
+        #card-display {
+            width: 100%; height: 420px; background: white; border-radius: 40px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1); display: flex; flex-direction: column;
+            align-items: center; justify-content: center; padding: 40px; box-sizing: border-box;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer;
+            border: 12px solid #fff; outline: 5px solid #b2ebf2;
+        }
+        
+        .card-type { font-size: 32px; font-weight: bold; margin-bottom: 20px; letter-spacing: 10px; }
+        .card-title { font-size: 36px; color: #333; margin-bottom: 25px; font-weight: 900; line-height: 1.2; }
+        .card-desc { font-size: 22px; color: #555; line-height: 1.6; margin-bottom: 20px; }
+        .card-action { font-size: 26px; color: #00796b; font-weight: bold; background: #e0f2f1; padding: 10px 30px; border-radius: 50px; border: 3px solid #00796b; }
+
+        .btn-group { display: flex; gap: 30px; margin-top: 50px; justify-content: center; width: 100%; }
+        button {
+            flex: 1; padding: 25px; font-size: 28px; font-weight: bold; border: none;
+            border-radius: 20px; cursor: pointer; color: white; transition: 0.2s; max-width: 220px;
+        }
+        .btn-chance { background-color: var(--chance-color); box-shadow: 0 8px #0097a7; }
+        .btn-fate { background-color: var(--fate-color); box-shadow: 0 8px #303f9f; }
+        button:active { transform: translateY(4px); box-shadow: 0 2px #0097a7; }
+
+        .waiting-box { text-align: center; }
+        .waiting-icon { font-size: 100px; margin: 0; color: #4dd0e1; animation: float 3s infinite ease-in-out; }
+        /* 回教材首頁按鈕 */
+        .back-to-home-btn {
+          position: fixed;
+          top: 12px;
+          left: 12px;
+          z-index: 99999;
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          padding: 8px 16px;
+          font-size: 14px;
+          font-weight: 600;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans TC", sans-serif;
+          color: #ffffff !important;
+          background: rgba(0, 0, 0, 0.45);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          border-radius: 50px;
+          text-decoration: none !important;
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+          transition: all 0.2s ease;
+          user-select: none;
+          -webkit-tap-highlight-color: transparent;
+          touch-action: manipulation;
+          cursor: pointer;
+        }
+        .back-to-home-btn:hover {
+          background: rgba(0, 0, 0, 0.75);
+          border-color: rgba(255, 255, 255, 0.6);
+          transform: translateY(-1px);
+          color: #ffffff !important;
+        }
+        .back-to-home-btn:active {
+          transform: translateY(0);
+          background: rgba(0, 0, 0, 0.85);
+        }
+        @media (max-width: 768px) {
+          .back-to-home-btn {
+            top: 10px;
+            left: 10px;
+            padding: 6px 12px;
+            font-size: 13px;
+          }
+        }
+    </style>
+</head>
+<body>
+<a href="../index.html" class="back-to-home-btn" aria-label="回教材首頁">⬅ 回教材首頁</a>
+
+    <div class="container">
+        <div id="card-display" onclick="resetCard()">
+            <div id="content" class="waiting-box">
+                <div class="waiting-icon">💧</div>
+                <p style="font-size: 24px; color: #999; font-weight: bold;">點擊下方按鈕抽取卡片</p>
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn-chance" onclick="draw('機會')">✨ 機會</button>
+            <button class="btn-fate" onclick="draw('⛈️')">⛈️ 命運</button>
+        </div>
+    </div>
+
+    <script>
+        const data = {
+            "機會": [
+                { title: "落實省水標章", desc: "你挑選了有省水標章的洗衣機，節水有功！", action: "前進 3 格" },
+                { title: "雨水回收高手", desc: "利用雨水回收桶澆花，珍惜每一滴資源。", action: "再擲一次骰子" },
+                { title: "自來水廠參訪", desc: "了解過濾與消毒過程，知識值大提升！", action: "前進 2 格" },
+                { title: "找到早期水井", desc: "在離河較遠的地方發現古井，供水充足。", action: "前進 4 格" },
+                { title: "大型水庫完工", desc: "政府開發大型建設儲存雨水，不再怕乾旱。", action: "直接前進 5 格" },
+                { title: "服務業節水模範", desc: "推廣旅館減少更換毛巾，用水量大減。", action: "前進 2 格" },
+                { title: "工業廢水循環", desc: "工廠將廢水回收再利用，節約大量水費。", action: "再擲一次骰子" },
+                { title: "農業滴灌技術", desc: "精準給水不浪費，作物長得又大又好。", action: "前進 3 格" },
+                { title: "省水小妙招分享", desc: "教大家洗澡改用淋浴，獲得大家掌聲。", action: "前進 3 格" },
+                { title: "發現清澈河川", desc: "在早期居住地找到水質優良的河段。", action: "前進 1 格" }
+            ],
+            "⛈️": [
+                { title: "河川乾涸", desc: "長期不下雨，河川水淺的地方都乾掉了。", action: "後退 3 格" },
+                { title: "工業廢水污染", desc: "工廠亂排廢水，導致水資源無法使用。", action: "暫停一回合" },
+                { title: "忘記關緊水龍頭", desc: "出門一整天都在滴水，造成嚴重浪費。", action: "回到上一個問答格" },
+                { title: "水庫淤積嚴重", desc: "泥沙太多導致儲水量大減，限水開始。", action: "後退 4 格" },
+                { title: "挑水路途遙遠", desc: "早期取水不便，走到腳痠走不動了。", action: "後退 2 格" },
+                { title: "河口水質變鹹", desc: "海水倒灌導致河水不能飲用。", action: "後退 2 格" },
+                { title: "洗車浪費過多", desc: "洗車時一直開著水管沖洗，被警告了。", action: "後退 3 格" },
+                { title: "水管老舊漏水", desc: "地底下的自來水管破掉，維修中。", action: "暫停一回合" },
+                { title: "農業過度取水", desc: "抽地下水過多導致地層下陷。", action: "回到起點" },
+                { title: "忘記節慶休假", desc: "大家都在慶祝，商店沒開買不到飲水。", action: "後退 1 格" }
+            ]
+        };
+
+        function draw(type) {
+            const cardDisplay = document.getElementById('card-display');
+            const content = document.getElementById('content');
+            const list = type === '機會' ? data["機會"] : data["⛈️"];
+            const result = list[Math.floor(Math.random() * list.length)];
+
+            cardDisplay.style.transform = "rotateY(180deg)";
+            cardDisplay.style.opacity = "0";
+
+            setTimeout(() => {
+                cardDisplay.style.borderColor = type === '機會' ? 'var(--chance-color)' : 'var(--fate-color)';
+                content.innerHTML = `
+                    <div class="card-type" style="color:${type === '機會' ? 'var(--chance-color)' : 'var(--fate-color)'}">${type}</div>
+                    <div class="card-title">${result.title}</div>
+                    <div class="card-desc">${result.desc}</div>
+                    <div class="card-action">${result.action}</div>
+                `;
+                cardDisplay.style.transform = "rotateY(0deg)";
+                cardDisplay.style.opacity = "1";
+            }, 300);
+        }
+
+        function resetCard() {
+            const cardDisplay = document.getElementById('card-display');
+            cardDisplay.style.transform = "scale(0.95)";
+            setTimeout(() => {
+                cardDisplay.style.transform = "scale(1)";
+                document.getElementById('content').innerHTML = `
+                    <div class="waiting-icon">💧</div>
+                    <p style="font-size: 24px; color: #999; font-weight: bold;">點擊下方按鈕抽取卡片</p>
+                `;
+                cardDisplay.style.borderColor = '#fff';
+            }, 100);
+        }
+    </script>
+</body>
+</html>

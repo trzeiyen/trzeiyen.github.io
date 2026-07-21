@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>哪些東西可以做堆肥？</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:"Noto Sans TC",sans-serif;font-size:18px;background:#fff;color:#1a1a1a;}
+#app{padding:1.5rem 1rem;max-width:700px;margin:0 auto;}
+h2.title{font-size:24px;font-weight:500;text-align:center;margin-bottom:4px;}
+p.sub{font-size:17px;color:#555;text-align:center;margin-bottom:1.5rem;}
+
+.intro-box{background:#f5f5ef;border-radius:12px;border:1px solid #ddd;padding:1.25rem;margin-bottom:1.5rem;}
+.intro-box h3{font-size:17px;font-weight:500;margin-bottom:10px;}
+.intro-steps{display:flex;flex-direction:column;gap:10px;}
+.istep{display:flex;gap:10px;align-items:flex-start;}
+.istep .num{min-width:28px;height:28px;border-radius:50%;background:#EAF3DE;color:#3B6D11;font-size:14px;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.istep p{font-size:17px;line-height:1.7;}
+
+.score-row{display:flex;justify-content:center;gap:24px;margin-bottom:1.25rem;}
+.score-chip{font-size:17px;padding:6px 18px;border-radius:8px;border:1px solid;}
+.score-chip.yes{background:#EAF3DE;color:#3B6D11;border-color:#97C459;}
+.score-chip.no{background:#FCEBEB;color:#791F1F;border-color:#F09595;}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px;margin-bottom:1.5rem;}
+.item-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:14px 8px;border-radius:12px;border:1.5px solid #ddd;background:#fff;cursor:pointer;transition:transform 0.15s;min-height:110px;}
+.item-btn:hover{transform:scale(1.05);}
+.item-btn .ico{font-size:34px;line-height:1;}
+.item-btn .lbl{font-size:15px;color:#666;text-align:center;line-height:1.3;}
+.item-btn.correct{border-color:#639922;background:#EAF3DE;}
+.item-btn.correct .lbl{color:#3B6D11;}
+.item-btn.wrong{border-color:#E24B4A;background:#FCEBEB;}
+.item-btn.wrong .lbl{color:#791F1F;}
+.item-btn.answered{cursor:default;pointer-events:none;}
+.result-badge{font-size:13px;font-weight:500;padding:2px 10px;border-radius:20px;margin-top:2px;}
+.item-btn.correct .result-badge{background:#C0DD97;color:#27500A;}
+.item-btn.wrong .result-badge{background:#F7C1C1;color:#791F1F;}
+
+.win-box{display:none;background:#EAF3DE;border:1.5px solid #639922;border-radius:12px;padding:1rem 1.5rem;text-align:center;margin-bottom:1.5rem;}
+.win-box.show{display:block;}
+.win-box p{font-size:18px;font-weight:500;color:#3B6D11;}
+.win-box span{font-size:15px;color:#639922;display:block;margin-top:4px;}
+
+.quiz-section{display:none;}
+.quiz-section.show{display:block;}
+.quiz-section h3{font-size:19px;font-weight:500;margin-bottom:1rem;padding-top:0.75rem;border-top:1px solid #ddd;}
+.q-card{background:#fff;border:1px solid #ddd;border-radius:12px;padding:1.25rem;margin-bottom:14px;}
+.q-card .q-text{font-size:17px;margin-bottom:12px;line-height:1.65;font-weight:500;}
+.q-opts{display:flex;flex-direction:column;gap:8px;}
+.opt-btn{text-align:left;padding:12px 16px;border-radius:8px;border:1px solid #ddd;background:#f9f9f9;font-size:17px;cursor:pointer;transition:background 0.1s;}
+.opt-btn:hover:not(:disabled){background:#fff;border-color:#aaa;}
+.opt-btn.opt-correct{background:#EAF3DE;border-color:#639922;color:#27500A;}
+.opt-btn.opt-wrong{background:#FCEBEB;border-color:#E24B4A;color:#791F1F;}
+.opt-btn:disabled{cursor:default;}
+.q-feedback{font-size:15px;margin-top:10px;line-height:1.6;padding:10px 14px;border-radius:8px;}
+.q-feedback.fb-ok{background:#EAF3DE;color:#3B6D11;}
+.q-feedback.fb-no{background:#FCEBEB;color:#791F1F;}
+
+.report-section{display:none;margin-top:1.5rem;}
+.report-section.show{display:block;}
+.report-section h3{font-size:19px;font-weight:500;margin-bottom:1rem;padding-top:0.75rem;border-top:1px solid #ddd;}
+.id-form{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:1rem;}
+.id-form label{display:flex;flex-direction:column;gap:4px;font-size:16px;color:#555;}
+.id-form input{padding:12px 14px;border-radius:8px;border:1px solid #bbb;background:#fff;font-size:18px;width:100%;}
+.gen-btn{display:block;width:100%;padding:14px;border-radius:8px;border:1px solid #639922;background:#EAF3DE;color:#3B6D11;font-size:18px;font-weight:500;cursor:pointer;margin-bottom:1.25rem;}
+.gen-btn:hover{background:#C0DD97;}
+
+.report-card{display:none;background:#fff;border:1.5px solid #ddd;border-radius:12px;padding:1.5rem;position:relative;overflow:hidden;}
+.report-card.show{display:block;}
+.report-card::before{content:'';position:absolute;top:0;left:0;right:0;height:6px;background:#639922;}
+.rpt-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;padding-top:4px;}
+.rpt-title{font-size:17px;font-weight:500;}
+.rpt-subject{font-size:13px;color:#777;}
+.rpt-info{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1rem;}
+.rpt-field{background:#f5f5f5;border-radius:8px;padding:8px 10px;}
+.rpt-field .fl{font-size:12px;color:#777;margin-bottom:2px;}
+.rpt-field .fv{font-size:16px;font-weight:500;}
+.rpt-divider{border:none;border-top:1px solid #eee;margin:1rem 0;}
+.rpt-scores{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:1rem;}
+.rpt-score-box{background:#f5f5f5;border-radius:8px;padding:10px;text-align:center;}
+.rpt-score-box .sl{font-size:12px;color:#777;margin-bottom:4px;}
+.rpt-score-box .sv{font-size:22px;font-weight:500;}
+.rpt-score-box .su{font-size:12px;color:#777;}
+.rpt-score-box.highlight .sv{color:#3B6D11;}
+.rpt-items{margin-bottom:1rem;}
+.rpt-items-title{font-size:14px;font-weight:500;margin-bottom:8px;}
+.rpt-item-row{display:flex;flex-wrap:wrap;gap:6px;}
+.rpt-tag{font-size:13px;padding:3px 10px;border-radius:20px;}
+.rpt-tag.ok{background:#EAF3DE;color:#27500A;}
+.rpt-tag.ng{background:#FCEBEB;color:#791F1F;}
+.rpt-quiz-rows{display:flex;flex-direction:column;gap:5px;margin-bottom:1rem;}
+.rpt-qrow{display:flex;align-items:center;gap:8px;font-size:14px;}
+.rpt-qrow .qi{color:#777;min-width:40px;}
+.rpt-qrow .qr{font-weight:500;}
+.rpt-qrow .qr.ok{color:#3B6D11;}
+.rpt-qrow .qr.ng{color:#A32D2D;}
+.rpt-footer{display:flex;align-items:center;justify-content:space-between;margin-top:0.5rem;}
+.rpt-stamp{width:56px;height:56px;border-radius:50%;border:2px solid #639922;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1px;}
+.rpt-stamp .sl{font-size:10px;color:#639922;font-weight:500;}
+.rpt-stamp .sv{font-size:19px;font-weight:500;color:#3B6D11;}
+.rpt-note{font-size:13px;color:#777;line-height:1.5;}
+.tip-text{font-size:14px;color:#777;text-align:center;margin-top:10px;}
+
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:100;align-items:center;justify-content:center;}
+.overlay.open{display:flex;}
+.card{background:#fff;border-radius:12px;border:1px solid #ddd;width:90%;max-width:380px;padding:1.5rem;position:relative;}
+.card .c-ico{font-size:52px;text-align:center;margin-bottom:10px;}
+.card h3{font-size:19px;font-weight:500;text-align:center;margin-bottom:6px;}
+.card .verdict{text-align:center;font-size:15px;font-weight:500;padding:5px 18px;border-radius:8px;display:inline-block;margin:0 auto 14px;}
+.card .verdict.yes{background:#EAF3DE;color:#3B6D11;}
+.card .verdict.no{background:#FCEBEB;color:#791F1F;}
+.verdict-wrap{text-align:center;}
+.card .desc{font-size:16px;line-height:1.7;}
+.close-btn{position:absolute;top:10px;right:14px;background:none;border:none;font-size:22px;cursor:pointer;color:#888;}
+.close-btn:hover{color:#333;}
+
+/* 回教材首頁按鈕 */
+.back-to-home-btn {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 99999;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans TC", sans-serif;
+  color: #ffffff !important;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50px;
+  text-decoration: none !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  cursor: pointer;
+}
+.back-to-home-btn:hover {
+  background: rgba(0, 0, 0, 0.75);
+  border-color: rgba(255, 255, 255, 0.6);
+  transform: translateY(-1px);
+  color: #ffffff !important;
+}
+.back-to-home-btn:active {
+  transform: translateY(0);
+  background: rgba(0, 0, 0, 0.85);
+}
+@media (max-width: 768px) {
+  .back-to-home-btn {
+    top: 10px;
+    left: 10px;
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+}
+</style>
+</head>
+<body>
+<a href="../index.html" class="back-to-home-btn" aria-label="回教材首頁">⬅ 回教材首頁</a>
+<div id="app">
+  <h2 class="title">哪些東西可以做堆肥？</h2>
+  <p class="sub">認識早期農民的堆肥智慧，再來挑戰辨認題！</p>
+
+  <div class="intro-box">
+    <h3>早期農民怎麼做堆肥？</h3>
+    <div class="intro-steps">
+      <div class="istep"><div class="num">1</div><p>早期農村沒有化學肥料，農民會把<strong>動物糞便</strong>（牛糞、雞糞、豬糞）收集起來，堆放在田邊角落。</p></div>
+      <div class="istep"><div class="num">2</div><p>收割後剩下的<strong>農作物殘渣</strong>（稻草、玉米梗、菜葉）也會一起堆入，和糞便混合疊放。</p></div>
+      <div class="istep"><div class="num">3</div><p>堆好後要保持<strong>適當濕度</strong>，偶爾翻動讓空氣進入，幫助微生物分解有機物。</p></div>
+      <div class="istep"><div class="num">4</div><p>經過幾週到幾個月，有機物慢慢腐熟，變成深色鬆軟的<strong>堆肥</strong>，施入田中讓土壤更肥沃。</p></div>
+    </div>
+  </div>
+
+  <div class="score-row">
+    <div class="score-chip yes" id="yesCount">可以堆肥：0</div>
+    <div class="score-chip no" id="noCount">不可以：0</div>
+  </div>
+  <div class="grid" id="grid"></div>
+
+  <div class="win-box" id="winBox">
+    <p>全部辨認完成！</p>
+    <span>天然有機的東西才能變成堆肥，讓土地更肥沃！</span>
+  </div>
+
+  <div class="quiz-section" id="quizSection">
+    <h3>小測驗：挑戰你的理解</h3>
+    <div id="quizContainer"></div>
+  </div>
+
+  <div class="report-section" id="reportSection">
+    <h3>學習成果報告</h3>
+    <div class="id-form">
+      <label>班級<input id="inClass" placeholder="例：401" maxlength="10"/></label>
+      <label>座號<input id="inNum" placeholder="例：18" maxlength="4" type="number"/></label>
+      <label>姓名<input id="inName" placeholder="你的名字" maxlength="8"/></label>
+    </div>
+    <button class="gen-btn" id="genBtn">產生我的學習報告</button>
+
+    <div class="report-card" id="reportCard">
+      <div class="rpt-header">
+        <div>
+          <div class="rpt-title">學習成果報告</div>
+          <div class="rpt-subject">自然與生活科技・堆肥與土地</div>
+        </div>
+        <div class="rpt-note" id="rptDate" style="text-align:right;"></div>
+      </div>
+      <div class="rpt-info">
+        <div class="rpt-field"><div class="fl">班級</div><div class="fv" id="rClass">—</div></div>
+        <div class="rpt-field"><div class="fl">座號</div><div class="fv" id="rNum">—</div></div>
+        <div class="rpt-field"><div class="fl">姓名</div><div class="fv" id="rName">—</div></div>
+      </div>
+      <hr class="rpt-divider">
+      <div class="rpt-scores">
+        <div class="rpt-score-box">
+          <div class="sl">辨認材料</div>
+          <div class="sv" id="rIdScore">—</div>
+          <div class="su">題答對</div>
+        </div>
+        <div class="rpt-score-box">
+          <div class="sl">小測驗</div>
+          <div class="sv" id="rQScore">—</div>
+          <div class="su">題答對</div>
+        </div>
+        <div class="rpt-score-box highlight">
+          <div class="sl">學習等級</div>
+          <div class="sv" id="rLevel">—</div>
+          <div class="su" id="rLevelSub">—</div>
+        </div>
+      </div>
+      <div class="rpt-items">
+        <div class="rpt-items-title">材料辨認結果</div>
+        <div class="rpt-item-row" id="rItemRow"></div>
+      </div>
+      <hr class="rpt-divider">
+      <div class="rpt-items">
+        <div class="rpt-items-title">小測驗作答明細</div>
+        <div class="rpt-quiz-rows" id="rQuizRows"></div>
+      </div>
+      <div class="rpt-footer">
+        <div class="rpt-note" id="rptMsg"></div>
+        <div class="rpt-stamp"><div class="sl">得分</div><div class="sv" id="rStamp">—</div></div>
+      </div>
+    </div>
+    <p class="tip-text" id="tipText" style="display:none;">完成後請截圖儲存，回傳給老師。</p>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="card">
+    <button class="close-btn" id="closeBtn">&#x2715;</button>
+    <div class="c-ico" id="cIco"></div>
+    <h3 id="cName"></h3>
+    <div class="verdict-wrap"><span class="verdict" id="cVerdict"></span></div>
+    <p class="desc" id="cDesc"></p>
+  </div>
+</div>
+
+<script>
+const items=[
+  {ico:'🐄',name:'牛糞',yes:true,desc:'早期農民最常用的堆肥材料！牛糞富含氮磷鉀，能大大提升土壤養分。'},
+  {ico:'🐓',name:'雞糞',yes:true,desc:'雞糞氮含量高，早期農家常用來當堆肥，施在田裡能讓農作物長得更好。'},
+  {ico:'🌾',name:'稻草稈',yes:true,desc:'農作物殘渣像稻草是傳統堆肥材料，含有豐富碳素，能幫助堆肥發酵。'},
+  {ico:'🍂',name:'落葉',yes:true,desc:'枯葉分解後變成腐植質，讓土壤鬆軟透氣，是製作堆肥的好幫手。'},
+  {ico:'🥦',name:'蔬菜殘渣',yes:true,desc:'菜葉、菜根等廚餘含有豐富有機質，很容易分解，非常適合做堆肥。'},
+  {ico:'🍌',name:'香蕉皮',yes:true,desc:'果皮含有氮和鉀，分解後能讓土壤更肥沃，是很好的堆肥材料。'},
+  {ico:'☕',name:'咖啡渣',yes:true,desc:'咖啡渣富含氮素，加入堆肥能加速分解，也可以直接灑在土壤表面。'},
+  {ico:'🍖',name:'肉骨頭',yes:false,desc:'肉類不適合家庭堆肥，會產生臭味並吸引害蟲，應丟一般垃圾。'},
+  {ico:'🛍️',name:'塑膠袋',yes:false,desc:'塑膠是人工合成材料，無法被微生物分解，放入堆肥只會污染土壤。'},
+  {ico:'🍶',name:'玻璃瓶',yes:false,desc:'玻璃不會分解，放入堆肥沒有任何幫助，應該送去回收。'},
+  {ico:'🔋',name:'電池',yes:false,desc:'電池含有重金屬，放入土壤會造成嚴重污染，必須送至有害垃圾回收。'},
+  {ico:'📰',name:'印刷紙張',yes:false,desc:'有彩色油墨的印刷紙張含有化學物質，不適合放入堆肥，應送紙類回收。'},
+];
+const quizzes=[
+  {q:'早期農民最常用哪種天然材料來製作堆肥？',opts:['化學肥料','動物糞便和農作物殘渣','玻璃和塑膠','油漆和金屬'],ans:1,fb:'早期農村沒有化學肥料，農民善用動物糞便和農作物殘渣製作堆肥。'},
+  {q:'下列哪一項「不適合」放入堆肥桶？',opts:['枯葉','稻草稈','塑膠袋','香蕉皮'],ans:2,fb:'塑膠袋是人工合成材料，微生物無法分解它，放入堆肥只會污染土壤。'},
+  {q:'製作堆肥時，需要偶爾翻動的主要原因是？',opts:['讓堆肥看起來整齊','讓空氣進入幫助微生物分解','讓顏色變得好看','讓水分流失'],ans:1,fb:'翻動堆肥能讓空氣進入，幫助微生物活動，加速有機物分解成肥料。'},
+  {q:'堆肥完成後，土壤會有什麼變化？',opts:['變成白色硬土','變成深色鬆軟的肥沃土壤','變成黏稠的泥巴','什麼都不會改變'],ans:1,fb:'腐熟的堆肥施入土壤後，土壤會變得深色且鬆軟，養分豐富。'},
+  {q:'雞糞和牛糞可以做堆肥，主要是因為它們含有豐富的？',opts:['塑膠','金屬','有機養分（氮磷鉀）','玻璃纖維'],ans:2,fb:'動物糞便含有豐富的氮、磷、鉀等有機養分，正是植物生長所需要的。'},
+];
+
+const answered=new Set();
+let yesC=0,noC=0,quizAnswered=0,quizCorrect=0;
+const quizResults=[],itemResults=[];
+const grid=document.getElementById('grid');
+const overlay=document.getElementById('overlay');
+
+items.forEach((item,i)=>{
+  const btn=document.createElement('button');
+  btn.className='item-btn';
+  btn.innerHTML=`<span class="ico">${item.ico}</span><span class="lbl">${item.name}</span>`;
+  btn.addEventListener('click',()=>openCard(item,btn,i));
+  grid.appendChild(btn);
+});
+
+function openCard(item,btn,i){
+  document.getElementById('cIco').textContent=item.ico;
+  document.getElementById('cName').textContent=item.name;
+  const v=document.getElementById('cVerdict');
+  v.textContent=item.yes?'✓ 可以做堆肥':'✗ 不適合做堆肥';
+  v.className='verdict '+(item.yes?'yes':'no');
+  document.getElementById('cDesc').textContent=item.desc;
+  overlay.classList.add('open');
+  if(!answered.has(i)){
+    answered.add(i);
+    btn.classList.add('answered',item.yes?'correct':'wrong');
+    const badge=document.createElement('span');
+    badge.className='result-badge';
+    badge.textContent=item.yes?'可以堆肥':'不適合';
+    btn.appendChild(badge);
+    itemResults.push({name:item.name,ico:item.ico,yes:item.yes});
+    if(item.yes)yesC++;else noC++;
+    document.getElementById('yesCount').textContent='可以堆肥：'+yesC;
+    document.getElementById('noCount').textContent='不可以：'+noC;
+    if(answered.size===items.length){
+      setTimeout(()=>{
+        document.getElementById('winBox').classList.add('show');
+        buildQuiz();
+        document.getElementById('quizSection').classList.add('show');
+      },400);
+    }
+  }
+}
+
+function buildQuiz(){
+  const container=document.getElementById('quizContainer');
+  quizzes.forEach((q,qi)=>{
+    const card=document.createElement('div');
+    card.className='q-card';
+    const qtext=document.createElement('div');
+    qtext.className='q-text';
+    qtext.textContent=(qi+1)+'. '+q.q;
+    card.appendChild(qtext);
+    const opts=document.createElement('div');
+    opts.className='q-opts';
+    q.opts.forEach((opt,oi)=>{
+      const btn=document.createElement('button');
+      btn.className='opt-btn';
+      btn.textContent=opt;
+      btn.addEventListener('click',()=>{
+        if(card.dataset.done)return;
+        card.dataset.done='1';
+        quizAnswered++;
+        const correct=oi===q.ans;
+        if(correct)quizCorrect++;
+        quizResults.push({q:q.q,correct,chosen:opt,correctOpt:q.opts[q.ans]});
+        opts.querySelectorAll('.opt-btn').forEach((b,bi)=>{
+          b.disabled=true;
+          if(bi===q.ans)b.classList.add('opt-correct');
+          else if(bi===oi&&!correct)b.classList.add('opt-wrong');
+        });
+        const fb=document.createElement('div');
+        fb.className='q-feedback '+(correct?'fb-ok':'fb-no');
+        fb.textContent=(correct?'答對了！':'答錯了。')+q.fb;
+        card.appendChild(fb);
+        if(quizAnswered===quizzes.length){
+          setTimeout(()=>document.getElementById('reportSection').classList.add('show'),500);
+        }
+      });
+      opts.appendChild(btn);
+    });
+    card.appendChild(opts);
+    container.appendChild(card);
+  });
+}
+
+document.getElementById('genBtn').addEventListener('click',()=>{
+  const cls=document.getElementById('inClass').value.trim()||'未填寫';
+  const num=document.getElementById('inNum').value.trim()||'—';
+  const name=document.getElementById('inName').value.trim()||'未填寫';
+  document.getElementById('rClass').textContent=cls;
+  document.getElementById('rNum').textContent=num;
+  document.getElementById('rName').textContent=name;
+  const now=new Date();
+  document.getElementById('rptDate').textContent=now.getFullYear()+'年'+(now.getMonth()+1)+'月'+now.getDate()+'日';
+  const idCorrect=itemResults.filter(r=>r.yes).length;
+  document.getElementById('rIdScore').textContent=idCorrect;
+  document.getElementById('rQScore').textContent=quizCorrect;
+  const total=idCorrect+quizCorrect;
+  const max=items.length+quizzes.length;
+  const pct=Math.round(total/max*100);
+  let level,levelSub;
+  if(pct>=90){level='堆肥達人';levelSub='優秀！';}
+  else if(pct>=70){level='農田小幫手';levelSub='很不錯！';}
+  else if(pct>=50){level='堆肥學習中';levelSub='繼續加油！';}
+  else{level='再複習看看';levelSub='你可以的！';}
+  document.getElementById('rLevel').textContent=level;
+  document.getElementById('rLevelSub').textContent=levelSub;
+  document.getElementById('rStamp').textContent=pct+'%';
+  const itemRow=document.getElementById('rItemRow');
+  itemRow.innerHTML='';
+  itemResults.forEach(r=>{
+    const tag=document.createElement('span');
+    tag.className='rpt-tag ok';
+    tag.textContent=r.ico+' '+r.name;
+    itemRow.appendChild(tag);
+  });
+  items.filter(it=>!itemResults.find(r=>r.name===it.name)).forEach(it=>{
+    const tag=document.createElement('span');
+    tag.className='rpt-tag ng';
+    tag.textContent=it.ico+' '+it.name+'（未辨認）';
+    itemRow.appendChild(tag);
+  });
+  const qrows=document.getElementById('rQuizRows');
+  qrows.innerHTML='';
+  quizResults.forEach((r,i)=>{
+    const row=document.createElement('div');
+    row.className='rpt-qrow';
+    row.innerHTML=`<span class="qi">第${i+1}題</span><span class="qr ${r.correct?'ok':'ng'}">${r.correct?'答對':'答錯'}</span><span style="font-size:13px;color:#777;">${r.correct?'':'正確答案：'+r.correctOpt}</span>`;
+    qrows.appendChild(row);
+  });
+  const msgs=['做得很好，繼續保持對大自然的好奇心！','堆肥是讓土地永續的重要方法，你學會了！','記得：天然有機才能回歸大地！'];
+  document.getElementById('rptMsg').textContent=msgs[Math.floor(Math.random()*msgs.length)];
+  document.getElementById('reportCard').classList.add('show');
+  document.getElementById('tipText').style.display='block';
+  document.getElementById('genBtn').style.display='none';
+});
+
+document.getElementById('closeBtn').addEventListener('click',()=>overlay.classList.remove('open'));
+overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.classList.remove('open');});
+</script>
+</body>
+</html>

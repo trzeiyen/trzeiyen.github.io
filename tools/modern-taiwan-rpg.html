@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>時空旅人：近代臺灣的便利與代價</title>
+    <style>
+        :root {
+            --bg-color: #f4ecd8;
+            --text-color: #4a3c31;
+            --accent-color: #8c2d19;
+            --card-bg: #fffbf0;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow-x: hidden;
+        }
+
+        /* 領航頂欄 */
+        header {
+            background-color: var(--accent-color);
+            color: #fff;
+            text-align: center;
+            padding: 15px;
+            font-size: 24px;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            letter-spacing: 2px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+
+        /* 螢幕切換基礎樣式 */
+        .screen {
+            display: none;
+            background-color: var(--card-bg);
+            border: 3px double var(--text-color);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            animation: fadeIn 0.6s ease-in-out forwards;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h2 {
+            color: var(--accent-color);
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+
+        /* 縱貫鐵路主畫面設計 */
+        .map-container {
+            position: relative;
+            background: #e8dfc7;
+            border: 2px solid var(--text-color);
+            border-radius: 8px;
+            height: 350px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        /* 鐵軌軌道 */
+        .railway {
+            position: absolute;
+            top: 50%;
+            left: -10%;
+            width: 120%;
+            height: 10px;
+            background: repeating-linear-gradient(90deg, #555, #555 10px, #fffbf0 10px, #fffbf0 20px);
+            transform: rotate(5deg);
+        }
+
+        /* 車站節點 */
+        .station {
+            position: absolute;
+            background-color: var(--card-bg);
+            border: 3px solid var(--accent-color);
+            border-radius: 50%;
+            width: 70px;
+            height: 70px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            font-size: 14px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .station:hover {
+            transform: scale(1.1);
+            background-color: var(--accent-color);
+            color: #fff;
+        }
+
+        .station-label {
+            position: absolute;
+            bottom: -25px;
+            white-space: nowrap;
+            color: var(--text-color);
+            font-size: 14px;
+            background: rgba(255,255,255,0.8);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        /* 按鈕設計 */
+        .btn {
+            background-color: var(--text-color);
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin: 10px 5px;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            background-color: var(--accent-color);
+        }
+
+        .btn-option {
+            display: block;
+            width: 100%;
+            text-align: left;
+            background-color: #f7f1e1;
+            color: var(--text-color);
+            border: 2px solid var(--text-color);
+            margin-bottom: 15px;
+        }
+
+        .btn-option:hover {
+            background-color: #eddcb4;
+            color: var(--accent-color);
+        }
+
+        /* 雙欄場景視覺設計 */
+        .visual-split {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .visual-card {
+            flex: 1;
+            border: 2px dashed #b5a48a;
+            border-radius: 8px;
+            padding: 15px;
+            background-color: #faf6ec;
+            text-align: center;
+        }
+
+        .visual-card.tech {
+            border-color: #4a6b82;
+            background-color: #edf4f9;
+        }
+
+        .emoji-art {
+            font-size: 50px;
+            margin-bottom: 10px;
+        }
+
+        /* 反饋警報與反思盒 */
+        .feedback-box {
+            background-color: #fbebeb;
+            border-left: 5px solid var(--accent-color);
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+            display: none;
+        }
+
+        .reflection-box {
+            background-color: #eaf2f8;
+            border-left: 5px solid #2980b9;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+            display: none;
+        }
+
+        /* 火車移動小動畫 */
+        @keyframes drive {
+            0% { left: -50px; }
+            100% { left: 105%; }
+        }
+        .train-animation {
+            font-size: 30px;
+            position: absolute;
+            top: 43%;
+        /* 回教材首頁按鈕 */
+        .back-to-home-btn {
+          position: fixed;
+          top: 12px;
+          left: 12px;
+          z-index: 99999;
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          padding: 8px 16px;
+          font-size: 14px;
+          font-weight: 600;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans TC", sans-serif;
+          color: #ffffff !important;
+          background: rgba(0, 0, 0, 0.45);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          border-radius: 50px;
+          text-decoration: none !important;
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+          transition: all 0.2s ease;
+          user-select: none;
+          -webkit-tap-highlight-color: transparent;
+          touch-action: manipulation;
+          cursor: pointer;
+        }
+        .back-to-home-btn:hover {
+          background: rgba(0, 0, 0, 0.75);
+          border-color: rgba(255, 255, 255, 0.6);
+          transform: translateY(-1px);
+          color: #ffffff !important;
+        }
+        .back-to-home-btn:active {
+          transform: translateY(0);
+          background: rgba(0, 0, 0, 0.85);
+        }
+        @media (max-width: 768px) {
+          .back-to-home-btn {
+            top: 10px;
+            left: 10px;
+            padding: 6px 12px;
+            font-size: 13px;
+          }
+        }
+    </style>
+</head>
+<body>
+<a href="../index.html" class="back-to-home-btn" aria-label="回教材首頁">⬅ 回教材首頁</a>
+
+    <header>時空旅人：近代臺灣的便利與代價</header>
+
+    <div class="container">
+
+        <div id="screen-main" class="screen active">
+            <h2>縱貫鐵路通車！搭上火車探尋歷史</h2>
+            <p>西元1908年臺灣縱貫鐵路全線通車，日本總督府大力推動交通、水利、製糖等現代化基礎建設與資源開發。然而，這些進步的背後，當時不同階層的臺灣人付出了什麼代價呢？</p>
+            <p>💡 <strong>請點擊鐵路上的「車站節點」化身不同身分，進入歷史現場：</strong></p>
+            
+            <div class="map-container">
+                <div class="railway"></div>
+                <div class="train-animation">🚂🚃🚃</div>
+                
+                <div class="station" style="top: 20%; left: 25%;" onclick="startStory('aboriginal')">
+                    ⛰️
+                    <span class="station-label">三峽 大豹溪</span>
+                </div>
+
+                <div class="station" style="top: 65%; left: 70%;" onclick="startStory('farmer')">
+                    🌾
+                    <span class="station-label">高雄 橋頭</span>
+                </div>
+            </div>
+            <p style="text-align: center; color: #7f8c8d; font-size: 14px;">（點擊車站標籤開始換位體驗）</p>
+        </div>
+
+        <div id="screen-farmer" class="screen">
+            <h2>方向一：新式製糖業興起 vs 蔗農的無奈</h2>
+            <p><strong>🧑‍🌾 您的換位身分：高雄橋頭地區的臺灣「蔗農」</strong></p>
+            
+            <div class="visual-split">
+                <div class="visual-card">
+                    <div class="emoji-art">🧑‍🌾🎋</div>
+                    <strong>你的汗水</strong><br>沒日沒夜辛苦栽種、細心照顧的甘蔗田，這是全家大小唯一的生計。
+                </div>
+                <div class="visual-card tech">
+                    <div class="emoji-art">🏭🚂</div>
+                    <strong>現代化進步</strong><br>雄偉冒煙的「臺灣製糖株式會社」新式糖廠完工，還有快速載運的五分車鐵道。
+                </div>
+            </div>
+
+            <div id="farmer-quest">
+                <p><strong>🎯 情境任務：</strong>你開著牛車，將今年辛勤採收的甘蔗送去製糖會社新式糖廠。秤重完後，糖廠人員敲了敲計算盤，冷冷地報出了一個極低的收購價...</p>
+                <p>❓ <strong>引導式抉擇：</strong>「糖廠給的價格比你預期的低太多了，但總督府規定限制你<strong>只能賣給這家指定糖廠</strong>，否則私下販售就是違法被抓。這時，你會怎麼做？」</p>
+                
+                <button class="btn btn-option" onclick="selectFarmer(1)">👉 (A) 認命接受，雖然虧本，但如果不賣給他們，甘蔗放久了會壞掉，一毛都賺不到...</button>
+                <button class="btn btn-option" onclick="selectFarmer(2)">👉 (B) 太不公平了！我要偷偷運到其他縣市，賣給出價比較高的小糖廍或商行！</button>
+            </div>
+
+            <div id="farmer-feedback" class="feedback-box"></div>
+            <div id="farmer-reflection" class="reflection-box">
+                <p><strong>🤔 身臨其境的反思引導：</strong></p>
+                <p>當時全台流傳著一句俗話：<strong>「第一憨，種甘蔗予會社磅。」</strong></p>
+                <p>透過剛才的抉擇，你發現了什麼？新式糖廠引進了現代化的機械、大規模生產，產量驚人，讓臺灣的黑金（蔗糖）外銷大增。但在這項「經濟進步」的包裝下，總督府實施的保護與限制政策，卻剝奪了農民自由買賣的權利，形成不平等的殖民經濟剝削。</p>
+                <button class="btn" onclick="backToMain()">返回縱貫鐵路主畫面</button>
+            </div>
+        </div>
+
+        <div id="screen-aboriginal" class="screen">
+            <h2>方向二：開發自然資源 vs 原住民族權益的衝突</h2>
+            <p><strong>🏹 您的換位身分：三峽大豹溪一帶的泰雅族大豹社青年</strong></p>
+
+            <div class="visual-split">
+                <div class="visual-card">
+                    <div class="emoji-art">🏹🌲</div>
+                    <strong>原民的家園</strong><br>世代居住、舉行祭儀的祖靈聖地，以及賴以生存與狩獵的豐富樟樹林。
+                </div>
+                <div class="visual-card tech">
+                    <div class="emoji-art">🪓🪵</div>
+                    <strong>林業的開發</strong><br>日本樟腦業者進入山區開採，隨後鋪設伐木機具與森林鐵路。
+                </div>
+            </div>
+
+            <div id="aboriginal-quest">
+                <p><strong>🎯 情境任務：</strong>西元1900年，總督府為了獲取樟腦的經濟利益，開放業者大規模進入山區。為了保護日本業者，日方設立了「隘勇線」（通電圍籬與哨所），甚至直接沒收並闖入你們部落的傳統領域，砍伐樟樹。</p>
+                <p>❓ <strong>引導式抉擇：</strong>「看著世世代代居住、狩獵的獵場被業者砍伐、圍起通電圍網，族人甚至被迫面臨斷糧與生存危機。你和部落領導人瓦旦．燮謝促會怎麼選擇？」</p>
+                
+                <button class="btn btn-option" onclick="selectAboriginal(1)">👉 (A) 為了守護家園、祖靈的土地與尊嚴，聯合各部落發動武裝反抗，與日軍對抗！</button>
+                <button class="btn btn-option" onclick="selectAboriginal(2)">👉 (B) 對方的武器太強大了，為了保全性命，放棄獵場，妥協搬離原本的部落吧...</button>
+            </div>
+
+            <div id="aboriginal-feedback" class="feedback-box"></div>
+            <div id="aboriginal-reflection" class="reflection-box">
+                <p><strong>🤔 身臨其境的反思引導：</strong></p>
+                <p>在歷史上，大豹社族人選擇了奮力抵抗，展開了長達七年的<strong>「大豹社事件」</strong>。然而，最終仍不敵日軍派出的正規軍隊與現代化優勢武力，族人犧牲極其慘烈，少數倖存的族人更被總督府集體強制遷移（如今的桃園東眼山等地）。</p>
+                <p>總督府全面開發林業、改建金瓜石礦場、興建森林鐵路，為近代臺灣留下了如今的許多觀光景點（如阿里山小火車、黃金博物館）。但透過換位思考，<strong>你認為當時的原住民族，在這場現代化開發中付出了什麼痛苦的代價？</strong></p>
+                <button class="btn" onclick="backToMain()">返回縱貫鐵路主畫面</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // 畫面切換控制
+        function startStory(type) {
+            document.getElementById('screen-main').classList.remove('active');
+            
+            // 重置動態內容
+            if(type === 'farmer') {
+                document.getElementById('screen-farmer').classList.add('active');
+                document.getElementById('farmer-quest').style.display = 'block';
+                document.getElementById('farmer-feedback').style.display = 'none';
+                document.getElementById('farmer-reflection').style.display = 'none';
+            } else if(type === 'aboriginal') {
+                document.getElementById('screen-aboriginal').classList.add('active');
+                document.getElementById('aboriginal-quest').style.display = 'block';
+                document.getElementById('aboriginal-feedback').style.display = 'none';
+                document.getElementById('aboriginal-reflection').style.display = 'none';
+            }
+        }
+
+        function backToMain() {
+            document.getElementById('screen-farmer').classList.remove('active');
+            document.getElementById('screen-aboriginal').classList.remove('active');
+            document.getElementById('screen-main').classList.add('active');
+        }
+
+        // 方向一：蔗農抉擇反饋
+        function selectFarmer(option) {
+            document.getElementById('farmer-quest').style.display = 'none';
+            const feedback = document.getElementById('farmer-feedback');
+            feedback.style.display = 'block';
+            
+            if(option === 1) {
+                feedback.innerHTML = "<strong>💥 抉擇後果：【認命接受】</strong><br>你無奈地簽下不平等的契約。眼睜睜看著糖廠人員在秤重時動手腳、壓低價格。你辛苦了一整年，換來的金錢扣掉工具和租金後，連全家吃飽都有困難。你深刻體驗到被製糖會社束縛的無助。";
+                feedback.style.borderColor = "#8c2d19";
+            } else {
+                feedback.innerHTML = "<strong>🚨 抉擇後果：【偷偷運走】</strong><br>在深夜裡，你偷偷用布袋裝好甘蔗，想運往其他地方售賣。沒想到半路遇到巡邏的日本警察（大人）與保甲人員，當場被以『違反糖業保護實施措施』人贓俱獲，甘蔗全數被沒收，你還被抓去警局拘留罰款，生計雪上加霜！";
+                feedback.style.borderColor = "#c0392b";
+            }
+            
+            document.getElementById('farmer-reflection').style.display = 'block';
+        }
+
+        // 方向二：大豹社抉擇反饋
+        function selectAboriginal(option) {
+            document.getElementById('aboriginal-quest').style.display = 'none';
+            const feedback = document.getElementById('aboriginal-feedback');
+            feedback.style.display = 'block';
+
+            if(option === 1) {
+                feedback.innerHTML = "<strong>💥 抉擇後果：【發動武裝反抗】</strong><br>你們埋伏在山林中，利用對地形的熟悉與出色的獵人技巧奮勇抵抗。但日本總督府隨後調派大批軍警，攜帶機關槍、甚至大砲等現代化武器強力鎮壓！部落家園被燒毀，親人死傷慘重，退無可退。";
+                feedback.style.borderColor = "#8c2d19";
+            } else {
+                feedback.innerHTML = "<strong>🚨 抉擇後果：【妥協搬離】</strong><br>你們含著淚收拾簡單的家當，離開了祖靈庇佑的世居獵場。失去獵場後，傳統文化與狩獵技術逐漸流失，在外地受到嚴密的監控與不平等的對待，生活依然陷入集體生存的極大困境。";
+                feedback.style.borderColor = "#c0392b";
+            }
+
+            document.getElementById('aboriginal-reflection').style.display = 'block';
+        }
+    </script>
+</body>
+</html>

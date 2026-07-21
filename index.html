@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zeiyen 老師的教學工具箱|互動教材分享</title>
+<meta name="description" content="國小社會科互動教材分享:台灣史 RPG、日治時期活動、理財教育遊戲,全部免費開放給老師使用。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --board:#2E4B3C;        /* 黑板綠 */
+    --board-dark:#243C30;
+    --chalk:#F6F3E8;        /* 粉筆白 */
+    --paper:#FBFAF4;        /* 作業簿紙色 */
+    --grid:#DCE9DB;         /* 生字簿格線 */
+    --ink:#2B2A26;          /* 墨色 */
+    --redpen:#C8402A;       /* 老師紅筆 */
+    --indigo:#2B4C7E;       /* 三峽藍染 */
+    --card:#FFFFFF;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:'Noto Sans TC',sans-serif;
+    color:var(--ink);
+    background-color:var(--paper);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:36px 36px;
+    line-height:1.7;
+  }
+  .kai{font-family:'LXGW WenKai TC','Noto Sans TC',serif;}
+
+  /* ===== 黑板頁首 ===== */
+  header{
+    background:
+      radial-gradient(ellipse at 20% 10%, rgba(255,255,255,.06), transparent 55%),
+      radial-gradient(ellipse at 85% 90%, rgba(255,255,255,.05), transparent 50%),
+      linear-gradient(160deg, var(--board), var(--board-dark));
+    color:var(--chalk);
+    padding:64px 24px 88px;
+    border-bottom:10px solid #B78B4E; /* 木頭粉筆槽 */
+    position:relative;
+  }
+  .header-inner{max-width:960px;margin:0 auto;}
+  .eyebrow{
+    font-size:.95rem;letter-spacing:.35em;
+    color:rgba(246,243,232,.75);
+    margin-bottom:18px;
+  }
+  h1{
+    font-family:'LXGW WenKai TC',serif;
+    font-size:clamp(2.1rem,5.5vw,3.4rem);
+    font-weight:400;
+    letter-spacing:.06em;
+    line-height:1.35;
+  }
+  h1 .underline{
+    background-image:linear-gradient(to right, rgba(246,243,232,.85) 60%, rgba(246,243,232,.2));
+    background-repeat:no-repeat;
+    background-size:100% 3px;
+    background-position:0 96%;
+    padding-bottom:6px;
+  }
+  .lede{
+    max-width:620px;
+    margin-top:22px;
+    font-size:1.05rem;
+    color:rgba(246,243,232,.88);
+  }
+  .header-actions{margin-top:34px;display:flex;gap:14px;flex-wrap:wrap;}
+  .btn{
+    display:inline-block;
+    padding:11px 26px;
+    border-radius:6px;
+    font-size:1rem;
+    font-weight:500;
+    text-decoration:none;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .btn:hover{transform:translateY(-2px);}
+  .btn:focus-visible{outline:3px solid var(--chalk);outline-offset:3px;}
+  .btn-chalk{
+    background:var(--chalk);color:var(--board);
+    box-shadow:0 3px 0 rgba(0,0,0,.25);
+  }
+  .btn-ghost{
+    color:var(--chalk);
+    border:1.5px dashed rgba(246,243,232,.6);
+  }
+
+  /* ===== 主要區塊 ===== */
+  main{max-width:1080px;margin:0 auto;padding:0 24px;}
+  section{padding:72px 0 8px;}
+  .section-title{
+    display:flex;align-items:flex-end;gap:16px;
+    margin-bottom:8px;
+  }
+  .section-title h2{
+    font-family:'LXGW WenKai TC',serif;
+    font-weight:400;
+    font-size:clamp(1.6rem,3.4vw,2.1rem);
+    letter-spacing:.08em;
+  }
+  .section-title h2 ruby rt{
+    font-size:.55rem;
+    color:var(--redpen);
+    letter-spacing:.08em;
+    font-family:'Noto Sans TC',sans-serif;
+  }
+  .section-title::after{
+    content:"";flex:1;height:2px;margin-bottom:12px;
+    background:repeating-linear-gradient(90deg, var(--redpen) 0 10px, transparent 10px 18px);
+    opacity:.5;
+  }
+  .section-note{color:#6b6a63;font-size:.95rem;margin-bottom:28px;}
+
+  /* ===== 分類篩選 ===== */
+  .filters{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:34px;}
+  .filter-btn{
+    font-family:'Noto Sans TC',sans-serif;
+    font-size:.95rem;
+    padding:7px 18px;
+    border-radius:999px;
+    border:1.5px solid #C9C6B8;
+    background:var(--card);
+    color:var(--ink);
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  .filter-btn:hover{border-color:var(--redpen);color:var(--redpen);}
+  .filter-btn:focus-visible{outline:3px solid var(--indigo);outline-offset:2px;}
+  .filter-btn.active{
+    background:var(--redpen);
+    border-color:var(--redpen);
+    color:#fff;
+    box-shadow:0 2px 0 rgba(0,0,0,.15);
+  }
+
+  /* ===== 教具卡片 ===== */
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(290px, 1fr));
+    gap:26px;
+    padding-bottom:56px;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid #E4E1D3;
+    border-radius:10px;
+    padding:26px 24px 22px;
+    display:flex;flex-direction:column;
+    box-shadow:0 2px 6px rgba(43,42,38,.06);
+    transition:transform .18s ease, box-shadow .18s ease;
+    position:relative;
+  }
+  .card:hover{
+    transform:translateY(-4px);
+    box-shadow:0 10px 22px rgba(43,42,38,.12);
+  }
+  .card.hidden{display:none;}
+  .card-cat{
+    font-size:.78rem;
+    letter-spacing:.12em;
+    color:var(--indigo);
+    font-weight:700;
+    margin-bottom:10px;
+  }
+  .card h3{
+    font-family:'LXGW WenKai TC',serif;
+    font-weight:400;
+    font-size:1.35rem;
+    letter-spacing:.04em;
+    margin-bottom:10px;
+  }
+  .card p{font-size:.95rem;color:#55544c;flex:1;}
+  .card-meta{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-top:20px;padding-top:16px;
+    border-top:1px dashed #D8D5C6;
+  }
+  .grade{
+    font-size:.8rem;
+    color:var(--board);
+    background:#EAF1E7;
+    border:1px solid #CBDCC5;
+    padding:3px 12px;
+    border-radius:4px;
+  }
+  .card-link{
+    font-size:.92rem;
+    font-weight:700;
+    color:var(--redpen);
+    text-decoration:none;
+  }
+  .card-link:hover{text-decoration:underline;}
+  .card-link:focus-visible{outline:3px solid var(--indigo);outline-offset:2px;border-radius:2px;}
+  .res-cat{color:var(--redpen);}
+  .res-type{
+    color:var(--indigo);
+    background:#EAF0F8;
+    border-color:#C3D2E6;
+  }
+  .stamp{
+    position:absolute;top:-11px;right:16px;
+    font-family:'LXGW WenKai TC',serif;
+    font-size:.8rem;
+    color:var(--redpen);
+    border:1.5px solid var(--redpen);
+    border-radius:4px;
+    background:var(--paper);
+    padding:1px 10px;
+    transform:rotate(3deg);
+    letter-spacing:.15em;
+  }
+
+  /* ===== 關於我 ===== */
+  .about-box{
+    background:var(--card);
+    border:1px solid #E4E1D3;
+    border-left:6px solid var(--indigo);
+    border-radius:8px;
+    padding:30px 32px;
+    max-width:760px;
+    margin-bottom:56px;
+    box-shadow:0 2px 6px rgba(43,42,38,.06);
+  }
+  .about-box p{margin-bottom:14px;font-size:1rem;}
+  .about-box p:last-child{margin-bottom:0;}
+  .about-box strong{color:var(--indigo);}
+
+  /* ===== 頁尾 ===== */
+  footer{
+    background:var(--board);
+    color:rgba(246,243,232,.85);
+    text-align:center;
+    padding:36px 24px;
+    font-size:.9rem;
+    letter-spacing:.05em;
+  }
+  footer .kai{font-size:1.05rem;color:var(--chalk);}
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important;animation:none !important;}
+    html{scroll-behavior:auto;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <p class="eyebrow kai">國小社會科・互動教材</p>
+    <h1><span class="underline">Zeiyen 老師的教學工具箱</span></h1>
+    <p class="lede kai">把台灣史變成一場冒險。這裡收錄我為課堂親手打造的互動網頁教具,從清領時期的穿越 RPG 到理財教育遊戲,全部開放給老師們自由取用。</p>
+    <div class="header-actions">
+      <a class="btn btn-chalk" href="#tools">瀏覽教具</a>
+      <a class="btn btn-ghost" href="#resources">資源分享</a>
+      <a class="btn btn-ghost" href="#counseling">輔導專區</a>
+      <a class="btn btn-ghost" href="#about">關於我</a>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ===== 教具作品集 ===== -->
+  <section id="tools">
+    <div class="section-title">
+      <h2><ruby>教<rt>ㄐㄧㄠ</rt></ruby><ruby>具<rt>ㄐㄩˋ</rt></ruby><ruby>作<rt>ㄗㄨㄛˋ</rt></ruby><ruby>品<rt>ㄆㄧㄣˇ</rt></ruby><ruby>集<rt>ㄐㄧˊ</rt></ruby></h2>
+    </div>
+    <p class="section-note">點選分類篩選,或直接瀏覽全部教具。每個教具都可以直接在瀏覽器開啟,不需安裝任何軟體。</p>
+
+    <div class="filters" role="group" aria-label="教具分類篩選">
+      <button class="filter-btn active" data-filter="all">全部</button>
+      <button class="filter-btn" data-filter="early">國際競逐時期</button>
+      <button class="filter-btn" data-filter="qing">清領時期</button>
+      <button class="filter-btn" data-filter="japan">日治時期</button>
+      <button class="filter-btn" data-filter="roc">中華民國時期</button>
+      <button class="filter-btn" data-filter="community">家鄉與社區</button>
+      <button class="filter-btn" data-filter="finance">理財教育</button>
+      <button class="filter-btn" data-filter="life">生活與其他</button>
+    </div>
+
+    <div class="grid">
+
+      <article class="card" data-cat="early">
+        <p class="card-cat">國際競逐時期</p>
+        <h3>17 世紀臺灣歷史多米諾</h3>
+        <p>把沈有容諭退紅毛番、荷西競逐到鄭成功來台的因果連鎖做成骨牌遊戲,排對順序就能推倒骨牌、觸發滿版彩帶特效!</p>
+        <div class="card-meta">
+          <span class="grade">適用五年級</span>
+          <a class="card-link" href="tools/domino-17c.html" target="_blank" rel="noopener">開始使用 →</a>
+        </div>
+      </article>
+
+      <article class="card" data-cat="early">
+        <p class="card-cat">國際競逐時期</p>
+        <h3>社會科大富翁・數位抽卡機</h3>
+        <p>搭配實體大富翁使用的機會命運抽卡機,卡片內容全是 17 世紀臺灣史:鹿皮貿易、黑水溝驚魂、郭懷一事件,邊玩邊複習。</p>
+        <div class="card-meta">
+          <span class="grade">適用五年級</span>
+          <a class="card-link" href="tools/monopoly-17c-cards.html" target="_blank" rel="noopener">開始使用 →</a>
+        </div>
+      </article>
+
+      <article class="card" data-cat="qing">
+        <span class="stamp">參賽作品</span>
+        <p class="card-cat">清領時期</p>
+        <h3>穿越時空的旅人</h3>
+        <p>台灣史 RPG 冒險遊戲,玩家穿越回清帝國時期,親歷沈葆楨與劉銘傳治台的關鍵時刻,在情境選擇中理解歷史的多元觀點。AiFed 2026 參賽作品,已於三個班級實際試教。</p>
+        <div class="card-meta">
+          <span class="grade">適用五年級</span>
+          <a class="card-link" href="https://claude.ai/public/artifacts/42055fac-7ecf-428f-b303-38f8b5d706db" target="_blank" rel="noopener">開始使用 →</a>
+        </div>
+      </article>
+
+      <article class="card" data-cat="roc">
+        <p class="card-cat">中華民國時期</p>
+        <h3>228 時空偵探</h3>
+        <p>化身時空偵探,回到戰後初期的台灣,循著線索抽絲剝繭,拼湊二二八事件的歷史脈絡與不同人物的處境。以 Genially 製作的情境解謎體驗。</p>
+        <div class="card-meta">
+          <span class="grade">適用五年級</span>
+          <a class="card-link" href="https://view.genially.com/6999d307ed6392a7e018e7be" target="_blank" rel="noopener">開始使用 →</a>
+        </div>
+      </article>
+
+      <article class="card" data-cat="japan">
+        <p class="card-cat">日治時期</p>
+        <h3>日治時期時序排列</h3>
+        <p>互動式時序排列活動,學生動手把日治五十年的重大事件排出正確順序,建立完整的時間概念。</p>
+        <div class="card-meta">
+          <span class="grade">適用五年級</span>
+          <a class="card-link" href="https://claude.ai/public/artifacts/e5f60528-aebd-4274-90ac-c183b38f4baa" target="_blank" rel="noopener">開始使用 →</a>
+        </div>
+      </article>
+
+      <article class="card" data-cat="japan">
+        <p class="card-cat">日治時期</p>
+        <h3>西來庵與霧社事件・角色扮演</h3>
+        <p>透過角色扮演活動,讓學生從不同立場的人物視角出發,思考武裝抗日事件背後的處境與抉擇。</p>
+        <div class="card-meta">
+          <span class="grade">適用五年級</span>
+          <a class="card-link" href="#">開始使用 →</a>
+        </div>
+      </article>
+
+      <article class="card" data-cat="japan">
+        <p class="card-cat">日治時期</p>
+        <h3>總督的超級選擇</h3>
+        <p>換你當總督!學生透過治理決策模擬,理解日治時期殖民統治的政策邏輯與其對台灣社會的影響。</p>
+        <div class="card-meta">
+          <span class="grade">適用五年級</span>
+          <a class="card-link" href="https://claude.ai/public/artifacts/9895e832-0343-45d9-9024-fd5c66a6d521" target="_blank" rel="noopener">開始使用 →</a>
+        </div>
+      </article>
+
+      <article class="card" data-cat="japan">
+        <p class="card-cat">日治時期</p>
+        <h3>殖民統治下的選擇</h3>
+        <p>從殖民統治下不同身分的台灣人視角出發,面對一次次兩難抉擇,體會殖民處境中的掙扎與代價。</p>
+        <div class="card-meta">
+          <span class="grade">適用五年級</span>
+          <a class="card-link" href="https://claude.ai/public/artifacts/0bd32fa2-b0cd-4c59-b35f-d4075896771a" target="_blank" rel="noopener">開始使用 →</a>
+        </div>
+      </article>
+
+      <article class="card" data-cat="japan">
+        <p class="card-cat">日治時期</p>
+        <h3>南無警察大菩薩</h3>
+        <p>日治時期警察職權互動地圖。點開地圖上的各個場景,認識殖民時期警察無所不管的權力有多深入台灣人的日常生活。</p>
+        <div class="card-meta">
+          <span class="grade">適用五年級</span>
+          <a class="card-link" href="tools/police-map.html" target="_blank" rel="noopener">開始使用 →</a>
+        </div>
+      </article>
+
+      <article class="card" data-cat="japan">
+        <p class="card-cat">日治時期</p>
+        <h3>時空旅人:近代臺灣的便利與代價</h3>
+        <p>搭上剛通車的縱貫鐵路,沿線探索新式製糖業與蔗農的無奈、資源開發與原住民族權益的衝突,思考「現代化」的一體兩面。</p>
+        <div class="card-meta">
+          <span class="grade">適用五年級</span>
+          <a class="card-link" href="tools/modern-taiwan-rpg.html" target="_blank" rel="noopener">開始使用 →</a>
+        </div>
+      </article>
+
+      <article class="card" data-cat="japan">
+        <p class="card-cat">日治時期</p>
+        <h3>米糖輪作數獨</h3>
+        <p>把日治時期的稻米與甘蔗輪作制度變成數獨式的邏輯謎題,在解謎過程中理解殖民經濟下的農業安排。</p>
+        <div class="card-meta">
+          <span class="grade">適用五年級</span>
+          <a class="card-link" href="#">開始使用 →</a>
+        </div>
+      </article>
+
+      <article class="card" data-cat="community">
+        <p class="card-cat">家鄉與社區</p>
+        <h3>社區營造探究(含隱藏關卡)</h3>
+        <p>家鄉單元的社區再生案例探究活動,內建隱藏關卡機制,完成基本任務的學生可以解鎖進階挑戰。</p>
+        <div class="card-meta">
+          <span class="grade">適用中高年級</span>
+          <a class="card-link" href="#">開始使用 →</a>
+        </div>
+      </article>
+
+      <article class="card" data-cat="community">
+        <p class="card-cat">家鄉與社區</p>
+        <h3>城鄉比較魚骨圖</h3>
+        <p>拖拉式魚骨圖分析工具,學生動手把城市與鄉村的特徵分類歸位,視覺化整理比較的思考架構。</p>
+        <div class="card-meta">
+          <span class="grade">適用中高年級</span>
+          <a class="card-link" href="#">開始使用 →</a>
+        </div>
+      </article>
+
+      <article class="card" data-cat="community">
+        <p class="card-cat">家鄉與社區</p>
+        <h3>聚落類型分類</h3>
+        <p>互動分類活動,學生依據特徵判斷不同聚落的類型,快速鞏固聚落單元的核心概念。</p>
+        <div class="card-meta">
+          <span class="grade">適用中年級</span>
+          <a class="card-link" href="https://claude.ai/public/artifacts/c90176d7-56c1-467d-b8a2-cc539737950f" target="_blank" rel="noopener">開始使用 →</a>
+        </div>
+      </article>
+
+      <article class="card" data-cat="finance">
+        <p class="card-cat">理財教育</p>
+        <h3>投資理財模擬遊戲</h3>
+        <p>學生在模擬情境中體驗儲蓄與投資的取捨,認識風險與報酬的基本概念,建立金錢觀的第一步。</p>
+        <div class="card-meta">
+          <span class="grade">適用高年級</span>
+          <a class="card-link" href="#">開始使用 →</a>
+        </div>
+      </article>
+
+      <article class="card" data-cat="finance">
+        <p class="card-cat">理財教育</p>
+        <h3>小豬撲滿大冒險 2.0</h3>
+        <p>RPG 形式的儲蓄教育遊戲,跟著小豬撲滿闖關,在冒險中學會記帳、儲蓄與消費決策。</p>
+        <div class="card-meta">
+          <span class="grade">適用中高年級</span>
+          <a class="card-link" href="#">開始使用 →</a>
+        </div>
+      </article>
+
+      <article class="card" data-cat="finance">
+        <p class="card-cat">理財教育</p>
+        <h3>退休人生規劃</h3>
+        <p>角色扮演決策遊戲,學生體驗從工作、儲蓄到退休的人生財務選擇,提早思考長期規劃與取捨的重要性。</p>
+        <div class="card-meta">
+          <span class="grade">適用高年級</span>
+          <a class="card-link" href="https://claude.ai/public/artifacts/08d858b8-1385-4aa6-b2dd-6dbe29b74f2c" target="_blank" rel="noopener">開始使用 →</a>
+        </div>
+      </article>
+
+      <article class="card" data-cat="life">
+        <p class="card-cat">生活與其他</p>
+        <h3>堆肥的製作</h3>
+        <p>課外知識自主學習教材,學生認識堆肥的原理與製作步驟,培養環境永續的生活素養。</p>
+        <div class="card-meta">
+          <span class="grade">適用中年級</span>
+          <a class="card-link" href="https://claude.ai/public/artifacts/5a143d6f-a750-4840-a7d6-72abb981891f" target="_blank" rel="noopener">開始使用 →</a>
+        </div>
+      </article>
+
+      <article class="card" data-cat="life">
+        <p class="card-cat">生活與其他</p>
+        <h3>哪些東西可以做堆肥?</h3>
+        <p>互動分類遊戲,學生動手判斷哪些東西可以進堆肥桶,搭配「堆肥的製作」使用,從知識走向實作判斷。</p>
+        <div class="card-meta">
+          <span class="grade">適用中年級</span>
+          <a class="card-link" href="tools/compost-sorting.html" target="_blank" rel="noopener">開始使用 →</a>
+        </div>
+      </article>
+
+      <article class="card" data-cat="life">
+        <p class="card-cat">生活與其他</p>
+        <h3>社會大富翁・水資源篇</h3>
+        <p>水資源單元的機會命運抽卡機,省水標章、雨水回收、水庫淤積都變成卡片事件,搭配實體大富翁讓複習變成班級遊戲。</p>
+        <div class="card-meta">
+          <span class="grade">適用中年級</span>
+          <a class="card-link" href="tools/monopoly-water.html" target="_blank" rel="noopener">開始使用 →</a>
+        </div>
+      </article>
+
+      <article class="card" data-cat="life">
+        <p class="card-cat">生活與其他</p>
+        <h3>社會大富翁・節慶生活版</h3>
+        <p>結合節慶、地圖要素與家鄉特色的機會命運抽卡機,從過年紅包到潑水節洗禮,把整學期的社會課重點玩過一輪。</p>
+        <div class="card-meta">
+          <span class="grade">適用中年級</span>
+          <a class="card-link" href="tools/monopoly-festival.html" target="_blank" rel="noopener">開始使用 →</a>
+        </div>
+      </article>
+
+      <article class="card" data-cat="life">
+        <p class="card-cat">生活與其他</p>
+        <h3>節日日期大挑戰</h3>
+        <p>3D 翻牌問答卡,從敘述猜出是哪個節日與日期,涵蓋傳統節慶、原住民族祭典與新住民節日,內建計時挑戰。</p>
+        <div class="card-meta">
+          <span class="grade">適用中年級</span>
+          <a class="card-link" href="tools/festival-flashcards.html" target="_blank" rel="noopener">開始使用 →</a>
+        </div>
+      </article>
+
+      <article class="card" data-cat="life">
+        <p class="card-cat">生活與其他</p>
+        <h3>節日記憶配對大挑戰</h3>
+        <p>32 張卡片的記憶翻牌遊戲,把節日敘述與正確的名稱日期配對成功才能過關,限時十分鐘,適合小組競賽。</p>
+        <div class="card-meta">
+          <span class="grade">適用中年級</span>
+          <a class="card-link" href="tools/festival-memory.html" target="_blank" rel="noopener">開始使用 →</a>
+        </div>
+      </article>
+
+      <article class="card" data-cat="life">
+        <p class="card-cat">教師工具</p>
+        <h3>QR Code 轉址產生器</h3>
+        <p>給老師的小工具:解決 claude.ai 網址被 App 攔截、無法在手機瀏覽器開啟的問題,一鍵產生可分享的轉址 QR Code。</p>
+        <div class="card-meta">
+          <span class="grade">教師專用</span>
+          <a class="card-link" href="#">開始使用 →</a>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ===== 教學資源分享 ===== -->
+  <section id="resources">
+    <div class="section-title">
+      <h2><ruby>教<rt>ㄐㄧㄠ</rt></ruby><ruby>學<rt>ㄒㄩㄝˊ</rt></ruby><ruby>資<rt>ㄗ</rt></ruby><ruby>源<rt>ㄩㄢˊ</rt></ruby><ruby>分<rt>ㄈㄣ</rt></ruby><ruby>享<rt>ㄒㄧㄤˇ</rt></ruby></h2>
+    </div>
+    <p class="section-note">簡報、學習單與班級經營範本,下載後可依自己的班級需求修改使用。</p>
+
+    <div class="grid">
+
+      <article class="card">
+        <p class="card-cat res-cat">簡報</p>
+        <h3>少年報導者・時事簡報</h3>
+        <p>以《少年報導者》報導為素材製作的時事討論簡報,帶學生認識教育議題並練習媒體識讀。</p>
+        <div class="card-meta">
+          <span class="grade res-type">PPT</span>
+          <a class="card-link" href="#">下載資源 →</a>
+        </div>
+      </article>
+
+      <article class="card">
+        <p class="card-cat res-cat">簡報</p>
+        <h3>煎鬆餅・生活課程簡報</h3>
+        <p>鬆餅烹飪課的完整教學簡報,包含步驟圖解與安全提醒,適合生活課或彈性課程使用。</p>
+        <div class="card-meta">
+          <span class="grade res-type">PPT</span>
+          <a class="card-link" href="#">下載資源 →</a>
+        </div>
+      </article>
+
+      <article class="card">
+        <p class="card-cat res-cat">班級經營</p>
+        <h3>集點兌換活動・完整套件</h3>
+        <p>期末集點兌換活動的整套範本:活動說明簡報、四級獎品架構,以及內建自動計算公式的 Excel 管理表,曾實際運行於五個班級、約 145 位學生。</p>
+        <div class="card-meta">
+          <span class="grade res-type">PPT+Excel</span>
+          <a class="card-link" href="#">下載資源 →</a>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ===== 輔導領域 ===== -->
+  <section id="counseling">
+    <div class="section-title">
+      <h2><ruby>輔<rt>ㄈㄨˇ</rt></ruby><ruby>導<rt>ㄉㄠˇ</rt></ruby><ruby>領<rt>ㄌㄧㄥˇ</rt></ruby><ruby>域<rt>ㄩˋ</rt></ruby></h2>
+    </div>
+    <p class="section-note">輔導工作的空白表單與範本,皆為<strong>去識別化的格式框架</strong>,不含任何實際個案內容,歡迎輔導夥伴取用。</p>
+
+    <div class="grid">
+
+      <article class="card">
+        <p class="card-cat res-cat">個案工作</p>
+        <h3>個案概念化範本(BPS 架構)</h3>
+        <p>以生理—心理—社會(Bio-Psycho-Social)架構設計的個案概念化空白範本,協助輔導老師系統性整理個案樣貌,適合個案會議前的準備使用。</p>
+        <div class="card-meta">
+          <span class="grade res-type">Word</span>
+          <a class="card-link" href="#">下載資源 →</a>
+        </div>
+      </article>
+
+      <article class="card">
+        <p class="card-cat res-cat">個案工作</p>
+        <h3>晤談紀錄表範本</h3>
+        <p>結構化的晤談紀錄空白表單,涵蓋晤談目標、歷程摘要與後續計畫欄位,讓紀錄撰寫更有效率也更完整。</p>
+        <div class="card-meta">
+          <span class="grade res-type">Word</span>
+          <a class="card-link" href="#">下載資源 →</a>
+        </div>
+      </article>
+
+      <article class="card">
+        <p class="card-cat res-cat">心理教育</p>
+        <h3>界線的紅線:人際安全工作坊</h3>
+        <p>互動式班級工作坊教材,用「紅黃綠燈」快問快答帶學生辨識人際互動的界線,並認識玩笑背後可能觸法的真實後果,適合性平教育與友善校園宣導。</p>
+        <div class="card-meta">
+          <span class="grade res-type">互動教材</span>
+          <a class="card-link" href="tools/boundary-workshop.html" target="_blank" rel="noopener">開始使用 →</a>
+        </div>
+      </article>
+
+      <article class="card">
+        <p class="card-cat res-cat">心理教育</p>
+        <h3>情緒與金錢觀・班級輔導活動</h3>
+        <p>結合理財教育遊戲的班級輔導活動構想,從「想要與需要」的抉擇中帶學生覺察情緒與衝動,適合綜合活動或班會使用。</p>
+        <div class="card-meta">
+          <span class="grade res-type">教案</span>
+          <a class="card-link" href="#">下載資源 →</a>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ===== 關於我 ===== -->
+  <section id="about">
+    <div class="section-title">
+      <h2><ruby>關<rt>ㄍㄨㄢ</rt></ruby><ruby>於<rt>ㄩˊ</rt></ruby><ruby>我<rt>ㄨㄛˇ</rt></ruby></h2>
+    </div>
+    <div class="about-box">
+      <p class="kai">嗨,我是 Zeiyen,新北市的國小社會科科任,同時也是兼任輔導老師。</p>
+      <p>我相信社會課程不該只有背誦。這幾年我用 AI 工具把課本裡的內容做成一個個互動遊戲和探究活動,讓學生在「玩」的過程中練習<strong>多元觀點的歷史思考</strong>。</p>
+      <p>這個網站上的所有教具都<strong>免費開放</strong>給老師們在課堂使用。如果你有任何回饋、發現問題,或想交流 AI 融入教學的心得,歡迎與我聯繫!</p>
+      <p style="color:#8a887c;font-size:.9rem;">聯絡方式:(trzeiyen@gmail.com)</p>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <p class="kai">一起把課堂變成學生想再玩一次的地方。</p>
+  <p style="margin-top:8px;">© 2026 Zeiyen・以 GitHub Pages 架設</p>
+</footer>
+
+<script>
+  const buttons = document.querySelectorAll('.filter-btn');
+  const cards = document.querySelectorAll('.card');
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      buttons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const f = btn.dataset.filter;
+      cards.forEach(card => {
+        card.classList.toggle('hidden', f !== 'all' && card.dataset.cat !== f);
+      });
+    });
+  });
+</script>
+
+</body>
+</html>

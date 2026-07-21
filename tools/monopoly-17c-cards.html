@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>社會科大富翁-數位抽卡機</title>
+    <style>
+        :root {
+            --chance-color: #9c27b0;
+            --fate-color: #d32f2f;
+            --bg-color: #f0f2f5;
+        }
+        body {
+            font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        .container { text-align: center; width: 90%; max-width: 600px; }
+        
+        #card-display {
+            width: 100%;
+            height: 400px;
+            background: white;
+            border-radius: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            box-sizing: border-box;
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            border: 10px solid #eee;
+        }
+        
+        .card-type { font-size: 28px; font-weight: bold; margin-bottom: 15px; letter-spacing: 5px; }
+        .card-title { font-size: 36px; color: #222; margin-bottom: 20px; font-weight: 900; }
+        .card-desc { font-size: 22px; color: #444; line-height: 1.6; margin-bottom: 15px; }
+        .card-action { font-size: 26px; color: #e91e63; font-weight: bold; padding: 10px 20px; border: 2px dashed #e91e63; border-radius: 10px; }
+
+        .btn-group { display: flex; gap: 25px; margin-top: 50px; justify-content: center; width: 100%; }
+        button {
+            flex: 1;
+            padding: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            color: white;
+            transition: 0.2s;
+            max-width: 200px;
+        }
+        .btn-chance { background-color: var(--chance-color); box-shadow: 0 6px #7b1fa2; }
+        .btn-fate { background-color: var(--fate-color); box-shadow: 0 6px #b71c1c; }
+        button:active { transform: translateY(4px); box-shadow: 0 2px #7b1fa2; }
+
+        /* 回教材首頁按鈕 */
+        .back-to-home-btn {
+          position: fixed;
+          top: 12px;
+          left: 12px;
+          z-index: 99999;
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          padding: 8px 16px;
+          font-size: 14px;
+          font-weight: 600;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans TC", sans-serif;
+          color: #ffffff !important;
+          background: rgba(0, 0, 0, 0.45);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          border-radius: 50px;
+          text-decoration: none !important;
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+          transition: all 0.2s ease;
+          user-select: none;
+          -webkit-tap-highlight-color: transparent;
+          touch-action: manipulation;
+          cursor: pointer;
+        }
+        .back-to-home-btn:hover {
+          background: rgba(0, 0, 0, 0.75);
+          border-color: rgba(255, 255, 255, 0.6);
+          transform: translateY(-1px);
+          color: #ffffff !important;
+        }
+        .back-to-home-btn:active {
+          transform: translateY(0);
+          background: rgba(0, 0, 0, 0.85);
+        }
+        @media (max-width: 768px) {
+          .back-to-home-btn {
+            top: 10px;
+            left: 10px;
+            padding: 6px 12px;
+            font-size: 13px;
+          }
+        }
+    </style>
+</head>
+<body>
+<a href="../index.html" class="back-to-home-btn" aria-label="回教材首頁">⬅ 回教材首頁</a>
+
+    <div class="container">
+        <div id="card-display" onclick="resetCard()">
+            <div id="content">
+                <h1 style="font-size: 120px; margin: 0; color: #f0f0f0;">?</h1>
+                <p class="waiting-text">點擊按鈕抽取機會或命運</p>
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn-chance" onclick="draw('機會')">✨ 機會</button>
+            <button class="btn-fate" onclick="draw('命運')">💥 命運</button>
+        </div>
+    </div>
+
+    <script>
+        const data = {
+            "機會": [
+                { title: "鹿皮大豐收", desc: "你與平埔族人貿易獲得大量鹿皮外銷日本。", action: "前進 3 格" },
+                { title: "季風助航", desc: "掌握了夏季西南季風，商船順利抵達大員。", action: "再擲一次骰子" },
+                { title: "陳永華獻策", desc: "在臺灣設立首座孔廟（全臺首學），重視教育。", action: "前進 4 格" },
+                { title: "西班牙撤退", desc: "荷蘭人趕走北臺灣的西班牙人，獨佔貿易權。", action: "前進 2 格" },
+                { title: "屯田有成", desc: "軍隊在各地開墾荒地，解決糧食不足問題。", action: "前進 3 格" },
+                { title: "沈有容諭退紅毛番", desc: "明朝將領沈有容成功要求荷蘭人撤離澎湖。", action: "前進 2 格" },
+                { title: "紅毛城完工", desc: "在淡水建立堅固防禦工事，貿易穩定發展。", action: "前進 5 格" },
+                { title: "引進新物種", desc: "荷蘭人引進耕牛與土芒果，促進農業發展。", action: "再擲一次骰子" },
+                { title: "大員港熱鬧", desc: "成為東南亞重要轉口港，砂糖與鹿皮熱銷。", action: "前進 3 格" },
+                { title: "獲贈原民飾品", desc: "成功與族長建立友誼，獲得部落協助。", action: "直接前進至起點" }
+            ],
+            "命運": [
+                { title: "黑水溝驚魂", desc: "橫渡臺灣海峽遭遇強大風浪，船隻受損。", action: "後退 3 格" },
+                { title: "郭懷一事件", desc: "不滿荷蘭人重稅而引發衝突，社會動盪不安。", action: "暫停一回合" },
+                { title: "清軍遷界令", desc: "清廷切斷與臺灣的補給，物資嚴重匱乏。", action: "後退 4 格" },
+                { title: "熱帶疾病流行", desc: "外來士兵不適應氣候，紛紛患上瘧疾。", action: "回到起點" },
+                { title: "與原民誤會", desc: "不小心觸犯部落禁忌，關係陷入緊張。", action: "後退 2 格" },
+                { title: "西班牙進攻", desc: "北方航線受到威脅，貿易航道受阻。", action: "暫停一回合" },
+                { title: "旱災侵襲", desc: "土地缺水導致水稻歉收，口糧分配不足。", action: "後退 3 格" },
+                { title: "鄭氏海禁", desc: "與清朝對抗導致商船出入受阻。", action: "暫停一回合" },
+                { title: "普羅民遮城陷落", desc: "敵軍發動突襲，城防受到嚴重破壞。", action: "後退 5 格" },
+                { title: "走私猖獗", desc: "非法貿易導致官方稅收減少。", action: "後退 2 格" }
+            ]
+        };
+
+        function draw(type) {
+            const cardDisplay = document.getElementById('card-display');
+            const content = document.getElementById('content');
+            const list = data[type];
+            const result = list[Math.floor(Math.random() * list.length)];
+
+            cardDisplay.style.transform = "rotateY(90deg) scale(0.8)";
+            cardDisplay.style.opacity = "0";
+
+            setTimeout(() => {
+                cardDisplay.style.borderColor = type === '機會' ? 'var(--chance-color)' : 'var(--fate-color)';
+                content.innerHTML = `
+                    <div class="card-type" style="color:${type === '機會' ? 'var(--chance-color)' : 'var(--fate-color)'}">${type}</div>
+                    <div class="card-title">${result.title}</div>
+                    <div class="card-desc">${result.desc}</div>
+                    <div class="card-action">${result.action}</div>
+                `;
+                cardDisplay.style.transform = "rotateY(0deg) scale(1)";
+                cardDisplay.style.opacity = "1";
+            }, 300);
+        }
+
+        function resetCard() {
+            const cardDisplay = document.getElementById('card-display');
+            cardDisplay.style.transform = "scale(0.95)";
+            setTimeout(() => {
+                cardDisplay.style.transform = "scale(1)";
+                document.getElementById('content').innerHTML = `
+                    <h1 style="font-size: 120px; margin: 0; color: #f0f0f0;">?</h1>
+                    <p class="waiting-text">點擊按鈕抽取機會或命運</p>
+                `;
+                cardDisplay.style.borderColor = '#eee';
+            }, 100);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>界線的紅線：人際安全工作坊</title>
+    <style>
+        :root {
+            --bg-color: #0a0a0a;
+            --text-main: #ffffff;
+            --text-muted: #888888;
+            --accent-red: #ff3333;
+            --accent-yellow: #ffcc00;
+            --accent-green: #33cc33;
+            --accent-blue: #3399ff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, '微軟正黑體', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            overflow: hidden; /* Prevent scrolling */
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .slider-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.6s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 5%;
+            text-align: center;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .slide.active {
+            opacity: 1;
+            z-index: 10;
+            pointer-events: auto;
+        }
+
+        /* Slide specific background images using pseudo-elements for better overlay */
+        .slide-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            opacity: 0.3; /* Dark overlay effect */
+            z-index: -1;
+        }
+
+        h1 {
+            font-size: 5vw;
+            font-weight: 900;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+            text-shadow: 2px 4px 10px rgba(0,0,0,0.8);
+        }
+
+        h2 {
+            font-size: 3.5vw;
+            font-weight: 700;
+            margin-bottom: 30px;
+            color: var(--accent-yellow);
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.8);
+        }
+
+        p, li {
+            font-size: 2.2vw;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            text-shadow: 1px 1px 5px rgba(0,0,0,0.8);
+        }
+
+        ul {
+            text-align: left;
+            list-style-type: none;
+            max-width: 80%;
+        }
+
+        li::before {
+            content: "▶ ";
+            color: var(--accent-red);
+            font-size: 1.5vw;
+        }
+
+        .highlight-red { color: var(--accent-red); font-weight: bold; }
+        .highlight-yellow { color: var(--accent-yellow); font-weight: bold; }
+        .highlight-green { color: var(--accent-green); font-weight: bold; }
+
+        /* Grid layouts for specific slides */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            width: 90%;
+            text-align: left;
+        }
+        
+        .grid-2 > div {
+            background: rgba(20, 20, 20, 0.7);
+            padding: 40px;
+            border-radius: 15px;
+            border-left: 5px solid var(--accent-red);
+        }
+
+        .scenario-box {
+            background: rgba(30, 30, 30, 0.8);
+            padding: 20px 30px;
+            margin: 15px 0;
+            border-radius: 10px;
+            font-size: 2vw;
+            border-left: 8px solid var(--accent-yellow);
+            text-align: left;
+            width: 100%;
+        }
+
+        .quote-box {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            margin: 20px 0;
+            border-radius: 15px;
+            font-style: italic;
+            border-left: 8px solid #3399ff;
+            text-align: left;
+            font-size: 2.2vw;
+        }
+
+        .huge-text {
+            font-size: 8vw;
+            font-weight: 900;
+            margin: 20px 0;
+        }
+
+        /* Controls */
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            display: flex;
+            gap: 20px;
+        }
+
+        button {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1.5rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 5px;
+            background: var(--accent-red);
+            transition: width 0.3s ease;
+            z-index: 100;
+        }
+
+        /* Click areas for easy navigation */
+        .nav-area {
+            position: fixed;
+            top: 0;
+            height: 100%;
+            width: 15%;
+            z-index: 50;
+            cursor: pointer;
+        }
+        .nav-left { left: 0; }
+        .nav-right { right: 0; }
+
+        /* 回教材首頁按鈕 */
+        .back-to-home-btn {
+          position: fixed;
+          top: 12px;
+          left: 12px;
+          z-index: 99999;
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          padding: 8px 16px;
+          font-size: 14px;
+          font-weight: 600;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans TC", sans-serif;
+          color: #ffffff !important;
+          background: rgba(0, 0, 0, 0.45);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          border-radius: 50px;
+          text-decoration: none !important;
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+          transition: all 0.2s ease;
+          user-select: none;
+          -webkit-tap-highlight-color: transparent;
+          touch-action: manipulation;
+          cursor: pointer;
+        }
+        .back-to-home-btn:hover {
+          background: rgba(0, 0, 0, 0.75);
+          border-color: rgba(255, 255, 255, 0.6);
+          transform: translateY(-1px);
+          color: #ffffff !important;
+        }
+        .back-to-home-btn:active {
+          transform: translateY(0);
+          background: rgba(0, 0, 0, 0.85);
+        }
+        @media (max-width: 768px) {
+          .back-to-home-btn {
+            top: 10px;
+            left: 10px;
+            padding: 6px 12px;
+            font-size: 13px;
+          }
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="back-to-home-btn" aria-label="回教材首頁">⬅ 回教材首頁</a>
+
+    <div class="nav-area nav-left" onclick="prevSlide()"></div>
+    <div class="nav-area nav-right" onclick="nextSlide()"></div>
+
+    <div class="slider-container" id="slider">
+        
+        <!-- Slide 1 -->
+        <div class="slide active">
+            <div class="slide-bg" style="background-image: url(''); opacity: 0.5;"></div>
+            <h1 class="highlight-red">界線的紅線</h1>
+            <h2>人際安全工作坊</h2>
+            <p style="font-size: 2.5vw; color: #ccc;">關於自由、代價與人際安全</p>
+        </div>
+
+        <!-- Slide 2 -->
+        <div class="slide">
+            <h2>快問快答！這是什麼燈？</h2>
+            <div style="width: 80%;">
+                <div class="scenario-box">1. 覺得同學反應好笑，從後面拉女同學內衣背帶。</div>
+                <div class="scenario-box">2. 心情有點悶，在廁所角落點燃衛生紙看它燒。</div>
+                <div class="scenario-box">3. 覺得對方講話衝，順手推一把，讓他撞到桌角。</div>
+                <div class="scenario-box">4. 上課太無聊，偷偷把同學椅子往後拉想看他出糗。</div>
+                <div class="scenario-box">5. 覺得好玩，偷拿同學手機亂發訊息或傳私密照。</div>
+            </div>
+            <p style="margin-top: 30px; font-weight: bold; font-size: 3vw;" class="highlight-red">在法律裡，這全是絕對紅燈。</p>
+        </div>
+
+        <!-- Slide 3 -->
+        <div class="slide">
+            <h2 class="highlight-red">你以為的玩笑，法典上的罪名</h2>
+            <div class="grid-2">
+                <div>
+                    <h1 style="font-size: 4vw;">🔥 玩火</h1>
+                    <p><strong>《刑法》公共危險罪</strong><br><span style="font-size:1.5vw; color:#aaa;">(非告訴乃論，警察直接辦)</span></p>
+                </div>
+                <div>
+                    <h1 style="font-size: 4vw;">👊 傷人</h1>
+                    <p><strong>《刑法》傷害罪</strong></p>
+                </div>
+                <div>
+                    <h1 style="font-size: 4vw;">🈲 亂摸/傳照</h1>
+                    <p><strong>《性騷擾防治法》<br>《刑法》妨害性自主</strong></p>
+                </div>
+                <div style="border-left-color: var(--accent-yellow);">
+                    <h1 style="font-size: 4vw;">💰 民事賠償</h1>
+                    <p class="highlight-yellow">你的衝動，爸媽買單。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4 -->
+        <div class="slide">
+            <h2>少年事件處理法：誰掌控你的青春？</h2>
+            <p style="font-size: 3vw; margin-bottom: 40px;">適用對象：12歲 ~ 18歲的你</p>
+            
+            <div class="grid-2" style="border-left:none;">
+                <div style="border-left: 8px solid var(--accent-yellow);">
+                    <h3 style="font-size: 3vw; margin-bottom:15px;">保護管束</h3>
+                    <p>定期向法院報到</p>
+                    <p>隨時驗尿檢查</p>
+                    <p>假日限制出門</p>
+                </div>
+                <div style="border-left: 8px solid var(--accent-red);">
+                    <h3 style="font-size: 3vw; margin-bottom:15px;">感化教育/收容</h3>
+                    <p>失去自由</p>
+                    <p>進入少年觀護所</p>
+                    <p>矯正學校</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5 -->
+        <div class="slide">
+            <div class="slide-bg" style="background-image: url(''); opacity: 0.4;"></div>
+            <h2>失去名字的地方：少年觀護所</h2>
+            <div style="background: rgba(0,0,0,0.8); padding: 40px; border-radius: 15px; width: 80%; border: 2px solid #444;">
+                <ul style="max-width: 100%; margin: 0 auto;">
+                    <li><strong>06:00</strong> 統一叫起床、折豆腐乾棉被</li>
+                    <li><strong>禁止</strong> 使用手機、網路、傳說對決</li>
+                    <li>上廁所、喝水，都要大聲報告</li>
+                </ul>
+                <p class="huge-text highlight-red" style="font-size: 4vw; margin-top: 30px;">你不再有名字，只有「編號」。</p>
+            </div>
+        </div>
+
+        <!-- Slide 6 -->
+        <div class="slide">
+            <h2>隱藏的第二幕：他們沒說出口的話</h2>
+            <div style="width: 85%;">
+                <div class="quote-box" style="border-left-color: #ff66b2;">
+                    <strong>【被害同學】</strong>：「大家都在笑，我覺得全身都在發抖，覺得很丟臉，甚至不敢來上學……」
+                </div>
+                <div class="quote-box" style="border-left-color: #ff9933;">
+                    <strong>【受傷同學】</strong>：「那天之後，只要有人走得比較快，我就會直覺想躲開，在教室裡一直很緊繃。」
+                </div>
+                <div class="quote-box" style="border-left-color: #aaaaaa;">
+                    <strong>【學校老師】</strong>：「那個角落全都是易燃物，如果火勢蔓延，整層樓可能都跑不掉。我想起來手都還會發抖……」
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7 -->
+        <div class="slide">
+            <div class="slide-bg" style="background-image: url(''); opacity: 0.5;"></div>
+            <h2 class="highlight-yellow" style="font-size: 5vw;">找出你的「黃燈訊號」</h2>
+            <p style="font-size: 3vw; margin-bottom: 40px;">從「想做」到「動手」，大腦只有 <strong>3秒鐘</strong> 的黃燈。</p>
+            
+            <div class="grid-2">
+                <div style="border-left-color: var(--accent-yellow);">
+                    <h3 style="font-size: 2.5vw; color: var(--accent-yellow);">身體訊號</h3>
+                    <p>拳頭變硬？</p>
+                    <p>心跳加速、呼吸變快？</p>
+                </div>
+                <div style="border-left-color: var(--accent-yellow);">
+                    <h3 style="font-size: 2.5vw; color: var(--accent-yellow);">心理訊號</h3>
+                    <p>「大家都看我」</p>
+                    <p>「沒人發現吧」、「反正很好玩」</p>
+                    <p>「真的太無聊了」</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 8 -->
+        <div class="slide">
+            <h2 class="highlight-green">大腦急救箱：我的黃燈煞車法</h2>
+            <p style="font-size: 2vw; color:#ccc; margin-bottom: 30px;">警報響起（衝動）時，理智會斷電。立刻用急救工具把能量送回理智區：</p>
+            
+            <div style="width: 85%; text-align: left;">
+                <div style="margin-bottom: 25px;">
+                    <span class="highlight-yellow" style="font-size: 2.5vw;">1. 五緊、五鬆：</span>
+                    <span style="font-size: 2.2vw;">用力握緊拳頭、繃緊身體5秒！然後瞬間放鬆，把壞情緒擠出去。</span>
+                </div>
+                <div style="margin-bottom: 25px;">
+                    <span class="highlight-yellow" style="font-size: 2.5vw;">2. 方形呼吸法：</span>
+                    <span style="font-size: 2.2vw;">吸氣(4秒) ➔ 憋氣(4秒) ➔ 吐氣(4秒) ➔ 憋氣(4秒)</span>
+                </div>
+                <div style="margin-bottom: 25px;">
+                    <span class="highlight-yellow" style="font-size: 2.5vw;">3. 安全空間抽離：</span>
+                    <span style="font-size: 2.2vw;">閉眼想像專屬放鬆基地；或起立去洗臉，物理離開現場。</span>
+                </div>
+                <div style="margin-bottom: 25px;">
+                    <span class="highlight-yellow" style="font-size: 2.5vw;">4. 帥氣拒絕：</span>
+                    <span style="font-size: 2.2vw;">「這太蠢了，老子今天不想去警察局。」</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 9 -->
+        <div class="slide">
+            <div class="slide-bg" style="background-image: url(''); opacity: 0.4;"></div>
+            <h2 style="color: #ffd700;">我的未來通行證</h2>
+            <div style="background: rgba(20,20,20,0.8); padding: 50px; border-radius: 20px; border: 2px solid #ffd700; width: 80%; text-align: left;">
+                <p style="font-size: 3vw; margin-bottom: 40px;">我個人的絕對紅線：<br><span style="border-bottom: 3px solid #666; display:inline-block; width:80%; margin-top:20px;">&nbsp;</span></p>
+                <p style="font-size: 3vw;">當黃燈亮起時，我的急救煞車密碼：<br><span style="border-bottom: 3px solid #666; display:inline-block; width:80%; margin-top:20px;">&nbsp;</span></p>
+            </div>
+        </div>
+
+        <!-- Slide 10 -->
+        <div class="slide">
+            <div class="slide-bg" style="background-image: url(''); opacity: 0.4;"></div>
+            <h1 class="highlight-green" style="font-size: 6vw;">拿回人生的主控權</h1>
+            <p class="huge-text" style="font-size: 4vw;">真正的強大，是懂得控制自己。</p>
+            <p class="huge-text" style="font-size: 4vw;">保護自己，也尊重他人。</p>
+        </div>
+
+    </div>
+
+    <div class="controls">
+        <button onclick="prevSlide()">◀</button>
+        <button onclick="nextSlide()">▶</button>
+    </div>
+    
+    <div class="progress-bar" id="progress"></div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const progress = document.getElementById('progress');
+
+        function updateSlider() {
+            slides.forEach((slide, index) => {
+                if (index === currentSlide) {
+                    slide.classList.add('active');
+                } else {
+                    slide.classList.remove('active');
+                }
+            });
+            
+            // Update progress bar
+            const progressPercent = ((currentSlide + 1) / slides.length) * 100;
+            progress.style.width = progressPercent + '%';
+        }
+
+        function nextSlide() {
+            if (currentSlide < slides.length - 1) {
+                currentSlide++;
+                updateSlider();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlider();
+            }
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'Space') {
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                prevSlide();
+            }
+        });
+
+        // Init
+        updateSlider();
+    </script>
+</body>
+</html>
