@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>行為翻譯機 · 導師版</title>
+<style>
+  :root{
+    --ink:#1c2b26; --ink-soft:#4a5c55; --paper:#f6f4ec; --card:#ffffff;
+    --line:#dce3dd; --pine:#2f5c47; --pine-deep:#20402f; --pine-soft:#eaf1eb;
+    --clay:#b9603f; --clay-soft:#f4e6df; --amber:#c58a2d; --amber-soft:#f6ecd8;
+    --radius:14px; --shadow:0 1px 2px rgba(32,64,47,.06),0 8px 24px rgba(32,64,47,.06);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
+    background:var(--paper); color:var(--ink); line-height:1.7;
+    -webkit-font-smoothing:antialiased; padding-bottom:env(safe-area-inset-bottom);
+  }
+  .wrap{max-width:640px;margin:0 auto;padding:20px 16px 64px;}
+
+  header{padding:14px 2px 6px;}
+  .kicker{
+    display:inline-block;font-size:12px;letter-spacing:.14em;font-weight:700;
+    color:var(--pine);background:var(--pine-soft);padding:5px 11px;border-radius:999px;margin-bottom:14px;
+  }
+  h1{font-size:30px;line-height:1.2;margin:0 0 10px;letter-spacing:-.01em;font-weight:800;color:var(--pine-deep);}
+  .lede{font-size:15px;color:var(--ink-soft);margin:0;max-width:44ch;}
+  .privacy{
+    margin-top:16px;font-size:12.5px;color:var(--ink-soft);background:var(--card);
+    border:1px solid var(--line);border-radius:10px;padding:9px 12px;display:flex;gap:8px;align-items:flex-start;
+  }
+  .privacy b{color:var(--ink);font-weight:700;}
+
+  .steps{display:flex;gap:6px;margin:22px 0 18px;}
+  .steps .bar{flex:1;height:5px;border-radius:99px;background:var(--line);transition:background .3s;}
+  .steps .bar.on{background:var(--pine);}
+
+  .panel{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:22px 18px;margin-bottom:16px;
+  }
+  .step-tag{
+    font-size:12.5px;font-weight:700;color:var(--pine);background:var(--pine-soft);
+    padding:4px 10px;border-radius:8px;display:inline-block;margin-bottom:12px;
+  }
+  h2{font-size:21px;line-height:1.3;margin:0 0 4px;color:var(--pine-deep);font-weight:800;}
+  .hint{font-size:14px;color:var(--ink-soft);margin:0 0 16px;}
+
+  .field{margin-bottom:15px;}
+  .field label{display:block;font-size:13px;font-weight:700;color:var(--ink);margin-bottom:6px;}
+  .field .sub{font-weight:400;color:var(--ink-soft);font-size:12px;}
+  input[type=text],input[type=date],textarea,select{
+    width:100%;font-family:inherit;font-size:15px;color:var(--ink);background:var(--paper);
+    border:1px solid var(--line);border-radius:10px;padding:11px 12px;transition:border-color .15s,box-shadow .15s;
+  }
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--pine);box-shadow:0 0 0 3px var(--pine-soft);}
+  textarea{resize:vertical;min-height:80px;line-height:1.6;}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  @media(max-width:460px){.two-col{grid-template-columns:1fr;}}
+
+  .tag-grid{display:flex;flex-direction:column;gap:9px;}
+  .tag{
+    text-align:left;font-family:inherit;font-size:15.5px;color:var(--ink);background:var(--paper);
+    border:1.5px solid var(--line);border-radius:11px;padding:12px 14px;cursor:pointer;
+    transition:all .12s;position:relative;display:flex;align-items:center;gap:10px;
+  }
+  .tag:active{transform:scale(.99);}
+  .tag .dot{width:18px;height:18px;border-radius:6px;border:1.5px solid var(--line);flex:none;transition:all .12s;background:#fff;}
+  .tag.sel{border-color:var(--pine);background:var(--pine-soft);color:var(--pine-deep);font-weight:600;}
+  .tag.sel .dot{background:var(--pine);border-color:var(--pine);box-shadow:inset 0 0 0 3px #fff;}
+  .custom-add{margin-top:11px;}
+
+  .seg{display:flex;gap:8px;flex-wrap:wrap;}
+  .seg .tag{flex:1;min-width:80px;justify-content:center;text-align:center;}
+  .seg .tag .dot{display:none;}
+
+  .nav{display:flex;gap:10px;margin-top:20px;}
+  button.btn{font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;border-radius:11px;padding:13px 18px;border:1.5px solid transparent;transition:all .15s;}
+  .btn-ghost{background:transparent;border-color:var(--line);color:var(--ink-soft);}
+  .btn-ghost:active{background:var(--paper);}
+  .btn-primary{background:var(--pine);color:#fff;flex:1;box-shadow:0 4px 14px rgba(47,92,71,.28);}
+  .btn-primary:active{background:var(--pine-deep);}
+
+  /* result tabs */
+  .rtabs{display:flex;gap:6px;background:var(--pine-soft);padding:5px;border-radius:12px;margin-bottom:16px;}
+  .rtab{
+    flex:1;text-align:center;font-family:inherit;font-size:14px;font-weight:700;color:var(--ink-soft);
+    background:transparent;border:none;border-radius:8px;padding:10px 6px;cursor:pointer;transition:all .15s;line-height:1.3;
+  }
+  .rtab.on{background:#fff;color:var(--pine-deep);box-shadow:0 1px 3px rgba(0,0,0,.08);}
+  .rtab .sm{display:block;font-size:11px;font-weight:500;opacity:.7;margin-top:1px;}
+
+  .out-title{display:flex;align-items:center;gap:9px;font-size:16px;font-weight:800;color:var(--pine-deep);margin:0 0 3px;}
+  .out-title .pill{font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;}
+  .pill-parent{background:var(--clay-soft);color:var(--clay);}
+  .pill-b{background:var(--pine-soft);color:var(--pine);}
+  .pill-s{background:var(--amber-soft);color:var(--amber);}
+  .out-desc{font-size:12.5px;color:var(--ink-soft);margin:0 0 12px;}
+
+  .sec-label{font-size:13px;font-weight:800;color:var(--pine);margin:18px 0 8px;padding-left:2px;
+    display:flex;align-items:center;gap:7px;}
+  .sec-label:first-of-type{margin-top:4px;}
+  .sec-label .n{width:20px;height:20px;border-radius:6px;background:var(--pine);color:#fff;font-size:11px;
+    display:flex;align-items:center;justify-content:center;flex:none;}
+
+  .copy-card{background:var(--paper);border:1px solid var(--line);border-radius:11px;padding:13px 14px;margin-bottom:9px;position:relative;}
+  .copy-card .cc-label{font-size:12px;font-weight:700;color:var(--pine);margin-bottom:5px;display:flex;align-items:center;gap:6px;}
+  .copy-card .cc-body{font-size:14.5px;color:var(--ink);white-space:pre-wrap;padding-right:34px;}
+  .copy-btn{position:absolute;top:11px;right:11px;width:30px;height:30px;border-radius:8px;border:1px solid var(--line);
+    background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;padding:0;}
+  .copy-btn:active{transform:scale(.92);}
+  .copy-btn svg{width:15px;height:15px;stroke:var(--ink-soft);fill:none;stroke-width:2;}
+  .copy-btn.done{background:var(--pine);border-color:var(--pine);}
+  .copy-btn.done svg{stroke:#fff;}
+
+  .copy-all{width:100%;margin-top:2px;margin-bottom:14px;font-size:14px;font-weight:700;background:#fff;
+    border:1.5px solid var(--line);border-radius:10px;padding:11px;cursor:pointer;color:var(--pine);transition:all .12s;}
+  .copy-all:active{background:var(--pine-soft);}
+
+  .flags{margin-bottom:16px;}
+  .flag{display:flex;gap:9px;align-items:flex-start;font-size:13px;background:var(--amber-soft);border:1px solid #eaddbf;
+    color:#7a5a1c;border-radius:10px;padding:10px 12px;margin-bottom:8px;line-height:1.55;}
+  .flag.crit{background:var(--clay-soft);border-color:#e6c9bc;color:#8a3a1f;}
+  .flag svg{width:16px;height:16px;flex:none;margin-top:2px;}
+
+  /* reframe box (strategy view) */
+  .reframe{background:var(--paper);border:1px solid var(--line);border-radius:11px;padding:14px;margin-bottom:9px;}
+  .reframe .before{font-size:14px;color:var(--ink-soft);}
+  .reframe .before b{color:var(--clay);}
+  .reframe .arrow{text-align:center;color:var(--pine);font-size:18px;margin:8px 0;}
+  .reframe .after{font-size:14.5px;color:var(--ink);}
+  .reframe .after b{color:var(--pine);}
+
+  .disclaimer{font-size:12px;color:var(--ink-soft);text-align:center;line-height:1.7;margin-top:26px;padding:0 6px;}
+  .restart{display:block;margin:18px auto 0;font-size:14px;color:var(--pine);background:none;border:none;
+    text-decoration:underline;cursor:pointer;font-family:inherit;}
+  .hidden{display:none!important;}
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--pine-deep);
+    color:#fff;font-size:14px;font-weight:600;padding:11px 20px;border-radius:99px;box-shadow:0 8px 24px rgba(0,0,0,.2);
+    opacity:0;transition:all .25s;pointer-events:none;z-index:50;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  /* mood step */
+  .mood-lede{font-size:15px;color:var(--ink-soft);margin:0 0 18px;}
+  .mood-grid{display:flex;flex-direction:column;gap:10px;}
+  .mood-btn{font-family:inherit;text-align:left;font-size:16px;font-weight:700;color:var(--ink);
+    background:var(--paper);border:1.5px solid var(--line);border-radius:12px;padding:15px 16px;cursor:pointer;
+    transition:all .12s;display:flex;align-items:center;gap:12px;}
+  .mood-btn:active{transform:scale(.99);}
+  .mood-btn .dot{width:18px;height:18px;border-radius:6px;border:1.5px solid var(--line);flex:none;transition:all .12s;background:#fff;}
+  .mood-btn.sel{border-color:var(--pine);background:var(--pine-soft);}
+  .mood-btn.sel .dot{background:var(--pine);border-color:var(--pine);box-shadow:inset 0 0 0 3px #fff;}
+  .mood-btn .emo{font-size:22px;flex:none;}
+  .mood-btn .mt{display:flex;flex-direction:column;gap:2px;}
+  .mood-btn .mt .s{font-size:12.5px;font-weight:400;color:var(--ink-soft);}
+  .catch{background:var(--pine-soft);border:1px solid #cfe0d3;border-radius:12px;padding:16px 16px;
+    margin-top:16px;font-size:15px;line-height:1.75;color:var(--pine-deep);
+    animation:catchIn .4s ease;}
+  @keyframes catchIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+  .catch .lead{font-weight:800;margin-bottom:6px;display:block;}
+  .catch + .catch{margin-top:10px;}
+  .catch .bridge{margin-top:12px;padding-top:12px;border-top:1px dashed #bcd2c0;color:var(--ink-soft);font-size:14px;}
+  .skip{display:block;margin:14px auto 0;font-size:13.5px;color:var(--ink-soft);background:none;border:none;
+    text-decoration:underline;cursor:pointer;font-family:inherit;}
+
+  .tag .s2{display:block;font-size:12.5px;font-weight:400;color:var(--ink-soft);margin-top:2px;}
+  .tag.sel .s2{color:var(--pine);}
+
+  /* breathing pause */
+  .breath-box{display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:34px 0 26px;animation:catchIn .3s ease;}
+  .breath-ring{width:86px;height:86px;border-radius:50%;border:2.5px solid var(--pine);
+    display:flex;align-items:center;justify-content:center;
+    animation:breathe 4.2s ease-in-out;transform-origin:center;}
+  .breath-dot{width:14px;height:14px;border-radius:50%;background:var(--pine);
+    animation:breatheDot 4.2s ease-in-out;}
+  @keyframes breathe{
+    0%{transform:scale(.72);opacity:.55;}
+    45%{transform:scale(1.06);opacity:1;}
+    60%{transform:scale(1.06);opacity:1;}
+    100%{transform:scale(.72);opacity:.55;}
+  }
+  @keyframes breatheDot{
+    0%{transform:scale(1);opacity:.5;}
+    45%{transform:scale(1.9);opacity:1;}
+    60%{transform:scale(1.9);opacity:1;}
+    100%{transform:scale(1);opacity:.5;}
+  }
+  .breath-txt{margin:18px 0 0;font-size:15.5px;font-weight:600;color:var(--pine);
+    letter-spacing:.04em;animation:breathTxt 4.2s ease-in-out;}
+  @keyframes breathTxt{
+    0%{opacity:.45;}45%{opacity:1;}60%{opacity:1;}100%{opacity:.6;}
+  }
+
+  .cc-count{margin-top:8px;font-size:11.5px;color:var(--ink-soft);letter-spacing:.02em;}
+  .cc-count.over{color:var(--clay);font-weight:700;}
+
+  /* action row + card modal */
+  .act-row{display:flex;gap:8px;}
+  .act-row .copy-all{flex:1;margin-bottom:14px;}
+  .card-btn{border-color:var(--pine)!important;background:var(--pine-soft)!important;}
+  .modal-bg{position:fixed;inset:0;background:rgba(20,35,28,.55);z-index:100;
+    display:flex;align-items:center;justify-content:center;padding:16px;
+    backdrop-filter:blur(3px);animation:fadeIn .2s ease;}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  .modal{background:var(--card);border-radius:16px;padding:20px 18px;max-width:520px;width:100%;
+    max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
+  .modal-head h3{margin:0;font-size:20px;font-weight:800;color:var(--pine-deep);}
+  .modal-x{background:none;border:none;font-size:20px;color:var(--ink-soft);cursor:pointer;padding:4px 8px;}
+  .modal-desc{font-size:13px;color:var(--ink-soft);margin:0 0 14px;}
+  .canvas-wrap{background:var(--paper);border-radius:10px;padding:8px;overflow:hidden;}
+  #cardCanvas{width:100%;height:auto;display:block;border-radius:6px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <span class="kicker">FBA · 導師溝通輔助</span>
+    <h1>行為翻譯機</h1>
+    <p class="lede">把口語的觀察，整理成給家長看的溫和敘述、可貼進 B 表的正式文字，以及一份給自己的輔導策略。</p>
+    <div class="privacy">
+      <span>🔒</span>
+      <span><b>資料不外傳。</b>全部在本機運算，不上傳、不儲存任何學生資訊，關掉即消失。</span>
+    </div>
+  </header>
+
+  <div class="steps" id="progress">
+    <div class="bar on"></div><div class="bar"></div><div class="bar"></div>
+    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+  </div>
+
+  <!-- STEP MOOD (第0步) -->
+  <section class="panel step" data-step="mood">
+    <span class="step-tag">開始前 · 先接住你</span>
+    <h2>剛剛，還好嗎？</h2>
+    <p class="mood-lede">在寫任何紀錄之前，先照顧一下你自己。此刻的心情——可以複選：</p>
+    <div class="mood-grid" id="moodGrid">
+      <button class="mood-btn" data-m="angry"><span class="dot"></span><span class="emo">😤</span><span class="mt">很生氣、被激怒<span class="s">他一而再、再而三，我快壓不住了</span></span></button>
+      <button class="mood-btn" data-m="drained"><span class="dot"></span><span class="emo">😮‍💨</span><span class="mt">好累、好無力<span class="s">試了很多方法，好像都沒用</span></span></button>
+      <button class="mood-btn" data-m="worried"><span class="dot"></span><span class="emo">😟</span><span class="mt">擔心、放不下<span class="s">我怕這孩子是不是出了什麼狀況</span></span></button>
+      <button class="mood-btn" data-m="ok"><span class="dot"></span><span class="emo">🙂</span><span class="mt">還算平靜<span class="s">只是想好好把紀錄整理清楚</span></span></button>
+    </div>
+    <div class="nav" id="moodNav" style="margin-top:18px;">
+      <button class="btn btn-ghost" onclick="go(0)">先跳過</button>
+      <button class="btn btn-primary" id="moodGo" onclick="revealCatch()">好了，接住我 →</button>
+    </div>
+    <div id="catchBox"></div>
+  </section>
+
+  <!-- STEP 0 -->
+  <section class="panel step hidden" data-step="0">
+    <span class="step-tag">步驟 1 / 6 · 訪談基本資料</span>
+    <h2>先填訪談基本欄位</h2>
+    <p class="hint">對應 B 表表頭。學生請用代號（如 401 座號），不要填全名。</p>
+    <div class="two-col">
+      <div class="field"><label>班級 <span class="sub">三碼</span></label>
+        <input type="text" id="f_class" placeholder="401" maxlength="4" inputmode="numeric"></div>
+      <div class="field"><label>學生代號 <span class="sub">勿填全名</span></label>
+        <input type="text" id="f_student" placeholder="如 S07 或 座號"></div>
+    </div>
+    <div class="field"><label>訪談方式</label>
+      <div class="seg" id="f_method" data-single="1">
+        <button class="tag" data-v="本人對談">本人對談</button>
+        <button class="tag" data-v="電話">電話</button>
+        <button class="tag" data-v="聯絡簿">聯絡簿</button>
+        <button class="tag" data-v="家長來訪">家長來訪</button>
+        <button class="tag" data-v="家庭訪問">家庭訪問</button>
+        <button class="tag" data-v="通訊軟體">通訊軟體</button>
+        <button class="tag" data-v="其他">其他</button>
+      </div></div>
+    <div class="two-col">
+      <div class="field"><label>訪談對象</label><input type="text" id="f_target" placeholder="如：案母、案父、個案本人"></div>
+      <div class="field"><label>訪談日期</label><input type="date" id="f_date"></div>
+    </div>
+    <div class="nav"><button class="btn btn-primary" onclick="go(1)">下一步</button></div>
+  </section>
+
+  <!-- STEP 1 -->
+  <section class="panel step hidden" data-step="1">
+    <span class="step-tag">步驟 2 / 6 · 問題行為</span>
+    <h2>發生了什麼具體行為？</h2>
+    <p class="hint">點選最貼近的（可複選）。這是 ABC 中的「行為 B」。</p>
+    <div class="tag-grid" id="s_behavior"></div>
+    <input type="text" class="custom-add" id="s_behavior_custom" placeholder="＋ 補充其他行為…">
+    <div class="nav"><button class="btn btn-ghost" onclick="go(0)">上一步</button><button class="btn btn-primary" onclick="go(2)">下一步</button></div>
+  </section>
+
+  <!-- STEP 2 -->
+  <section class="panel step hidden" data-step="2">
+    <span class="step-tag">步驟 3 / 6 · 前因情境</span>
+    <h2>通常在什麼情境下發生？</h2>
+    <p class="hint">當時的活動或環境要求（可複選）。這是 ABC 中的「前事 A」。</p>
+    <div class="tag-grid" id="s_ante"></div>
+    <input type="text" class="custom-add" id="s_ante_custom" placeholder="＋ 補充其他情境…">
+    <div class="nav"><button class="btn btn-ghost" onclick="go(1)">上一步</button><button class="btn btn-primary" onclick="go(3)">下一步</button></div>
+  </section>
+
+  <!-- STEP 3 -->
+  <section class="panel step hidden" data-step="3">
+    <span class="step-tag">步驟 4 / 6 · 行為後果</span>
+    <h2>行為發生後，通常得到什麼結果？</h2>
+    <p class="hint">旁人或老師隨後的反應（可複選）。這是 ABC 中的「後果 C」。</p>
+    <div class="tag-grid" id="s_conseq"></div>
+    <input type="text" class="custom-add" id="s_conseq_custom" placeholder="＋ 補充其他反應…">
+    <div class="nav"><button class="btn btn-ghost" onclick="go(2)">上一步</button><button class="btn btn-primary" onclick="go(4)">下一步</button></div>
+  </section>
+
+  <!-- STEP 4 -->
+  <section class="panel step hidden" data-step="4">
+    <span class="step-tag">步驟 5 / 6 · 替代能力</span>
+    <h2>如果要他改用「好好說」，他做得到嗎？</h2>
+    <p class="hint">這能幫忙分辨他是「真的不會（能力缺口）」還是「有能力但沒動機」。</p>
+    <div class="seg" id="s_ability" data-single="1">
+      <button class="tag" data-v="幾乎不會">幾乎不會</button>
+      <button class="tag" data-v="時好時壞">時好時壞</button>
+      <button class="tag" data-v="其實會做">其實會做</button>
+    </div>
+
+    <div class="field" style="margin-top:22px;">
+      <label>行為當下，你心裡最接近哪種感覺？ <span class="sub">選填</span></label>
+      <p class="hint" style="margin:0 0 10px;">老師的直覺反應，往往透露孩子在關係中想爭取什麼（阿德勒觀點）。</p>
+      <div class="tag-grid" id="s_goal" data-single="1">
+        <button class="tag" data-v="power"><span class="dot"></span><span>覺得被挑戰、想壓過他<span class="s2">「我不能輸給他」</span></span></button>
+        <button class="tag" data-v="attention2"><span class="dot"></span><span>覺得煩、一直被打斷<span class="s2">「怎麼又來了」</span></span></button>
+        <button class="tag" data-v="revenge"><span class="dot"></span><span>覺得受傷、被針對<span class="s2">「他怎麼可以這樣對我」</span></span></button>
+        <button class="tag" data-v="inadequacy"><span class="dot"></span><span>覺得無能為力、想放棄<span class="s2">「我真的幫不了他」</span></span></button>
+      </div>
+    </div>
+
+    <div class="nav"><button class="btn btn-ghost" onclick="go(3)">上一步</button><button class="btn btn-primary" onclick="go(5)">下一步</button></div>
+  </section>
+
+  <!-- STEP 5 -->
+  <section class="panel step hidden" data-step="5">
+    <span class="step-tag">步驟 6 / 6 · 已採取措施</span>
+    <h2>你已經怎麼處理了？</h2>
+    <p class="hint">導師已採取的輔導措施（可複選）。B 表「事件處遇」會用到。</p>
+    <div class="tag-grid" id="s_action"></div>
+    <input type="text" class="custom-add" id="s_action_custom" placeholder="＋ 補充其他處理…">
+
+    <div class="field" style="margin-top:16px;">
+      <label>是否已請行政介入？</label>
+      <div class="tag-grid" id="s_admin_wrap">
+        <button class="tag" id="s_admin_btn"><span class="dot"></span><span>已請行政介入</span></button>
+      </div>
+      <div id="s_office_box" class="hidden" style="margin-top:10px;">
+        <p class="hint" style="margin:0 0 8px;">請選介入處室（可複選）：</p>
+        <div class="seg" id="s_office"></div>
+      </div>
+    </div>
+    <div class="field" style="margin-top:18px;">
+      <label>其他想補充的觀察 <span class="sub">選填</span></label>
+      <textarea id="s_free" placeholder="可貼聯絡簿內容，或隨手寫下的事件經過。系統會挑出關鍵詞，並提醒需注意的用字。"></textarea>
+    </div>
+    <div class="nav"><button class="btn btn-ghost" onclick="go(4)">上一步</button>
+      <button class="btn btn-primary" onclick="generate()">✦ 產出三份文字</button></div>
+  </section>
+
+  <!-- RESULT -->
+  <section class="step hidden" data-step="result" id="resultSec">
+    <div id="flags" class="flags"></div>
+    <div class="rtabs">
+      <button class="rtab on" data-view="parent" onclick="switchView('parent')">家長溝通版<span class="sm">給家長看</span></button>
+      <button class="rtab" data-view="btable" onclick="switchView('btable')">B 表紀錄版<span class="sm">貼進輔導紀錄</span></button>
+      <button class="rtab" data-view="strategy" onclick="switchView('strategy')">輔導策略版<span class="sm">給自己備課</span></button>
+    </div>
+
+    <div class="panel view" id="view_parent">
+      <div class="out-title"><span class="pill pill-parent">給家長</span> 家長溝通版</div>
+      <p class="out-desc">客觀事實 → 可能的需求 → 邀請家長一起協助。可直接貼進聯絡簿或訊息。</p>
+      <div class="act-row">
+        <button class="copy-all" onclick="copyAll('parent')">📋 複製整段</button>
+        <button class="copy-all card-btn" onclick="openCard('parent')">🖼️ 生成圖卡</button>
+      </div>
+      <div id="out_parent"></div>
+    </div>
+
+    <div class="panel view hidden" id="view_btable">
+      <div class="out-title"><span class="pill pill-b">B 表</span> 輔導紀錄版</div>
+      <p class="out-desc">對應 B 表欄位，逐欄可複製。用字客觀、避免情緒化描述。</p>
+      <button class="copy-all" onclick="copyAll('btable')">📋 一次複製整份 B 表文字</button>
+      <div id="out_btable"></div>
+    </div>
+
+    <div class="panel view hidden" id="view_strategy">
+      <div class="out-title"><span class="pill pill-s">給自己</span> 輔導策略版</div>
+      <p class="out-desc">依 FBA 觀點整理的功能假設與 ABC 三時段策略，供備課與班級經營參考。</p>
+      <div class="act-row">
+        <button class="copy-all" onclick="copyAll('strategy')">📋 複製整份</button>
+        <button class="copy-all card-btn" onclick="openCard('strategy')">🖼️ 生成圖卡</button>
+      </div>
+      <div id="out_strategy"></div>
+    </div>
+
+    <p class="disclaimer">
+      本工具依功能性行為評估（FBA）觀點整理文字，僅供導師書寫參考，非正式評估。<br>
+      監護人依政府資訊公開法有權調閱輔導紀錄，繕寫請客觀審慎。<br>
+      重大事件（如疑似家暴、無故曠課）務必記錄並轉介輔導室；<br>
+      如需正式 IEP 或行為功能支持計畫，建議會同專業特教團隊與醫療機構。
+    </p>
+    <button class="restart" onclick="restart()">↺ 重新填一份</button>
+  </section>
+
+</div>
+<div class="toast" id="toast">已複製</div>
+
+<!-- 圖卡預覽 modal -->
+<div class="modal-bg hidden" id="cardModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>圖卡預覽</h3>
+      <button class="modal-x" onclick="closeCard()">✕</button>
+    </div>
+    <p class="modal-desc">可下載為 PNG 圖片，方便分享或存檔。圖卡不含學生姓名。</p>
+    <div class="canvas-wrap"><canvas id="cardCanvas"></canvas></div>
+    <div class="nav" style="margin-top:14px;">
+      <button class="btn btn-ghost" onclick="closeCard()">取消</button>
+      <button class="btn btn-primary" onclick="downloadCard()">⤓ 下載圖卡 (PNG)</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- option banks ---------- */
+const BEHAVIOR = [
+  {v:"大叫、尖叫、大哭"},{v:"打人、咬人、推人"},{v:"拒絕功課、趴桌不動"},
+  {v:"離開座位、跑出教室"},{v:"頂嘴、罵髒話、言語挑釁"},{v:"一直找老師說話、打斷他人"},
+  {v:"發呆放空、沒有反應"},{v:"摔課本、破壞物品"},
+];
+const ANTE = [
+  {v:"要開始寫作業時"},{v:"遇到不會的題目、字太多時"},{v:"分組活動、小組討論時"},
+  {v:"被大人拒絕要求時"},{v:"環境太吵、人太多時"},{v:"活動轉換期（下課進教室）"},
+  {v:"自由活動時間（打掃、午休）"},{v:"同儕起爭執、被搶東西時"},
+];
+const CONSEQ = [
+  {v:"老師或同學過來關心、安撫",fn:"attention"},
+  {v:"活動暫停，他被帶離現場",fn:"escape"},
+  {v:"暫時不用寫作業或做任務",fn:"escape"},
+  {v:"如願拿到想要的東西，或得到想做某件事的機會",fn:"tangible"},
+  {v:"旁人沒理他，他自己繼續",fn:"sensory"},
+];
+const ACTION = [
+  {v:"當下口頭提醒、引導情緒"},{v:"個別晤談、了解原因"},{v:"調整座位或任務份量"},
+  {v:"給予冷靜時間與空間"},{v:"電話聯繫家長溝通"},{v:"約定獎勵或行為契約"},
+];
+const OFFICES = ["學務處","輔導室","教導處","教務處","總務處","校長室"];
+
+/* ---------- state ---------- */
+const state = {behavior:new Set(),ante:new Set(),conseq:new Set(),action:new Set(),office:new Set(),adminIntervened:false};
+
+function renderTags(containerId, bank, key){
+  const box=document.getElementById(containerId);
+  bank.forEach(item=>{
+    const b=document.createElement('button');
+    b.className='tag';
+    b.innerHTML='<span class="dot"></span><span>'+item.v+'</span>';
+    b.onclick=()=>{
+      if(state[key].has(item.v)){state[key].delete(item.v);b.classList.remove('sel');}
+      else{state[key].add(item.v);b.classList.add('sel');}
+    };
+    box.appendChild(b);
+  });
+}
+renderTags('s_behavior',BEHAVIOR,'behavior');
+renderTags('s_ante',ANTE,'ante');
+renderTags('s_conseq',CONSEQ,'conseq');
+renderTags('s_action',ACTION,'action');
+
+function bindSingle(groupId, prop){
+  document.querySelectorAll('#'+groupId+' .tag').forEach(t=>{
+    t.onclick=()=>{
+      document.querySelectorAll('#'+groupId+' .tag').forEach(x=>x.classList.remove('sel'));
+      t.classList.add('sel'); state[prop]=t.dataset.v;
+    };
+  });
+}
+bindSingle('f_method','method');
+bindSingle('s_ability','ability');
+bindSingle('s_goal','goal');
+
+/* office multi-select */
+(function(){
+  const box=document.getElementById('s_office');
+  OFFICES.forEach(o=>{
+    const b=document.createElement('button');
+    b.className='tag';b.textContent=o;
+    b.onclick=()=>{
+      if(state.office.has(o)){state.office.delete(o);b.classList.remove('sel');}
+      else{state.office.add(o);b.classList.add('sel');}
+    };
+    box.appendChild(b);
+  });
+})();
+/* admin-intervened toggle */
+document.getElementById('s_admin_btn').onclick=function(){
+  state.adminIntervened=!state.adminIntervened;
+  this.classList.toggle('sel',state.adminIntervened);
+  document.getElementById('s_office_box').classList.toggle('hidden',!state.adminIntervened);
+  if(!state.adminIntervened){
+    state.office.clear();
+    document.querySelectorAll('#s_office .tag').forEach(t=>t.classList.remove('sel'));
+  }
+};
+
+document.getElementById('f_date').valueAsDate=new Date();
+
+/* ---------- mood (第0步：接住老師) ---------- */
+const CATCH = {
+  angry:{lead:"你會生氣，是因為你在乎。",
+    body:"一次又一次的挑戰，任誰都會被激起火氣——這不代表你不夠專業，也不代表你不夠好。先深呼吸一下，這股氣，我接住了。"},
+  drained:{lead:"你已經做了很多了。",
+    body:"會覺得累、覺得無力，正是因為你一直沒有放棄這個孩子。試過的方法沒有白費，它們幫你排除了不管用的路。"},
+  worried:{lead:"你的擔心，是這孩子的幸運。",
+    body:"願意停下來想「他是不是怎麼了」，而不是只看到表面的行為——這份細膩，很珍貴。"},
+  ok:{lead:"很好，那我們慢慢來。",
+    body:"平靜的時候整理紀錄，往往最客觀、也最能幫到孩子。"},
+};
+const MOOD_BRIDGE="等情緒緩一緩，我們一起把「剛剛那件事」慢慢拆開來看。當行為變成可以分析的線索，心裡也會鬆一點。";
+state.mood=new Set();
+function bindMood(){
+  document.querySelectorAll('#moodGrid .mood-btn').forEach(b=>{
+    b.onclick=()=>{
+      const m=b.dataset.m;
+      if(state.mood.has(m)){state.mood.delete(m);b.classList.remove('sel');}
+      else{state.mood.add(m);b.classList.add('sel');}
+      // if comfort already shown, hide it again until they re-confirm
+      document.getElementById('catchBox').innerHTML='';
+    };
+  });
+}
+bindMood();
+let breathTimer=null;
+function revealCatch(){
+  if(state.mood.size===0){ go(0); return; } // nothing selected = skip
+  const box=document.getElementById('catchBox');
+  document.getElementById('moodNav').style.display='none';
+
+  // 先給一次呼吸的空檔，再浮出文字
+  box.innerHTML='<div class="breath-box">'+
+    '<div class="breath-ring"><span class="breath-dot"></span></div>'+
+    '<p class="breath-txt">先陪你深呼吸一次</p></div>';
+  box.scrollIntoView({behavior:'smooth',block:'nearest'});
+
+  clearTimeout(breathTimer);
+  breathTimer=setTimeout(function(){ showCatchText(); }, 4200);
+}
+function showCatchText(){
+  const order=['angry','drained','worried','ok'];
+  let html='';
+  order.filter(m=>state.mood.has(m)).forEach(m=>{
+    const c=CATCH[m];
+    html+='<div class="catch"><span class="lead">'+c.lead+'</span>'+c.body+'</div>';
+  });
+  html+='<div class="catch"><div class="bridge" style="margin:0;padding:0;border:none;">'+MOOD_BRIDGE+'</div>'+
+        '<div class="nav" style="margin-top:16px;"><button class="btn btn-primary" onclick="go(0)">我準備好了，開始整理 →</button></div></div>';
+  const box=document.getElementById('catchBox');
+  box.innerHTML=html;
+  box.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+
+function go(step){
+  if(step!=='mood') clearTimeout(breathTimer);
+  document.querySelectorAll('.step').forEach(s=>s.classList.add('hidden'));
+  document.querySelector('.step[data-step="'+step+'"]').classList.remove('hidden');
+  const bars=document.querySelectorAll('#progress .bar');
+  let idx;
+  if(step==='mood') idx=0;
+  else if(step==='result') idx=6;
+  else idx=step+1;
+  bars.forEach((b,i)=>b.classList.toggle('on', i<=idx));
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function gather(key, customId){
+  const arr=[...state[key]];
+  const c=document.getElementById(customId).value.trim();
+  if(c) arr.push(c);
+  return arr;
+}
+function listCN(arr){
+  if(arr.length===0) return "";
+  if(arr.length===1) return arr[0];
+  return arr.slice(0,-1).join("、")+"，以及"+arr[arr.length-1];
+}
+const SOFTEN = {
+  "打人、咬人、推人":"與同學發生肢體上的推擠",
+  "頂嘴、罵髒話、言語挑釁":"用比較衝的語氣回應",
+  "摔課本、破壞物品":"情緒上來時會摔東西",
+  "拒絕功課、趴桌不動":"對作業顯得卻步、提不起勁",
+  "大叫、尖叫、大哭":"情緒比較激動、容易哭",
+  "離開座位、跑出教室":"坐不住、想離開現場",
+  "一直找老師說話、打斷他人":"很希望得到老師的注意",
+  "發呆放空、沒有反應":"顯得比較退縮、放空",
+};
+function soften(v){return SOFTEN[v]||v;}
+
+
+/* ================================================================
+   策略句庫（PLAYBOOK）
+   架構：行為功能 × 前因情境
+   key 格式： "<功能>|<前因>"
+     功能：attention / escape / tangible / sensory
+     前因：使用 ANTE 陣列中的原字串
+   每格三段： before（事前預防）/ during（當下處理）/ after（事後教導）
+   ----------------------------------------------------------------
+   ★ 給協作夥伴：
+     - 要新增組合，直接照下面格式加一行即可，不必改其他程式碼
+     - 沒寫到的組合會自動退回該功能的通用策略（GENERIC）
+     - 請寫「可以直接照做的具體動作」，不要只寫理論名詞
+     - 可以寫老師實際要說的句子，用「」框起來
+   ================================================================ */
+const PLAYBOOK = {
+
+  /* ---------- 逃避／規避任務 Escape ---------- */
+  "escape|要開始寫作業時":{
+    before:"發作業時別一次給整張。先給 3 題，寫完再給下一組；或用螢光筆圈起來說：「先做這三題就好。」\n開始前先問他：「這張你覺得哪裡最難？我們先跳過那題。」",
+    during:"他一趴下或推開簿子，先別催。走過去蹲下說：「這題看起來很難齁？我陪你看第一題。」\n只要求他動筆寫一題，寫完立刻說：「你看，一題就過了。」",
+    after:"平常先跟他約好一個暗號（例如把紅色小卡立起來），代表「我卡住了，需要幫忙」。練到他願意用卡片，而不是趴下。"},
+
+  "escape|遇到不會的題目、字太多時":{
+    before:"事先幫他把長題目斷句、畫重點，或允許他用手指遮住其他題目只看一題。\n跟他說好：「不會的可以先空著，等一下我們一起看。」",
+    during:"不要說「你再想想」——他已經卡住了。直接把題目念一次給他聽，或把題目拆成兩個小問題問他。\n他答出第一小題就馬上肯定：「對，就是這樣，你會的。」",
+    after:"教他一句求助的話：「老師，這題我看不懂。」在他平靜時演練幾次。\n他一用這句話，就立刻過去幫他，讓他發現「說出來比趴著有效」。"},
+
+  "escape|活動轉換期（下課進教室）":{
+    before:"轉換前 5 分鐘先預告，走到他身邊輕聲說：「再五分鐘我們要換數學課囉。」\n給他一個轉場小任務（發簿子、擦黑板），幫他把注意力切換過來。",
+    during:"他鬧起來時給選擇，不要下命令：「東西你要現在收，還是三分鐘後收？」\n有選擇的感覺，會大幅降低對抗。",
+    after:"跟他一起做一張「換課流程小卡」貼在桌角：收書→拿出數學課本→坐好。讓他照著做，做完自己打勾。"},
+
+  "escape|分組活動、小組討論時":{
+    before:"先幫他安排好角色，不要讓他自己找組別。給他一個明確、簡單的任務（記錄員、發表員）。\n事先跟組員說好：「他負責這部分就好。」",
+    during:"他退縮或搗亂時，先把他的任務再縮小：「你只要幫忙念這一句就好。」\n必要時允許他先在旁邊看兩分鐘再加入。",
+    after:"事後單獨跟他聊：「剛剛分組時，最讓你不舒服的是哪一段？」了解是怕被笑、還是不知道要做什麼，再對症調整。"},
+
+  /* ---------- 獲得注意 Attention ---------- */
+  "attention|要開始寫作業時":{
+    before:"開始寫之前，先主動給他 30 秒的關注：走過去問一句「今天這張你打算先寫哪裡？」\n先餵飽他，他就不必用鬧的來換。",
+    during:"他一直來找你講話時，別直接斥退。給明確的等待條件：「我數到 20 走過去看你，你先寫第一題。」然後真的做到。",
+    after:"跟他約定一個「專屬時段」：每天寫作業寫到一半，老師固定去看他一次。讓他知道不必吵也會有人來。"},
+
+  "attention|自由活動時間（打掃、午休）":{
+    before:"這段時間他最容易失控，因為沒有結構。事先給他一個有存在感的任務：小組長、器材管理員。\n有事做、有身分，就不必靠搗蛋被看見。",
+    during:"他刷存在感時，盡量平淡處理，不要在全班面前跟他來回。\n改成走近他、低聲說一句：「我看到你了，等一下來找我。」",
+    after:"刻意抓他安靜做事的時刻，馬上具體說出來：「剛剛掃地你都沒有跑掉，很認真。」\n讓「做對」也能被看見。"},
+
+  "attention|同儕互動起爭執、被搶東西時":{
+    before:"事先教全班一套處理衝突的固定流程（先說停→找老師→輪流講），讓他有規則可循。",
+    during:"先分開兩人，各自問一次，不要當眾論斷誰對誰錯。\n對他說：「我會聽你講完。」——他要的常常是被聽見。",
+    after:"平常演練「請你還我」「我不喜歡這樣」這兩句話。他真的用出來時，立刻肯定他。"},
+
+  /* ---------- 獲得實物或活動機會 Tangible ---------- */
+  "tangible|被大人拒絕要求時":{
+    before:"規則講在前面，不要臨場才說：「這個下課才能玩，現在先放老師這裡。」\n並把計時器放在他看得到的地方。",
+    during:"他吵起來時，重複同一句話就好，不要跟他辯：「下課就可以，現在不行。」\n語氣平穩、不加碼、不威脅。",
+    after:"平靜後跟他演練：「可以借我嗎？」「輪到我了嗎？」\n下次他一用這句話，就盡量讓他成功一次，他才會相信這招有效。"},
+
+  "tangible|同儕互動起爭執、被搶東西時":{
+    before:"先建立班級的輪流規則（例如用計時器輪流 5 分鐘），讓「輪到誰」有客觀依據，不用靠搶。",
+    during:"先把東西收起來，兩邊都停：「東西先放我這，你們各講一次。」\n避免變成誰搶贏誰就有。",
+    after:"教他協商的句子：「我們輪流好不好？你先五分鐘。」在平常演練，做到時立刻肯定。"},
+
+  /* ---------- 感官／自我調節 Sensory ---------- */
+  "sensory|環境太吵、太雜亂、人很多時":{
+    before:"調整座位，遠離走廊、冷氣口或人多的動線。\n允許他寫作業時戴降噪耳罩，或在桌上放一個小隔板。",
+    during:"他開始躁動時，主動給合法的出口：「你要不要去洗手台洗個臉？」\n在他真的衝出去之前，先給他一個台階。",
+    after:"跟他一起找出「哪種吵他最受不了」，並約好一個安全角落，讓他知道撐不住時可以去哪裡待一下再回來。"},
+
+  "sensory|自由活動時間（打掃、午休）":{
+    before:"給他一個可以動的任務（搬椅子、擦窗台），把過剩的精力導向合理的出口。",
+    during:"不要硬壓著他坐好。改成：「你去把這疊簿子送到辦公室。」用走動代替壓制。",
+    after:"在抽屜放捏壓球或一小條黏土，教他手癢時捏它，而不是敲桌子或碰別人。"},
+};
+
+/* 通用退路：找不到交叉組合時使用 */
+const GENERIC = {
+  attention:{
+    before:"每天固定給他一小段「只屬於他」的關注時間（例如早自習花 2 分鐘問他昨天的事），讓他不必鬧才有人看見。",
+    during:"教他一個具體動作代替插嘴：舉手、或把小卡立在桌上。跟他說好：「你立卡片，老師看到會在 5 分鐘內過去。」",
+    after:"刻意抓他安靜等待的時刻，立刻說出來：「你剛剛有舉手等老師，很不容易。」"},
+  escape:{
+    before:"把任務切小再給：不要一次發整張，先給幾題，寫完再給下一組。",
+    during:"教他說一句話代替逃跑：「老師，我需要休息兩分鐘。」冷靜後仍要回來完成精簡版。",
+    after:"在平靜時演練求助的句子，練到他脫口而出。他一用出來，就立刻回應他。"},
+  tangible:{
+    before:"事先講好規則，不要臨場才說，並用計時器讓等待變得看得見。",
+    during:"重複同一句話、不加碼：「等一下就可以，現在不行。」",
+    after:"教他用問的代替搶：「可以借我嗎？」先演練過，實際情境才用得出來。"},
+  sensory:{
+    before:"給他一個可以動的出口：抽屜放捏壓球，或允許他中途幫忙發簿子走動一下。",
+    during:"主動提供合法的離開理由（去洗手台、送東西），而不是等他自己衝出去。",
+    after:"跟他一起找出讓他受不了的刺激來源，約好一個可以暫時避開的角落。"},
+};
+
+/* 依「功能 × 前因」查表，找不到就退回通用 */
+function lookupPlaybook(fnKey, anteList){
+  if(!fnKey) return null;
+  for(const a of anteList){
+    const hit=PLAYBOOK[fnKey+"|"+a];
+    if(hit) return {src:a, ...hit};
+  }
+  return {src:null, ...GENERIC[fnKey]};
+}
+
+
+/* ================================================================
+   關係面向（Dreikurs 偏差行為四目標／阿德勒觀點）
+   與 FBA 不同層次：FBA 問「得到什麼強化物」，這裡問「在關係中爭什麼」
+   判讀線索：老師當下的情緒反應
+   ================================================================ */
+const DREIKURS = {
+  attention2:{
+    name:"尋求過度關注",
+    signal:"老師覺得煩躁、一直被打斷。",
+    belief:"孩子心裡想的是：「只有被注意的時候，我才有價值。」",
+    dont:"別在他鬧的時候給大量關注（即使是罵他），那等於證明「鬧才有用」。",
+    do:"改成在他沒鬧的時候主動給關注。事先約定一個暗號，讓他知道你看見他了。\n把他放進有貢獻的位置：小幫手、發簿子，讓他靠「被需要」得到存在感。"},
+  power:{
+    name:"爭奪權力",
+    signal:"老師覺得被挑戰、想壓過他、覺得「我不能輸」。",
+    belief:"孩子心裡想的是：「只有當我說了算、沒人能命令我，我才重要。」",
+    dont:"別硬碰硬。你越用權威壓，他越要證明壓不倒——當眾對峙只會兩敗俱傷。",
+    do:"先退出權力鬥爭：「這件事我們等一下再談。」不在當下爭輸贏。\n把權力還一部分給他：給有限的選擇（「你要先做A還是B？」），或請他當幹部、負責訂班規。讓他用合作取得掌控感，而不是靠對抗。"},
+  revenge:{
+    name:"報復",
+    signal:"老師覺得受傷、被針對、覺得「他怎麼可以這樣對我」。",
+    belief:"孩子心裡想的是：「我被傷害了，所以我也要讓別人痛。」",
+    dont:"別回擊、別冷落他。以牙還牙會坐實他「果然沒人在乎我」的信念。",
+    do:"先不處理行為，處理關係。找一個平靜時刻對他說：「我猜你心裡可能覺得很不公平，願意跟我說說嗎？」\n持續釋出善意，即使他推開你。修復信任比糾正行為優先。"},
+  inadequacy:{
+    name:"自暴自棄",
+    signal:"老師覺得無能為力、想放棄、覺得「我真的幫不了他」。",
+    belief:"孩子心裡想的是：「反正我做不到，不如不要試，免得再被證明我不行。」",
+    dont:"別再施壓或說「你可以的」——這對他是壓力，不是鼓勵。也別替他做完，那會確認他真的不行。",
+    do:"把任務切到「小到不可能失敗」的程度，讓他先成功一次。\n肯定歷程而非結果：「你剛剛有拿起筆，這就是開始。」\n任何一點嘗試都要看見，重建「我做得到」的感覺。"},
+};
+
+function inferFunction(){
+  const map={attention:0,escape:0,tangible:0,sensory:0};
+  CONSEQ.forEach(c=>{if(state.conseq.has(c.v)) map[c.fn]++;});
+  let top=null,max=0;
+  for(const k in map){if(map[k]>max){max=map[k];top=k;}}
+  const label={
+    attention:{p:"很希望得到大人的關注與陪伴",b:"獲得注意（Attention）",
+      pbs:["每天固定給他一小段「只屬於他」的關注時間（例如早自習花 2 分鐘問他昨天的事），讓他不必鬧才有人看見",
+           "教他一個具體動作代替插嘴：舉手、或把小卡立在桌上。跟他說好：「你立卡片，老師看到會在 5 分鐘內過去。」"]},
+    escape:{p:"想要逃開當下有壓力的任務或情境",b:"逃避／規避任務（Escape）",
+      pbs:["把作業切小塊再給：不要一次發整張，先給 3 題，寫完再給下一組。或用螢光筆圈出「只要先做這幾題」",
+           "教他說一句話代替逃跑：「老師，我需要休息兩分鐘。」允許他去教室後面站一下，但冷靜後仍要回來完成精簡版（例如原本 10 題改成 5 題）"]},
+    tangible:{p:"想爭取到他想要的東西，或想做某件事的機會",b:"獲得實物或活動機會（Tangible）",
+      pbs:["事先講好規則，不要臨場才說：「這個球下課才能玩，現在先放老師這裡。」並在他看得到的地方放計時器",
+           "教他用問的代替搶：「可以借我嗎？」「輪到我了嗎？」先在角色扮演裡練過，實際情境才用得出來"]},
+    sensory:{p:"透過這些動作來自我調節、安撫自己",b:"感官／自我刺激（Sensory）",
+      pbs:["給他一個可以動的出口：抽屜裡放捏壓球、允許他上課中途幫忙發簿子走動一下",
+           "看看是不是環境太吵太亮：調整座位遠離走廊或冷氣口，必要時允許他戴降噪耳罩寫作業"]},
+  };
+  if(max===0) return null;
+  return Object.assign({key:top}, label[top]);
+}
+
+const EMOTION_WORDS = ["討厭","白目","朽木","故意","壞","懶","笨","欠","擺爛","死","爛","無藥可救","沒救"];
+const CRITICAL_WORDS = ["家暴","打小孩","曠課","逃家","自殘","自傷","割腕","輕生","毒","偷竊","玩火","放火","縱火","打火機","火柴","刀","美工刀","爆裂","危險物"];
+const SEXUAL_WORDS = ["性平","性騷","性侵","猥褻","脫褲","掀裙","摸下體","摸胸","私密處","露下體","偷看","偷拍","性器","強吻","下體"];
+function runChecks(freeText, behaviorArr){
+  const flags=[];
+  const found=EMOTION_WORDS.filter(w=>freeText.includes(w));
+  if(found.length) flags.push({crit:false,
+    msg:"補充文字裡出現較主觀的字眼（"+found.join("、")+"）。B 表建議客觀描述行為，正式版本已略過這些用字，請再確認語氣。"});
+  const hay=freeText+"｜"+(behaviorArr||[]).join("｜");
+  const sexual=SEXUAL_WORDS.filter(w=>hay.includes(w));
+  if(sexual.length) flags.push({crit:true,
+    msg:"偵測到疑似校園性別事件關鍵詞（"+sexual.join("、")+"）。依《性別平等教育法》，教職員知悉後應於 24 小時內通報，並轉知學校性平會，切勿自行處理或私下和解。本工具僅供文字整理，不可取代正式通報程序。"});
+  const crit=CRITICAL_WORDS.filter(w=>hay.includes(w));
+  if(crit.length) flags.push({crit:true,
+    msg:"偵測到可能的重大／危險事件關鍵詞（"+crit.join("、")+"）。依規定務必完整記錄並立即通報、轉介行政與輔導室，勿僅以本工具產出的簡述帶過。"});
+  return flags;
+}
+
+let RESULT={};
+function generate(){
+  const behavior=gather('behavior','s_behavior_custom');
+  const ante=gather('ante','s_ante_custom');
+  const conseq=gather('conseq','s_conseq_custom');
+  const action=gather('action','s_action_custom');
+  const free=document.getElementById('s_free').value.trim();
+  if(behavior.length===0){alert("請至少選一個問題行為。");go(1);return;}
+
+  const PREDEF_BEH=BEHAVIOR.map(b=>b.v);
+  const customBeh=behavior.filter(b=>!PREDEF_BEH.includes(b));
+  const hasCustomBeh=customBeh.length>0;
+
+  const cls=document.getElementById('f_class').value.trim()||"（班級）";
+  const stu=document.getElementById('f_student').value.trim()||"個案";
+  const method=state.method||"（會談方式）";
+  const target=document.getElementById('f_target').value.trim()||"（會談對象）";
+  const date=document.getElementById('f_date').value||"（日期）";
+  const ability=state.ability||"";
+  const fn=inferFunction();
+
+  /* ---- Parent ---- */
+  const softBeh=listCN(behavior.map(soften));
+  const anteTxt=ante.length?("我觀察到，這比較容易發生在"+listCN(ante)+"的時候。"):"";
+  const needTxt=fn?("從幾次情況看下來，孩子當下可能是"+fn.p+"。這些行為，其實是他一時還不知道怎麼好好表達的方式。"):"我想先理解行為背後的原因，而不是急著責備。";
+  RESULT.parent=[
+    {label:"① 觀察到的狀況",body:"最近在學校，我注意到孩子"+softBeh+"。"+anteTxt+"我先讓您知道，也想聽聽他在家裡是不是也有類似的狀況。"},
+    {label:"② 可能的原因",body:needTxt},
+    {label:"③ 邀請一起協助",body:"如果方便，想請您在家也留意一下類似的時刻，我們一起找出對孩子最有幫助的方式。有任何觀察都歡迎隨時跟我說，謝謝您。"},
+  ];
+
+  /* ---- B table ---- */
+  const b_event=(ante.length
+      ? "個案多於"+listCN(ante)+"等情境下，出現"+listCN(behavior)+"等行為。"
+      : "個案於課堂情境中出現"+listCN(behavior)+"等行為。")
+    +(conseq.length?("行為發生後，"+listCN(conseq)+"。"):"");
+  let b_action=action.length?("導師已採取："+listCN(action)+"。"):"導師已於當下進行口頭提醒與情緒引導。";
+  if(state.adminIntervened){
+    const offices=[...state.office];
+    b_action+="已請行政介入"+(offices.length?("（"+offices.join("、")+"）"):"")+"。";
+  }
+  let b_follow=fn?("綜合前因與後果研判，此行為之可能功能為「"+fn.b+"」。"):"";
+  if(ability==="幾乎不會") b_follow+="個案目前尚不具備適當的替代表達能力，後續以技能教導為主。";
+  else if(ability==="時好時壞") b_follow+="個案替代表達能力尚不穩定，需持續提示與練習。";
+  else if(ability==="其實會做") b_follow+="個案具備替代表達能力，後續著重動機引導與一致性要求。";
+  b_follow+="後續將持續觀察其頻率與情境，並視情況調整輔導策略。";
+  const critHay=free+"｜"+behavior.join("｜");
+  if(SEXUAL_WORDS.some(w=>critHay.includes(w))) b_follow+="本案疑似涉及校園性別事件，應依《性別平等教育法》於 24 小時內通報並轉知性平會。";
+  if(CRITICAL_WORDS.some(w=>critHay.includes(w))) b_follow+="本案涉及重大／危險事件，已依規定通報並轉介行政與輔導室，並留存紀錄。";
+  /* 依校務系統「新增親師訪談紀錄」實際欄位輸出 */
+  const keyPoints=
+    "1.事件經過："+b_event+"\n"+
+    "2.事件處遇："+b_action+"\n"+
+    "3.後續追蹤："+b_follow;
+  const contactNote=
+    "與"+target+"就上述情形進行溝通，說明個案在校之表現與導師已採取之輔導方式，"+
+    "並邀請家長分享個案在家之狀況，共同討論後續協助方向。"+
+    (state.adminIntervened?"本案已請行政協助處理，後續由相關處室共同追蹤。":"")+
+    "雙方約定持續保持聯繫，導師將續予觀察並適時回報。";
+
+  RESULT.btable=[
+    {label:"訪談方式",body:method},
+    {label:"訪談對象",body:target},
+    {label:"訪談日期",body:date},
+    {label:"輔導內容要點（必填）",body:keyPoints,limit:1000},
+    {label:"聯絡事項（必填）",body:contactNote,limit:1000},
+  ];
+
+  /* ---- Strategy (參考原版 ABC 三時段 + 功能假設 + 替代技能) ---- */
+  RESULT.strategy=[];
+  const riskHit=SEXUAL_WORDS.some(w=>critHay.includes(w))||CRITICAL_WORDS.some(w=>critHay.includes(w));
+
+  if(hasCustomBeh || riskHit){
+    RESULT.strategy.push({type:"section",label:"觀察摘要（ABC）"});
+    RESULT.strategy.push({label:"A 前事",body:ante.length?listCN(ante):"（未填）"});
+    RESULT.strategy.push({label:"B 行為",body:listCN(behavior)});
+    RESULT.strategy.push({label:"C 後果",body:conseq.length?listCN(conseq):"（未填）"});
+    RESULT.strategy.push({type:"section",label:"策略暫不自動產生"});
+    let why=hasCustomBeh
+      ? "你輸入了自訂行為（"+customBeh.join("、")+"），系統無法自動判斷其行為功能，因此不提供自動策略，以免給出不合適的建議。"
+      : "本案偵測到重大／性平相關關鍵詞，屬於須依法通報、由專業團隊處理的範疇，不適合以自動模板給策略。";
+    RESULT.strategy.push({type:"caution",body:why+"請依你的專業判斷處理，並在必要時會同輔導室、行政與相關專業團隊。"});
+  } else {
+  RESULT.strategy.push({type:"section",label:"功能假設"});
+  RESULT.strategy.push({label:"A 前事",body:ante.length?listCN(ante):"（未填）"});
+  RESULT.strategy.push({label:"B 行為",body:listCN(behavior)});
+  RESULT.strategy.push({label:"C 後果",body:conseq.length?listCN(conseq):"（未填）"});
+  if(fn) RESULT.strategy.push({label:"→ 可能功能",body:"此行為的主要功能可能為「"+fn.b+"」。"});
+
+  RESULT.strategy.push({type:"section",label:"觀點轉個彎"});
+  /* 「原本可能會想」依老師實際勾選的行為生成，才對得上前文 */
+  const BEFORE_BY_BEHAVIOR={
+    "大叫、尖叫、大哭":"他就是愛哭、情緒一來就崩潰給大家看。",
+    "打人、咬人、推人":"他就是脾氣壞、動不動就動手。",
+    "拒絕功課、趴桌不動":"他就是懶、故意不寫、擺爛。",
+    "離開座位、跑出教室":"他就是坐不住、故意跑給老師追。",
+    "頂嘴、罵髒話、言語挑釁":"他就是沒禮貌、故意頂撞大人。",
+    "一直找老師說話、打斷他人":"他就是愛講話、故意黏著老師討關注。",
+    "發呆放空、沒有反應":"他就是不專心、講都講不聽。",
+    "摔課本、破壞物品":"他就是不懂得愛惜東西、亂發脾氣。",
+  };
+  const AFTER_BY_FN={
+    attention:"他還沒學會用適當的方式取得陪伴，才用行為來表達「我需要你」。",
+    escape:"他覺得任務太難、壓力太大，用行為來躲開它，需要的是把任務變小、變簡單。",
+    tangible:"他還不會協商與等待，需要學用適當方式表達想要。",
+    sensory:"他可能有自我調節的需求，需要合適的感官出口。",
+  };
+  const befList=behavior.map(b=>BEFORE_BY_BEHAVIOR[b]).filter(Boolean);
+  if(befList.length && fn && AFTER_BY_FN[fn.key]){
+    const beforeTxt=befList.length>2
+      ? befList.slice(0,2).join("")+"（以及其他狀況）"
+      : befList.join("");
+    RESULT.strategy.push({type:"reframe",before:beforeTxt,after:AFTER_BY_FN[fn.key]});
+  }
+
+  const pb=lookupPlaybook(fn?fn.key:null, ante);
+  RESULT.strategy.push({type:"section",
+    label:"三時段策略"+(pb&&pb.src?("（針對："+pb.src+"）"):"（可直接照做）")});
+  RESULT.strategy.push({label:"事前 · 先做這些，減少爆發",body:
+    (pb?pb.before:"在活動開始前先預告，給他一點緩衝：「再 5 分鐘我們要收玩具囉。」")+
+    "\n\n通用原則：用看得見的方式讓他知道還要多久——計時器放桌上，或把今天要做的事寫在小白板上做完打勾。知道「什麼時候會結束」，焦慮就會降下來。"});
+  RESULT.strategy.push({label:"當下 · 情緒上來時這樣接",body:
+    "先別急著講道理——人在氣頭上聽不進去。指令要短、要具體：不說「你安靜一點」，改說「手放腿上，看老師」。\n\n"+
+    (pb?pb.during:"引導他用說的代替行為，例如教他說：「我現在很煩，我需要休息一下。」")+
+    "\n\n如果他真的失控，先帶開到安靜角落，蹲下來平視他，什麼都先不問，等呼吸慢下來再說。"});
+
+  let teach, teachEx;
+  if(ability==="其實會做"){
+    teach="他其實做得到，問題不在能力，在動機——所以重點是讓「好好說」比「用鬧的」更划算";
+    teachEx="做法：他一用好方法（舉手、好好說），你就立刻回應他。反過來，用鬧的時候盡量平淡處理、不給太多關注。他很快會發現哪一種比較有效。";
+  }else if(ability==="時好時壞"){
+    teach="他有時做得到、有時做不到，通常是情緒一上來就忘了——需要的是「平常多練、當下提醒」";
+    teachEx="做法：平靜的時候先演練過，例如你當同學搶他東西，讓他練習說：「這是我的，請還我。」真的發生時，先給他一個提示手勢（例如指指嘴巴），提醒他用練過的方法。";
+  }else{
+    teach="他可能是真的還不會，不是不肯——這時候罵沒有用，要教";
+    teachEx="做法：用「故事＋演練」教。先講一個小故事：「有個小朋友很生氣的時候會怎麼做……」再跟他角色扮演一次。一次只教一句話，例如「我可以先休息嗎？」練到他脫口而出為止。";
+  }
+  RESULT.strategy.push({label:"事後 · 教他下次可以怎麼做",body:
+    teach+"。\n\n"+teachEx+(pb&&pb.after?("\n\n針對這個情境："+pb.after):"")});
+  const dk=state.goal?DREIKURS[state.goal]:null;
+  if(dk){
+    RESULT.strategy.push({type:"section",label:"關係面向：他在爭什麼（阿德勒觀點）"});
+    RESULT.strategy.push({label:"可能的目標："+dk.name,body:
+      dk.signal+"\n\n"+dk.belief});
+    RESULT.strategy.push({label:"這時候別做的事",body:dk.dont});
+    RESULT.strategy.push({label:"可以改成這樣做",body:dk.do});
+  }
+
+  RESULT.strategy.push({label:"最重要：抓到他做對的那一刻",body:
+    "多數孩子的問題行為之所以持續，是因為「做對的時候沒人看見，做錯的時候全班都在看」。\n\n"+
+    "所以請刻意去抓他做對的瞬間，馬上、具體地說出來：\n"+
+    "・「你剛剛忍住沒有插嘴，還舉手等老師，這很不容易。」\n"+
+    "・「你生氣的時候有先跟老師說，沒有直接摔東西，做得很好。」\n\n"+
+    "重點是「立刻」和「講清楚他做對了什麼」，不要只說「你好棒」。（這在專業上叫區分性增強 DRA，其實就是：把注意力給對的行為。）"});
+  }
+
+  renderOutputs();
+  renderFlags(runChecks(free, behavior));
+  switchView('parent');
+  go('result');
+}
+
+function ccSVG(){return '<svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';}
+function makeCard(item){
+  const card=document.createElement('div');
+  card.className='copy-card';
+  let meta='';
+  if(item.limit){
+    const n=item.body.length;
+    const over=n>item.limit;
+    meta='<div class="cc-count'+(over?' over':'')+'">'+n+' / '+item.limit+' 字'+
+         (over?'（超過系統上限，請精簡後再貼上）':'')+'</div>';
+  }
+  card.innerHTML='<div class="cc-label">'+item.label+'</div><div class="cc-body">'+item.body+'</div>'+meta+
+    '<button class="copy-btn" title="複製">'+ccSVG()+'</button>';
+  card.querySelector('.copy-btn').onclick=(e)=>copyText(item.body,e.currentTarget);
+  return card;
+}
+function renderOutputs(){
+  ['parent','btable'].forEach(kind=>{
+    const box=document.getElementById('out_'+kind);
+    box.innerHTML='';
+    RESULT[kind].forEach(item=>box.appendChild(makeCard(item)));
+  });
+  const sbox=document.getElementById('out_strategy');
+  sbox.innerHTML='';
+  RESULT.strategy.forEach(item=>{
+    if(item.type==='section'){
+      const h=document.createElement('div');
+      h.className='sec-label';
+      h.innerHTML='<span class="n">§</span>'+item.label;
+      sbox.appendChild(h);
+    }else if(item.type==='reframe'){
+      const r=document.createElement('div');
+      r.className='reframe';
+      r.innerHTML='<div class="before">原本可能會想：<b>「'+item.before+'」</b></div><div class="arrow">↓</div><div class="after">換個角度看：<b>'+item.after+'</b></div>';
+      sbox.appendChild(r);
+    }else if(item.type==='caution'){
+      const c=document.createElement('div');
+      c.className='flag crit';
+      c.style.marginBottom='9px';
+      c.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg><span>'+item.body+'</span>';
+      sbox.appendChild(c);
+    }else{
+      sbox.appendChild(makeCard(item));
+    }
+  });
+}
+function renderFlags(flags){
+  const box=document.getElementById('flags');
+  box.innerHTML='';
+  const warn='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>';
+  flags.forEach(f=>{
+    const d=document.createElement('div');
+    d.className='flag'+(f.crit?' crit':'');
+    d.innerHTML=warn+'<span>'+f.msg+'</span>';
+    box.appendChild(d);
+  });
+}
+function switchView(v){
+  document.querySelectorAll('.rtab').forEach(t=>t.classList.toggle('on',t.dataset.view===v));
+  document.querySelectorAll('.view').forEach(el=>el.classList.add('hidden'));
+  document.getElementById('view_'+v).classList.remove('hidden');
+}
+
+function copyText(txt,btn){
+  navigator.clipboard.writeText(txt).then(()=>{
+    if(btn){btn.classList.add('done');setTimeout(()=>btn.classList.remove('done'),1200);}
+    showToast("已複製");
+  }).catch(()=>fallbackCopy(txt));
+}
+function copyAll(kind){
+  let txt;
+  if(kind==='strategy'){
+    txt=RESULT.strategy.map(x=>{
+      if(x.type==='section') return "◆ "+x.label;
+      if(x.type==='reframe') return "原本可能會想：「"+x.before+"」\n換個角度看："+x.after;
+      if(x.type==='caution') return "⚠ "+x.body;
+      return "【"+x.label+"】\n"+x.body;
+    }).join("\n\n");
+  }else{
+    txt=RESULT[kind].map(x=>"【"+x.label+"】\n"+x.body).join("\n\n");
+  }
+  copyText(txt);
+}
+function fallbackCopy(txt){
+  const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);
+  ta.select();try{document.execCommand('copy');showToast("已複製");}catch(e){}
+  document.body.removeChild(ta);
+}
+let toastTimer;
+function showToast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),1600);
+}
+
+/* ---------- 圖卡生成 (Canvas) ---------- */
+let CARD_KIND='parent';
+const CARD_W=1080, PAD=64;
+function wrapText(ctx, text, maxW){
+  const lines=[]; let line='';
+  for(const ch of text){
+    if(ch==='\n'){lines.push(line);line='';continue;}
+    const test=line+ch;
+    if(ctx.measureText(test).width>maxW && line){lines.push(line);line=ch;}
+    else line=test;
+  }
+  if(line)lines.push(line);
+  return lines;
+}
+function cardBlocks(kind){
+  if(kind==='parent'){
+    return {title:'給家長的話', sub:'行為翻譯機 · 導師版',
+      accent:'#b9603f', accentSoft:'#f4e6df',
+      blocks:RESULT.parent.map(x=>({h:x.label.replace(/^[①②③]\s*/,''),b:x.body}))};
+  }
+  const blocks=[];
+  RESULT.strategy.forEach(x=>{
+    if(x.type==='section') return;
+    if(x.type==='reframe'){blocks.push({h:'觀點轉個彎',b:'原本可能會想：「'+x.before+'」\n\n換個角度看：'+x.after});return;}
+    if(x.type==='caution'){blocks.push({h:'⚠ 請注意',b:x.body});return;}
+    blocks.push({h:x.label,b:x.body});
+  });
+  return {title:'孩子的行為與陪伴策略', sub:'行為翻譯機 · 導師版',
+    accent:'#2f5c47', accentSoft:'#eaf1eb', blocks:blocks};
+}
+function drawCard(kind){
+  const data=cardBlocks(kind);
+  const cv=document.getElementById('cardCanvas');
+  const ctx=cv.getContext('2d');
+  const F='"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif';
+  const innerW=CARD_W-PAD*2;
+
+  /* --- measure pass --- */
+  let y=0;
+  y+=150;                       // header band
+  y+=54;                        // gap after header
+  const laid=[];
+  data.blocks.forEach(bk=>{
+    ctx.font='700 34px '+F;
+    const hLines=wrapText(ctx,bk.h,innerW-56);
+    ctx.font='400 30px '+F;
+    const bLines=wrapText(ctx,bk.b,innerW-56);
+    const h=28+hLines.length*46+10+bLines.length*46+28;
+    laid.push({hLines,bLines,h});
+    y+=h+20;
+  });
+  y+=110;                       // footer
+  const CARD_H=Math.max(y,700);
+
+  const dpr=2;
+  cv.width=CARD_W*dpr; cv.height=CARD_H*dpr;
+  cv.style.aspectRatio=CARD_W+' / '+CARD_H;
+  ctx.scale(dpr,dpr);
+
+  /* --- background --- */
+  ctx.fillStyle='#f6f4ec'; ctx.fillRect(0,0,CARD_W,CARD_H);
+
+  /* --- header band --- */
+  ctx.fillStyle=data.accent; ctx.fillRect(0,0,CARD_W,150);
+  ctx.fillStyle='#ffffff';
+  ctx.font='800 46px '+F; ctx.textBaseline='alphabetic';
+  ctx.fillText(data.title,PAD,74);
+  ctx.font='400 26px '+F;
+  ctx.globalAlpha=.85;
+  ctx.fillText(data.sub,PAD,116);
+  ctx.globalAlpha=1;
+
+  /* --- blocks --- */
+  y=150+54;
+  data.blocks.forEach((bk,i)=>{
+    const L=laid[i];
+    // card bg
+    ctx.fillStyle='#ffffff';
+    roundRect(ctx,PAD,y,innerW,L.h,16); ctx.fill();
+    // left accent bar
+    ctx.fillStyle=data.accent;
+    roundRect(ctx,PAD,y,8,L.h,4); ctx.fill();
+
+    let ty=y+28+36;
+    ctx.fillStyle=data.accent;
+    ctx.font='700 34px '+F;
+    L.hLines.forEach(ln=>{ctx.fillText(ln,PAD+34,ty);ty+=46;});
+    ty+=10;
+    ctx.fillStyle='#1c2b26';
+    ctx.font='400 30px '+F;
+    L.bLines.forEach(ln=>{ctx.fillText(ln,PAD+34,ty);ty+=46;});
+    y+=L.h+20;
+  });
+
+  /* --- footer --- */
+  ctx.fillStyle='#4a5c55';
+  ctx.font='400 24px '+F;
+  ctx.textAlign='center';
+  ctx.fillText('依功能性行為評估（FBA）觀點整理，僅供參考',CARD_W/2,y+34);
+  ctx.fillText('本圖卡不含學生姓名等個人資料',CARD_W/2,y+70);
+  ctx.textAlign='left';
+}
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+function openCard(kind){
+  if(!RESULT || !RESULT[kind] || !RESULT[kind].length){
+    showToast("請先產出文字再生成圖卡");
+    return;
+  }
+  CARD_KIND=kind;
+  drawCard(kind);
+  document.getElementById('cardModal').classList.remove('hidden');
+}
+function closeCard(){document.getElementById('cardModal').classList.add('hidden');}
+function downloadCard(){
+  const cv=document.getElementById('cardCanvas');
+  cv.toBlob(function(blob){
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    const d=new Date().toISOString().slice(0,10);
+    a.href=url;
+    a.download=(CARD_KIND==='parent'?'家長溝通圖卡_':'輔導策略圖卡_')+d+'.png';
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast("圖卡已下載");
+  },'image/png');
+}
+document.getElementById('cardModal').addEventListener('click',function(e){
+  if(e.target===this) closeCard();
+});
+
+function restart(){
+  ['behavior','ante','conseq','action'].forEach(k=>state[k].clear());
+  document.querySelectorAll('.tag.sel').forEach(t=>t.classList.remove('sel'));
+  ['s_behavior_custom','s_ante_custom','s_conseq_custom','s_action_custom','s_free','f_student','f_target']
+    .forEach(id=>document.getElementById(id).value='');
+  state.method=null;state.ability=null;state.goal=null;
+  state.office.clear();state.adminIntervened=false;
+  const ab=document.getElementById('s_admin_btn');if(ab)ab.classList.remove('sel');
+  const ob=document.getElementById('s_office_box');if(ob)ob.classList.add('hidden');
+  document.querySelectorAll('#s_office .tag').forEach(t=>t.classList.remove('sel'));
+  document.getElementById('catchBox').innerHTML='';
+  state.mood.clear();
+  document.querySelectorAll('#moodGrid .mood-btn').forEach(x=>x.classList.remove('sel'));
+  const mn=document.getElementById('moodNav');if(mn)mn.style.display='';
+  go('mood');
+}
+</script>
+</body>
+</html>
