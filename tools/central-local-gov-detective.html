@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>中央地方分工小偵探</title>
+<style>
+  :root{
+    --blue:#2b6cb0; --blue-light:#ebf4ff; --green:#2f855a; --green-light:#e6fffa;
+    --red:#c53030; --red-light:#fff5f5; --orange:#dd6b20; --gray:#4a5568; --bg:#f7f9fc;
+  }
+  *{box-sizing:border-box;}
+  body{
+    font-family:"PingFang TC","Microsoft JhengHei","Helvetica Neue",Arial,sans-serif;
+    margin:0; background:var(--bg); color:#1a202c; line-height:1.7;
+  }
+  .wrap{max-width:720px; margin:0 auto; padding:20px 16px 60px;}
+  .screen{display:none;}
+  .screen.active{display:block; animation:fade .25s ease;}
+  @keyframes fade{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+  h1{font-size:1.4rem; color:var(--blue); margin:0 0 6px;}
+  h2{font-size:1.15rem; color:var(--blue); margin:0 0 12px; border-left:6px solid var(--blue); padding-left:10px;}
+  .tag{display:inline-block; background:var(--blue-light); color:var(--blue); font-size:.8rem; padding:3px 10px; border-radius:999px; margin-bottom:10px;}
+  .card{background:#fff; border-radius:14px; padding:18px; margin-bottom:16px; box-shadow:0 2px 8px rgba(0,0,0,.06);}
+  .lead{color:var(--gray); font-size:.95rem; margin-bottom:14px;}
+  label{display:block; font-weight:bold; margin:12px 0 6px;}
+  input[type=text]{
+    width:100%; padding:12px 14px; font-size:1rem; border:2px solid #cbd5e0; border-radius:10px;
+  }
+  input[type=text]:focus{outline:none; border-color:var(--blue);}
+  button{
+    font-size:1rem; padding:12px 20px; border-radius:10px; border:none; cursor:pointer;
+    font-weight:bold; transition:transform .1s;
+  }
+  button:active{transform:scale(.97);}
+  .btn-main{background:var(--blue); color:#fff; width:100%; padding:14px; font-size:1.05rem; margin-top:16px;}
+  .btn-main:disabled{background:#a0aec0; cursor:not-allowed;}
+  .btn-outline{background:#fff; border:2px solid var(--blue); color:var(--blue);}
+  .statement-box{background:var(--blue-light); border-radius:10px; padding:12px 14px; margin-bottom:8px; font-size:.95rem;}
+  .chk-row{display:flex; align-items:flex-start; gap:10px; background:#fff; border:2px solid #e2e8f0; border-radius:10px; padding:12px; margin-bottom:10px; cursor:pointer;}
+  .chk-row.checked{border-color:var(--blue); background:var(--blue-light);}
+  .chk-row input{width:20px; height:20px; margin-top:2px; flex-shrink:0;}
+  .who{display:inline-block; background:var(--orange); color:#fff; border-radius:6px; padding:1px 8px; font-size:.8rem; margin-right:6px;}
+
+  /* sorting game */
+  .sort-item{
+    background:#fff; border:2px solid #e2e8f0; border-radius:12px; padding:12px 14px; margin-bottom:10px;
+  }
+  .sort-item .txt{font-size:.95rem; margin-bottom:10px;}
+  .sort-btns{display:flex; gap:10px;}
+  .sort-btns button{flex:1; padding:10px; border-radius:8px; border:2px solid #cbd5e0; background:#fff; font-size:.9rem;}
+  .sort-btns button.sel-central{background:var(--blue); color:#fff; border-color:var(--blue);}
+  .sort-btns button.sel-local{background:var(--orange); color:#fff; border-color:var(--orange);}
+  .sort-item.correct{border-color:var(--green); background:var(--green-light);}
+  .sort-item.wrong{border-color:var(--red); background:var(--red-light);}
+  .feedback{font-size:.85rem; font-weight:bold; margin-top:8px; display:none;}
+  .feedback.show{display:block;}
+  .feedback.ok{color:var(--green);}
+  .feedback.no{color:var(--red);}
+
+  textarea{
+    width:100%; min-height:100px; padding:12px 14px; font-size:1rem; border:2px solid #cbd5e0; border-radius:10px; font-family:inherit; resize:vertical;
+  }
+  textarea:focus{outline:none; border-color:var(--blue);}
+
+  .score-banner{background:var(--green-light); color:var(--green); border-radius:10px; padding:12px 14px; font-weight:bold; text-align:center; margin-top:14px; display:none;}
+  .score-banner.show{display:block;}
+
+  .summary-block{background:#fff; border-radius:12px; padding:14px 16px; margin-bottom:12px; border-left:5px solid var(--blue);}
+  .summary-block h3{margin:0 0 8px; font-size:1rem; color:var(--blue);}
+  .summary-block p{margin:4px 0; font-size:.92rem;}
+  #copyArea{white-space:pre-wrap; background:#f1f5f9; border-radius:10px; padding:14px; font-size:.88rem; margin-top:14px; border:1px dashed #cbd5e0;}
+  .copy-status{margin-top:8px; font-size:.9rem; font-weight:bold; text-align:center; min-height:1.2em;}
+  .progress{text-align:right; font-size:.85rem; color:var(--gray); margin-bottom:6px;}
+  #hiddenTextarea{position:absolute; left:-9999px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Screen 0: 姓名座號 -->
+  <div class="screen active" id="screen0">
+    <span class="tag">第一單元・民主國家政府與人民的關係為何？</span>
+    <h1>🕵️ 中央地方分工小偵探</h1>
+    <p class="lead">配合習作 P.6～9、課本第24～27頁。跟著慈莉的觀察，一起找出政府怎麼分工合作！</p>
+    <div class="card">
+      <label for="stuName">姓名</label>
+      <input type="text" id="stuName" placeholder="請輸入你的姓名">
+      <label for="stuNum">座號</label>
+      <input type="text" id="stuNum" placeholder="請輸入你的座號">
+      <button class="btn-main" onclick="startGame()">開始闖關 →</button>
+    </div>
+  </div>
+
+  <!-- Screen 1: 六位同學的說法（開放討論，不評分） -->
+  <div class="screen" id="screen1">
+    <div class="progress">關卡 1 / 4</div>
+    <h2>關卡一：誰的說法怪怪的？</h2>
+    <p class="lead">慈莉和同學正在討論「民主國家的政府會有什麼作為或條件」。讀一讀六位同學的說法，勾選你覺得<b>可能有問題</b>的說法（可複選），等一下老師會帶大家一起討論，沒有標準答案！</p>
+    <div class="card" id="chkList"></div>
+    <button class="btn-main" onclick="goScreen(2)">下一關 →</button>
+  </div>
+
+  <!-- Screen 2: 中央 vs 地方 分類遊戲 -->
+  <div class="screen" id="screen2">
+    <div class="progress">關卡 2 / 4</div>
+    <h2>關卡二：這是中央還是地方的工作？</h2>
+    <p class="lead">慈莉在機場看到政府防詐騙的作為，請幫每一項工作分類：這是<b>中央政府</b>還是<b>地方政府</b>做的事？點按下方按鈕作答，答對會變綠色喔！</p>
+    <div class="card" id="sortList"></div>
+    <div class="score-banner" id="sortScore"></div>
+    <button class="btn-main" id="sortNextBtn" onclick="goScreen(3)" disabled>先完成全部分類才能下一關</button>
+  </div>
+
+  <!-- Screen 3: 多選判斷 -->
+  <div class="screen" id="screen3">
+    <div class="progress">關卡 3 / 4</div>
+    <h2>關卡三：中央地方怎麼合作？</h2>
+    <p class="lead">關於政府在「防詐騙」上的分工合作，下列哪些說法是<b>正確</b>的？（可複選）</p>
+    <div class="card" id="mcList"></div>
+    <button class="btn-main" id="mcCheckBtn" onclick="checkMC()">送出檢查答案</button>
+    <div class="score-banner" id="mcScore"></div>
+    <button class="btn-main btn-outline" id="mcNextBtn" style="display:none; margin-top:10px;" onclick="goScreen(4)">下一關 →</button>
+  </div>
+
+  <!-- Screen 4: 感受反思 -->
+  <div class="screen" id="screen4">
+    <div class="progress">關卡 4 / 4</div>
+    <h2>關卡四：換你想一想</h2>
+    <div class="statement-box">如果你是在機場被警察提醒出國要小心詐騙的民眾，面對警察的說明與要求，你有什麼感受？</div>
+    <div class="card">
+      <textarea id="feelingText" placeholder="寫下你的感受……"></textarea>
+    </div>
+    <button class="btn-main" onclick="finishGame()">完成！查看我的學習回顧 →</button>
+  </div>
+
+  <!-- Screen 5: 學習回顧 -->
+  <div class="screen" id="screen5">
+    <h1>🎉 學習回顧</h1>
+    <p class="lead">太棒了！這是你今天的闖關紀錄，記得按下方按鈕複製，貼到聯絡簿或回傳給老師。</p>
+    <div id="summaryContainer"></div>
+    <div id="copyArea"></div>
+    <button class="btn-main" onclick="copyReview()">📋 一鍵複製學習回顧</button>
+    <div class="copy-status" id="copyStatus"></div>
+    <textarea id="hiddenTextarea"></textarea>
+  </div>
+
+</div>
+
+<script>
+const chkData = [
+  {id:'甲', text:'傾聽民意的政府才能不斷進步，例如政府設置公共政策網路參與平台。'},
+  {id:'乙', text:'由人民投票選出的政府官員，願意順應民意並依法行事，就可算是民主國家的政府。'},
+  {id:'丙', text:'我國的中央政府只有五院，地方政府則分為行政機關和立法機關。'},
+  {id:'丁', text:'中央和地方政府會互相合作，提供人民更安全的生活，例如：中央修訂交通法規，縣市政府落實執法、勸導人民遵守交通規則。'},
+  {id:'戊', text:'地方政府中的行政機關會受到立法機關的監督，目的並不是要製造對立，而是要為人民把關。'},
+  {id:'己', text:'由人民選出的執政者，若執政者施政不當，人民只能默默忍耐，無法反映問題。'}
+];
+
+const sortData = [
+  {id:'甲', text:'制定或修改防止詐騙的法律。', answer:'central'},
+  {id:'乙', text:'法院開庭審判違法的詐騙集團分子。', answer:'central'},
+  {id:'丙', text:'市政府網站公告詐騙集團的相關話術與手法，提醒民眾小心。', answer:'local'},
+  {id:'丁', text:'規畫國家防止詐騙的政策，並要求機場的警察加強宣導。', answer:'central'},
+  {id:'戊', text:'在縣政府警察局可以看到宣傳「出國高薪工作可能是詐騙」的海報。', answer:'local'}
+];
+
+const mcData = [
+  {text:'中央政府加強宣導打工詐騙的問題，地方政府也配合執行。', correct:true},
+  {text:'只有中央政府在宣導防止打工詐騙。', correct:false},
+  {text:'地方政府透過不同方式，加強防止打工詐騙的宣導。', correct:true},
+  {text:'中央政府與地方政府的工作內容與項目都不同。', correct:false}
+];
+
+let student = {name:'', num:''};
+let sortAnswers = {};
+let mcAnswers = [];
+let mcChecked = false;
+
+function goScreen(n){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen'+n).classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function startGame(){
+  const name = document.getElementById('stuName').value.trim();
+  const num = document.getElementById('stuNum').value.trim();
+  if(!name || !num){ alert('請先輸入姓名和座號喔！'); return; }
+  student.name = name; student.num = num;
+  renderChkList();
+  renderSortList();
+  renderMcList();
+  goScreen(1);
+}
+
+function renderChkList(){
+  const box = document.getElementById('chkList');
+  box.innerHTML = '';
+  chkData.forEach((item,i)=>{
+    const row = document.createElement('label');
+    row.className = 'chk-row';
+    row.innerHTML = `<input type="checkbox" data-idx="${i}"><span><span class="who">同學${item.id}</span>${item.text}</span>`;
+    row.querySelector('input').addEventListener('change', function(){
+      row.classList.toggle('checked', this.checked);
+    });
+    box.appendChild(row);
+  });
+}
+
+function renderSortList(){
+  const box = document.getElementById('sortList');
+  box.innerHTML = '';
+  sortData.forEach((item,i)=>{
+    const div = document.createElement('div');
+    div.className = 'sort-item';
+    div.id = 'sort'+i;
+    div.innerHTML = `
+      <div class="txt"><span class="who">${item.id}</span>${item.text}</div>
+      <div class="sort-btns">
+        <button onclick="pickSort(${i},'central')" id="sort${i}-central">中央政府</button>
+        <button onclick="pickSort(${i},'local')" id="sort${i}-local">地方政府</button>
+      </div>
+      <div class="feedback" id="sort${i}-fb"></div>
+    `;
+    box.appendChild(div);
+  });
+}
+
+function pickSort(i, choice){
+  sortAnswers[i] = choice;
+  const item = sortData[i];
+  const div = document.getElementById('sort'+i);
+  const fb = document.getElementById('sort'+i+'-fb');
+  document.getElementById('sort'+i+'-central').className = choice==='central' ? 'sel-central' : '';
+  document.getElementById('sort'+i+'-local').className = choice==='local' ? 'sel-local' : '';
+  const isRight = choice === item.answer;
+  div.classList.remove('correct','wrong');
+  div.classList.add(isRight ? 'correct' : 'wrong');
+  fb.classList.add('show');
+  fb.className = 'feedback show ' + (isRight ? 'ok' : 'no');
+  fb.textContent = isRight ? '✓ 答對了！' : '✗ 再想想看～';
+
+  if(Object.keys(sortAnswers).length === sortData.length){
+    const correctCount = sortData.filter((it,idx)=>sortAnswers[idx]===it.answer).length;
+    const banner = document.getElementById('sortScore');
+    banner.classList.add('show');
+    banner.textContent = `完成分類！答對 ${correctCount} / ${sortData.length} 題`;
+    document.getElementById('sortNextBtn').disabled = false;
+    document.getElementById('sortNextBtn').textContent = '下一關 →';
+  }
+}
+
+function renderMcList(){
+  const box = document.getElementById('mcList');
+  box.innerHTML = '';
+  mcData.forEach((item,i)=>{
+    const row = document.createElement('label');
+    row.className = 'chk-row';
+    row.id = 'mc'+i;
+    row.innerHTML = `<input type="checkbox" data-idx="${i}"><span>${i+1}. ${item.text}</span>`;
+    row.querySelector('input').addEventListener('change', function(){
+      row.classList.toggle('checked', this.checked);
+    });
+    box.appendChild(row);
+  });
+}
+
+function checkMC(){
+  mcAnswers = [];
+  let correctCount = 0;
+  mcData.forEach((item,i)=>{
+    const checked = document.querySelector(`#mc${i} input`).checked;
+    mcAnswers.push(checked);
+    const row = document.getElementById('mc'+i);
+    row.classList.remove('correct','wrong');
+    const isRight = checked === item.correct;
+    row.style.borderColor = isRight ? 'var(--green)' : 'var(--red)';
+    row.style.background = isRight ? 'var(--green-light)' : 'var(--red-light)';
+    if(isRight) correctCount++;
+  });
+  mcChecked = true;
+  const banner = document.getElementById('mcScore');
+  banner.classList.add('show');
+  banner.textContent = `檢查完成！答對 ${correctCount} / ${mcData.length} 題`;
+  document.getElementById('mcNextBtn').style.display = 'block';
+  document.getElementById('mcCheckBtn').disabled = true;
+}
+
+function finishGame(){
+  buildSummary();
+  goScreen(5);
+}
+
+function buildSummary(){
+  const chosenIssues = chkData.filter((item,i)=>document.querySelectorAll('#chkList input')[i].checked).map(it=>'同學'+it.id);
+  const sortLines = sortData.map((it,i)=>{
+    const ans = sortAnswers[i]==='central' ? '中央政府' : (sortAnswers[i]==='local' ? '地方政府' : '未作答');
+    const mark = sortAnswers[i]===it.answer ? '✓' : '✗';
+    return `　${it.id}：${ans} ${mark}`;
+  }).join('\n');
+  const sortCorrect = sortData.filter((it,idx)=>sortAnswers[idx]===it.answer).length;
+
+  const mcLines = mcData.map((item,i)=>{
+    const picked = mcAnswers[i] ? '有勾選' : '未勾選';
+    const mark = mcAnswers[i]===item.correct ? '✓' : '✗';
+    return `　${i+1}. ${picked} ${mark}`;
+  }).join('\n');
+  const mcCorrect = mcData.filter((item,i)=>mcAnswers[i]===item.correct).length;
+
+  const feeling = document.getElementById('feelingText').value.trim() || '（未填寫）';
+
+  const container = document.getElementById('summaryContainer');
+  container.innerHTML = `
+    <div class="summary-block">
+      <h3>基本資料</h3>
+      <p>姓名：${student.name}　座號：${student.num}</p>
+    </div>
+    <div class="summary-block">
+      <h3>關卡一：可能有問題的說法</h3>
+      <p>${chosenIssues.length ? chosenIssues.join('、') : '（未勾選）'}</p>
+    </div>
+    <div class="summary-block">
+      <h3>關卡二：中央 / 地方分類（答對 ${sortCorrect} / ${sortData.length}）</h3>
+      <p style="white-space:pre-wrap;">${sortLines}</p>
+    </div>
+    <div class="summary-block">
+      <h3>關卡三：合作判斷（答對 ${mcCorrect} / ${mcData.length}）</h3>
+      <p style="white-space:pre-wrap;">${mcLines}</p>
+    </div>
+    <div class="summary-block">
+      <h3>關卡四：我的感受</h3>
+      <p>${feeling}</p>
+    </div>
+  `;
+
+  const plain =
+`【中央地方分工小偵探・學習回顧】
+姓名：${student.name}　座號：${student.num}
+
+關卡一：可能有問題的說法 → ${chosenIssues.length ? chosenIssues.join('、') : '（未勾選）'}
+
+關卡二：中央/地方分類（答對 ${sortCorrect}/${sortData.length}）
+${sortLines}
+
+關卡三：合作判斷（答對 ${mcCorrect}/${mcData.length}）
+${mcLines}
+
+關卡四：我的感受
+${feeling}`;
+
+  document.getElementById('copyArea').textContent = plain;
+  window._reviewText = plain;
+}
+
+function copyReview(){
+  const text = window._reviewText || '';
+  const statusEl = document.getElementById('copyStatus');
+  function showStatus(ok){
+    statusEl.textContent = ok ? '✅ 已複製到剪貼簿！可以貼到聯絡簿或傳給老師了。' : '⚠️ 複製失敗，請手動選取上方文字複製。';
+    statusEl.style.color = ok ? 'var(--green)' : 'var(--red)';
+  }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=>showStatus(true)).catch(()=>{
+      fallbackCopy(text, showStatus);
+    });
+  } else {
+    fallbackCopy(text, showStatus);
+  }
+}
+
+function fallbackCopy(text, cb){
+  try{
+    const ta = document.getElementById('hiddenTextarea');
+    ta.style.position = 'fixed';
+    ta.style.left = '0';
+    ta.style.top = '0';
+    ta.value = text;
+    ta.select();
+    ta.setSelectionRange(0, text.length);
+    const ok = document.execCommand('copy');
+    ta.style.position = 'absolute';
+    ta.style.left = '-9999px';
+    cb(ok);
+  }catch(e){
+    cb(false);
+  }
+}
+</script>
+</body>
+</html>
