@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>民主歷程小偵探｜六上1-1</title>
+<style>
+  :root{
+    --orange:#f2884b; --green:#4caf82; --amber:#f2b84b; --red:#e2604f;
+    --bg:#eef4f1; --card:#ffffff; --ink:#2c3e40;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:"Microsoft JhengHei","PingFang TC",sans-serif;
+    background:var(--bg); color:var(--ink); padding:16px;
+  }
+  .wrap{max-width:720px;margin:0 auto;}
+  header{
+    background:var(--orange); color:#fff; border-radius:16px;
+    padding:18px 20px; margin-bottom:16px;
+  }
+  header h1{margin:0 0 4px;font-size:22px;}
+  header p{margin:0;font-size:14px;opacity:.95;}
+  .stage{display:none;}
+  .stage.active{display:block;}
+  .card{
+    background:var(--card); border-radius:14px; padding:16px;
+    margin-bottom:12px; box-shadow:0 2px 6px rgba(0,0,0,.08);
+    font-size:16px; line-height:1.5; display:flex; align-items:center; gap:12px;
+  }
+  .card .txt{flex:1;}
+  .btnrow{display:flex; flex-direction:column; gap:6px;}
+  .arrow{
+    width:44px;height:44px;border:none;border-radius:10px;
+    background:var(--bg); font-size:18px; cursor:pointer;
+  }
+  .arrow:active{background:#dbe6e1;}
+  .card.correct{border:3px solid var(--green);}
+  .card.wrong{border:3px solid var(--amber);}
+  .primary{
+    display:inline-block; background:var(--green); color:#fff; border:none;
+    border-radius:12px; padding:14px 22px; font-size:16px; cursor:pointer;
+    margin-top:8px;
+  }
+  .primary:active{opacity:.85;}
+  .secondary{
+    display:inline-block; background:#fff; color:var(--ink); border:2px solid #ccd8d3;
+    border-radius:12px; padding:10px 16px; font-size:14px; cursor:pointer; margin-top:8px;
+  }
+  .gap-btn{
+    width:100%; background:#fff; border:2px dashed #b7c7c1; border-radius:10px;
+    padding:12px; margin:6px 0; font-size:14px; color:#5b6b66; cursor:pointer;
+  }
+  .gap-btn:active{background:#f2f8f5;}
+  .timeline-card{
+    background:var(--card); border-radius:14px; padding:14px 16px;
+    margin:6px 0; font-size:15px; box-shadow:0 2px 6px rgba(0,0,0,.06);
+  }
+  .msg{font-weight:bold; margin:10px 0; min-height:24px;}
+  .msg.ok{color:var(--green);}
+  .msg.no{color:var(--red);}
+  .insert-card{background:#fff7e8; border:2px solid var(--orange); }
+  options label{display:block;}
+  .opt{
+    display:flex; align-items:center; gap:10px; background:#fff; border-radius:10px;
+    padding:12px; margin-bottom:8px; font-size:15px; box-shadow:0 1px 4px rgba(0,0,0,.06);
+  }
+  textarea{
+    width:100%; min-height:70px; border-radius:10px; border:2px solid #ccd8d3;
+    padding:10px; font-size:15px; font-family:inherit; margin-top:8px;
+  }
+  .footer-note{font-size:12px; color:#7c8b86; text-align:center; margin-top:18px;}
+  .badge{
+    display:inline-block; background:#fff; color:var(--orange); border-radius:20px;
+    padding:4px 12px; font-size:13px; font-weight:bold; margin-bottom:8px;
+  }
+  .summary{background:#fff; border-radius:12px; padding:16px; margin-top:12px; box-shadow:0 2px 6px rgba(0,0,0,.08);}
+  .name-row{margin-top:8px;}
+  .name-row input{
+    padding:8px 10px; border-radius:8px; border:2px solid rgba(255,255,255,.7);
+    font-size:14px; width:160px; background:rgba(255,255,255,.9);
+  }
+  .review-box{background:#fff; border-radius:12px; padding:16px; margin-top:14px; box-shadow:0 2px 6px rgba(0,0,0,.08);}
+  .review-box h3{margin:0 0 8px; font-size:16px; color:var(--orange);}
+  #reviewText{
+    width:100%; min-height:150px; border-radius:10px; border:2px solid #ccd8d3;
+    padding:10px; font-size:14px; font-family:inherit; background:#fbfbf9;
+  }
+  .copy-status{font-size:13px; margin-top:6px; min-height:18px; font-weight:bold;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="badge" id="stageBadge">關卡 1 / 3</div>
+    <h1>民主歷程小偵探</h1>
+    <p>六上社會 第一單元 · 配合習作1-1、課本第14～21頁</p>
+    <div class="name-row"><label>姓名／座號：<input type="text" id="studentName" placeholder="例如：4號 王小明"></label></div>
+  </header>
+
+  <!-- 關卡一：排序 -->
+  <section class="stage active" id="stage1">
+    <p><strong>任務：</strong>把下面四個事件，依「發生時間先後」排好順序（用 ▲▼ 調整），排對了會變綠色！</p>
+    <div id="cardList"></div>
+    <div class="msg" id="msg1"></div>
+    <button class="primary" onclick="checkOrder()">確認排序</button>
+  </section>
+
+  <!-- 關卡二：插入美麗島事件 -->
+  <section class="stage" id="stage2">
+    <p><strong>任務：</strong>「美麗島事件」（民國68年，某雜誌創刊後為響應世界人權日舉辦遊行，提出「追求民主自由」、「開放黨禁報禁」等訴求，引發警民衝突）應該插在時間軸的哪個位置？點選正確的插入點。</p>
+    <div id="timelineWithGaps"></div>
+    <div class="msg" id="msg2"></div>
+  </section>
+
+  <!-- 關卡三：投票討論 -->
+  <section class="stage" id="stage3">
+    <p><strong>任務：</strong>你認為下列哪一個事件對臺灣民主發展的<strong>影響最大</strong>？選一個並寫下理由，等一下老師會抽人分享。</p>
+    <div id="voteOptions"></div>
+    <textarea id="reason" placeholder="因為……"></textarea>
+    <button class="primary" onclick="submitVote()">送出我的想法</button>
+    <div id="voteSummary"></div>
+  </section>
+
+  <div id="restartWrap" style="display:none;text-align:center;">
+    <button class="secondary" onclick="location.reload()">重新開始（換一組再玩一次）</button>
+  </div>
+
+  <p class="footer-note">六年級上學期社會 · 第一單元《臺灣人民爭取民主自由的歷程為何？》互動排序工具</p>
+</div>
+
+<script>
+// 事件依「正確時間順序」定義，correctIndex 就是 0,1,2,3
+const events = [
+  {id:0, text:"政府人員查緝私菸，引發抗議與武力鎮壓，許多民眾成為受難者。", name:"二二八事件（民國36年）"},
+  {id:1, text:"政府對中共作戰失利，以維護治安為由頒布禁令，嚴格限制人民言論、集會等自由。", name:"戒嚴令頒布（民國38年）"},
+  {id:2, text:"政府宣布解除禁令後，更多新政黨、報社及電視臺紛紛成立，加速政治民主化。", name:"解嚴、開放黨禁報禁（民國76年後）"},
+  {id:3, text:"第一次實施由人民直接選舉總統和副總統，開啟民主發展的里程碑。", name:"首次總統副總統直選（民國85年）"}
+];
+
+let order = [1,3,0,2]; // 洗牌後的初始順序（刻意打亂）
+
+function renderCards(){
+  const list = document.getElementById('cardList');
+  list.innerHTML = '';
+  order.forEach((eid, pos) => {
+    const ev = events[eid];
+    const div = document.createElement('div');
+    div.className = 'card';
+    div.innerHTML = `
+      <div class="txt">${pos+1}. ${ev.text}</div>
+      <div class="btnrow">
+        <button class="arrow" onclick="move(${pos}, -1)">▲</button>
+        <button class="arrow" onclick="move(${pos}, 1)">▼</button>
+      </div>`;
+    list.appendChild(div);
+  });
+}
+
+function move(pos, dir){
+  const newPos = pos + dir;
+  if(newPos < 0 || newPos >= order.length) return;
+  [order[pos], order[newPos]] = [order[newPos], order[pos]];
+  renderCards();
+  document.getElementById('msg1').textContent = '';
+}
+
+function checkOrder(){
+  const cards = document.querySelectorAll('#cardList .card');
+  let allCorrect = true;
+  order.forEach((eid, pos) => {
+    if(eid === pos){
+      cards[pos].classList.add('correct');
+      cards[pos].classList.remove('wrong');
+    } else {
+      cards[pos].classList.add('wrong');
+      cards[pos].classList.remove('correct');
+      allCorrect = false;
+    }
+  });
+  const msg = document.getElementById('msg1');
+  if(allCorrect){
+    msg.textContent = '全部正確！進入下一關 →';
+    msg.className = 'msg ok';
+    setTimeout(goStage2, 900);
+  } else {
+    msg.textContent = '橘色卡片位置還不對，再用▲▼調整看看！（綠色代表正確）';
+    msg.className = 'msg no';
+  }
+}
+
+function goStage2(){
+  document.getElementById('stage1').classList.remove('active');
+  document.getElementById('stage2').classList.add('active');
+  document.getElementById('stageBadge').textContent = '關卡 2 / 3';
+  renderGaps();
+}
+
+function renderGaps(){
+  const box = document.getElementById('timelineWithGaps');
+  box.innerHTML = '';
+  box.appendChild(makeGapBtn(0));
+  events.forEach((ev, i) => {
+    const c = document.createElement('div');
+    c.className = 'timeline-card';
+    c.textContent = ev.name;
+    box.appendChild(c);
+    box.appendChild(makeGapBtn(i+1));
+  });
+}
+
+function makeGapBtn(gapIndex){
+  const b = document.createElement('button');
+  b.className = 'gap-btn';
+  b.textContent = '⬆ 點這裡插入「美麗島事件」';
+  b.onclick = () => checkGap(gapIndex, b);
+  return b;
+}
+
+function checkGap(gapIndex, btn){
+  const msg = document.getElementById('msg2');
+  if(gapIndex === 2){ // 正確位置：戒嚴(index1) 之後、解嚴(index2) 之前
+    btn.outerHTML = '<div class="timeline-card insert-card">美麗島事件（民國68年）－ 該雜誌名稱是？<br><input type="text" id="magAnswer" placeholder="輸入雜誌名稱" style="margin-top:6px;padding:8px;border-radius:8px;border:2px solid #ccd8d3;width:60%;"><button class="secondary" onclick="revealMag()">對答案</button><div id="magResult" style="margin-top:6px;font-weight:bold;"></div></div>';
+    msg.textContent = '答對了！插入位置正確 ✔';
+    msg.className = 'msg ok';
+    document.querySelectorAll('.gap-btn').forEach(g => g.disabled = true);
+    setTimeout(goStage3, 1800);
+  } else {
+    msg.textContent = '位置不對，再想想看：這件事發生在民國68年，跟其他四個事件比比看時間先後！';
+    msg.className = 'msg no';
+  }
+}
+
+function revealMag(){
+  document.getElementById('magResult').textContent = '答案：美麗島雜誌（又稱美麗島事件）';
+}
+
+function goStage3(){
+  document.getElementById('stage2').classList.remove('active');
+  document.getElementById('stage3').classList.add('active');
+  document.getElementById('stageBadge').textContent = '關卡 3 / 3';
+  renderVote();
+}
+
+function renderVote(){
+  const opts = ["二二八事件", "第一次由人民直選總統、副總統", "解除戒嚴", "其他（自己想一個！）"];
+  const box = document.getElementById('voteOptions');
+  box.innerHTML = '';
+  opts.forEach((o, i) => {
+    const label = document.createElement('label');
+    label.className = 'opt';
+    label.innerHTML = `<input type="radio" name="vote" value="${o}" style="width:20px;height:20px;"> ${o}`;
+    box.appendChild(label);
+  });
+}
+
+function submitVote(){
+  const selected = document.querySelector('input[name="vote"]:checked');
+  const reason = document.getElementById('reason').value.trim();
+  const summary = document.getElementById('voteSummary');
+  if(!selected){
+    summary.innerHTML = '<div class="msg no">請先選一個事件喔！</div>';
+    return;
+  }
+  summary.innerHTML = `<div class="summary"><strong>你的選擇：</strong>${selected.value}<br><strong>理由：</strong>${reason || '（未填寫）'}<br><br>👉 請舉手，等老師抽人分享你的想法！</div>`;
+
+  const name = (document.getElementById('studentName').value || '').trim() || '未填寫';
+  const magInput = document.getElementById('magAnswer');
+  const mag = magInput ? (magInput.value.trim() || '未作答') : '未作答';
+  const today = new Date().toLocaleDateString('zh-TW');
+  const reviewText =
+`六年級上學期 社會｜第一單元《臺灣人民爭取民主自由的歷程為何？》
+姓名／座號：${name}　日期：${today}
+
+【關卡一】民主歷程事件排序：完成 ✔
+【關卡二】美麗島事件插入時間軸：正確 ✔｜雜誌名稱回答：${mag}
+【關卡三】我認為影響民主發展最大的事件：${selected.value}
+理由：${reason || '（未填寫）'}`;
+
+  const reviewBox = document.createElement('div');
+  reviewBox.className = 'review-box';
+  reviewBox.innerHTML = `
+    <h3>📋 學習回顧（可回傳給老師）</h3>
+    <textarea id="reviewText" readonly>${reviewText}</textarea>
+    <button class="primary" onclick="copyReview()">一鍵複製學習回顧</button>
+    <div class="copy-status" id="copyStatus"></div>
+    <p style="font-size:12px;color:#7c8b86;">複製後可貼到 Google表單、聯絡簿、班級群組或請老師檢查。</p>
+  `;
+  summary.appendChild(reviewBox);
+  document.getElementById('restartWrap').style.display = 'block';
+}
+
+async function copyReview(){
+  const ta = document.getElementById('reviewText');
+  const status = document.getElementById('copyStatus');
+  ta.focus();
+  ta.select();
+  ta.setSelectionRange(0, 999999);
+  let ok = false;
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    try{ await navigator.clipboard.writeText(ta.value); ok = true; }catch(e){ ok = false; }
+  }
+  if(!ok){
+    try{ ok = document.execCommand('copy'); }catch(e){ ok = false; }
+  }
+  status.style.color = ok ? 'var(--green)' : 'var(--red)';
+  status.textContent = ok
+    ? '✅ 已複製！貼到表單或群組回傳給老師即可。'
+    : '⚠️ 自動複製失敗，請長按上方文字框，選取全部後手動複製。';
+}
+
+renderCards();
+</script>
+</body>
+</html>
