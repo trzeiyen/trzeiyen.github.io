@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>權利義務抓錯大偵探</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif;
+    background: linear-gradient(160deg,#fef6e4,#e8f6ef);
+    min-height: 100vh; display: flex; justify-content: center; padding: 16px;
+  }
+  #app { width: 100%; max-width: 640px; }
+  .card {
+    background: #fff; border-radius: 20px; padding: 24px 20px; margin-bottom: 16px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+  }
+  h1 { font-size: 1.4em; color: #d9622b; margin: 0 0 6px; text-align:center; }
+  h2 { font-size: 1.1em; color: #2b7a78; margin: 0 0 12px; }
+  .badge { display:inline-block; background:#d9622b; color:#fff; border-radius:50%; width:28px; height:28px; line-height:28px; text-align:center; font-weight:bold; margin-right:6px; }
+  p.lead { color:#555; line-height:1.7; text-align:center; }
+  .context { background:#fdf1e4; border-radius:14px; padding:16px; line-height:1.9; font-size:1.05em; color:#333; margin-bottom:16px; }
+  .context .target { color:#c0392b; font-weight:bold; text-decoration: underline wavy #c0392b; }
+  .btn-row { display:flex; flex-wrap:wrap; gap:12px; margin-top: 10px; }
+  button.opt {
+    flex: 1 1 auto; min-width: 120px; padding: 16px 14px; font-size: 1.05em; border:none;
+    border-radius: 14px; background:#eef6f6; color:#2b7a78; font-weight:bold; cursor:pointer;
+    transition: transform .1s, background .15s; border: 2px solid #cfe9e8;
+  }
+  button.opt:active { transform: scale(0.96); }
+  button.opt.selected { background:#2b7a78; color:#fff; border-color:#2b7a78; }
+  button.primary {
+    display:block; width:100%; padding:16px; font-size:1.1em; font-weight:bold; color:#fff;
+    background:#d9622b; border:none; border-radius:14px; margin-top:18px; cursor:pointer;
+  }
+  button.primary:disabled { background:#e0c4b0; cursor:not-allowed; }
+  button.primary:active:not(:disabled) { transform: scale(0.98); }
+  input[type=text] {
+    width:100%; padding:14px; font-size:1.05em; border-radius:12px; border:2px solid #cfe9e8;
+    margin-bottom:12px;
+  }
+  textarea {
+    width:100%; padding:14px; font-size:1.05em; border-radius:12px; border:2px solid #cfe9e8;
+    min-height: 70px; font-family: inherit; resize: vertical;
+  }
+  .feedback { margin-top:14px; padding:14px; border-radius:12px; font-size:1em; line-height:1.6; display:none; }
+  .feedback.correct { background:#e3f6e0; color:#2e7d32; display:block; }
+  .feedback.wrong { background:#fde9e7; color:#c0392b; display:block; }
+  .progress { text-align:center; color:#888; font-size:.9em; margin-bottom:8px; }
+  .cat-row { display:flex; gap:12px; margin-top:12px; }
+  .cat-row button.opt { text-align:center; }
+  table.review { width:100%; border-collapse: collapse; margin-top:10px; font-size:.95em; }
+  table.review th, table.review td { border:1px solid #ddd; padding:8px; text-align:left; }
+  table.review th { background:#f3f3f3; }
+  .mark-ok { color:#2e7d32; font-weight:bold; }
+  .mark-fix { color:#c0392b; font-weight:bold; }
+  #copyBtn { background:#2b7a78; }
+  #copyStatus { text-align:center; margin-top:8px; font-weight:bold; min-height:1.4em; }
+  .hidden { display:none !important; }
+  .small-note { font-size:.85em; color:#888; text-align:center; margin-top:6px; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="card" id="screen-intro">
+    <h1>🔍 權利義務抓錯大偵探</h1>
+    <p class="lead">福平和蕾米的故事裡，藏著 6 個關於「憲法保障的權利與義務」的說法，其中有 3 個說錯了！<br>你能找出來，並說出正確答案嗎？</p>
+    <input type="text" id="inputName" placeholder="請輸入姓名">
+    <input type="text" id="inputSeat" placeholder="請輸入座號">
+    <button class="primary" id="startBtn">開始偵探任務！</button>
+  </div>
+
+  <div class="card hidden" id="screen-quiz">
+    <div class="progress" id="progressText"></div>
+    <h2 id="questionTitle"></h2>
+    <div class="context" id="contextBox"></div>
+    <div id="stepArea"></div>
+  </div>
+
+  <div class="card hidden" id="screen-reflect">
+    <h2>💭 最後想一想</h2>
+    <p class="lead" style="text-align:left;">現在身為小學生的你，目前擁有哪些權利？有哪些應盡的義務？</p>
+    <p style="margin-bottom:4px;font-weight:bold;color:#555;">✏️ 我擁有的權利：</p>
+    <textarea id="reflectRight" placeholder="例如：受教育、參加校內活動投票…"></textarea>
+    <p style="margin:14px 0 4px;font-weight:bold;color:#555;">✏️ 我應盡的義務：</p>
+    <textarea id="reflectDuty" placeholder="例如：遵守校規、準時上學…"></textarea>
+    <button class="primary" id="reflectDoneBtn">完成，查看學習回顧</button>
+  </div>
+
+  <div class="card hidden" id="screen-review">
+    <h2>📋 學習回顧</h2>
+    <p class="small-note" id="reviewWho"></p>
+    <table class="review">
+      <thead><tr><th>題號</th><th>你的判斷</th><th>正確答案／類別</th></tr></thead>
+      <tbody id="reviewBody"></tbody>
+    </table>
+    <p style="margin-top:14px;font-weight:bold;color:#555;">✏️ 我擁有的權利：</p>
+    <p id="reviewRight" style="background:#fdf1e4;padding:10px;border-radius:10px;"></p>
+    <p style="font-weight:bold;color:#555;">✏️ 我應盡的義務：</p>
+    <p id="reviewDuty" style="background:#fdf1e4;padding:10px;border-radius:10px;"></p>
+    <button class="primary" id="copyBtn">📋 一鍵複製學習回顧</button>
+    <div id="copyStatus"></div>
+    <textarea id="copySource" class="hidden"></textarea>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  const ITEMS = [
+    { id:1, isError:true,
+      contextHTML: '福平計畫在高中畢業後，就要離開家鄉，獨自去外縣市就讀理想的大學。因為憲法保障<span class="target">①就業權</span>，到時候他可以依據自己的需求選擇適合居住的地方。',
+      shownTerm:'就業權', correctTerm:'居住及遷徙自由', category:'權利',
+      choices:['居住及遷徙自由','就業權','服兵役','參政權'] },
+    { id:2, isError:true,
+      contextHTML: '等到大學畢業後，他會到軍隊接受軍事訓練，因為<span class="target">②納稅</span>是國民的責任，可以保護國家、保障人民生命和財產安全。',
+      shownTerm:'納稅', correctTerm:'服兵役', category:'義務',
+      choices:['服兵役','納稅','接受國民教育','平等權'] },
+    { id:3, isError:false,
+      contextHTML: '蕾米說未來等她年滿二十歲，就可以在選舉時，投票給自己認同的縣市長候選人，福平說這就是因為憲法保障人民擁有<span class="target">③參政權</span>。',
+      shownTerm:'參政權', category:'權利' },
+    { id:4, isError:true,
+      contextHTML: '縣市長當選後，為了服務人民，政府的公共建設、道路興建等都需要經費，所以他的爸爸和媽媽每年都要按時<span class="target">④投票</span>給政府。',
+      shownTerm:'投票', correctTerm:'納稅', category:'義務',
+      choices:['納稅','投票','服兵役','居住及遷徙自由'] },
+    { id:5, isError:false,
+      contextHTML: '蕾米班上有一位同學是視障生，每逢考試時，學校老師會特別為他準備放大印製的考卷，這是為了確保他和其他同學都享有<span class="target">⑤平等權</span>，能讓他順利完成考試。',
+      shownTerm:'平等權', category:'權利' },
+    { id:6, isError:false,
+      contextHTML: '福平說他和堂哥現在分別在國小及國中念書學習，這是因為我國六至十五歲的國民都要<span class="target">⑥接受國民教育</span>，讓國民增長知識與思考能力，身心發展得更健康。',
+      shownTerm:'接受國民教育', category:'義務' }
+  ];
+
+  let student = { name:'', seat:'' };
+  let idx = 0;
+  let subStep = 0; // 0 = judge, 1 = pick term (if error), 2 = pick category
+  let answers = []; // { judge, term, category }
+  let current = { judge:null, term:null, category:null };
+
+  const screenIntro = document.getElementById('screen-intro');
+  const screenQuiz = document.getElementById('screen-quiz');
+  const screenReflect = document.getElementById('screen-reflect');
+  const screenReview = document.getElementById('screen-review');
+
+  document.getElementById('startBtn').addEventListener('click', () => {
+    const name = document.getElementById('inputName').value.trim();
+    const seat = document.getElementById('inputSeat').value.trim();
+    if (!name) { alert('請先輸入姓名喔！'); return; }
+    student.name = name; student.seat = seat || '（未填）';
+    screenIntro.classList.add('hidden');
+    screenQuiz.classList.remove('hidden');
+    renderStep();
+  });
+
+  function renderStep(){
+    const item = ITEMS[idx];
+    document.getElementById('progressText').textContent = `第 ${idx+1} / ${ITEMS.length} 題`;
+    document.getElementById('contextBox').innerHTML = item.contextHTML;
+    const stepArea = document.getElementById('stepArea');
+    stepArea.innerHTML = '';
+
+    if (subStep === 0) {
+      document.getElementById('questionTitle').textContent = '這句話畫底線的說法，對不對？';
+      const row = document.createElement('div');
+      row.className = 'btn-row';
+      ['對','錯'].forEach(opt => {
+        const b = document.createElement('button');
+        b.className = 'opt'; b.textContent = opt;
+        b.onclick = () => chooseJudge(opt, item, b, row);
+        row.appendChild(b);
+      });
+      stepArea.appendChild(row);
+      const fb = document.createElement('div');
+      fb.className = 'feedback'; fb.id = 'fb';
+      stepArea.appendChild(fb);
+      const next = document.createElement('button');
+      next.className = 'primary'; next.textContent = '下一步';
+      next.id = 'nextBtn'; next.disabled = true;
+      next.onclick = () => advance(item);
+      stepArea.appendChild(next);
+    } else if (subStep === 1) {
+      document.getElementById('questionTitle').textContent = '這句話正確的說法應該是？';
+      const row = document.createElement('div');
+      row.className = 'btn-row';
+      item.choices.forEach(choice => {
+        const b = document.createElement('button');
+        b.className = 'opt'; b.textContent = choice;
+        b.onclick = () => {
+          [...row.children].forEach(c => c.classList.remove('selected'));
+          b.classList.add('selected');
+          current.term = choice;
+          document.getElementById('nextBtn').disabled = false;
+        };
+        row.appendChild(b);
+      });
+      stepArea.appendChild(row);
+      const next = document.createElement('button');
+      next.className = 'primary'; next.textContent = '下一步';
+      next.id = 'nextBtn'; next.disabled = true;
+      next.onclick = () => advance(item);
+      stepArea.appendChild(next);
+    } else if (subStep === 2) {
+      document.getElementById('questionTitle').textContent = '這是屬於人民的「權利」還是「義務」？';
+      const row = document.createElement('div');
+      row.className = 'btn-row cat-row';
+      ['權利','義務'].forEach(choice => {
+        const b = document.createElement('button');
+        b.className = 'opt'; b.textContent = choice;
+        b.onclick = () => {
+          [...row.children].forEach(c => c.classList.remove('selected'));
+          b.classList.add('selected');
+          current.category = choice;
+          document.getElementById('nextBtn').disabled = false;
+        };
+        row.appendChild(b);
+      });
+      stepArea.appendChild(row);
+      const next = document.createElement('button');
+      next.className = 'primary'; next.textContent = (idx === ITEMS.length-1) ? '完成所有題目' : '下一題';
+      next.id = 'nextBtn'; next.disabled = true;
+      next.onclick = () => advance(item);
+      stepArea.appendChild(next);
+    }
+  }
+
+  function chooseJudge(opt, item, btn, row){
+    [...row.children].forEach(c => c.classList.remove('selected'));
+    btn.classList.add('selected');
+    current.judge = opt;
+    const fb = document.getElementById('fb');
+    const isCorrectJudge = (opt === '錯') === item.isError;
+    if (item.isError) {
+      fb.className = 'feedback ' + (opt === '錯' ? 'correct' : 'wrong');
+      fb.textContent = opt === '錯'
+        ? '答對了！這句話說錯了，接下來選出正確答案吧！'
+        : `再想想哦～課本第28～35頁有提到，「${item.shownTerm}」用在這裡不太對喔，我們一起找出正確答案！`;
+    } else {
+      fb.className = 'feedback ' + (opt === '對' ? 'correct' : 'wrong');
+      fb.textContent = opt === '對'
+        ? '答對了！這句話說的是對的～'
+        : `再想想哦～其實這句話是對的，「${item.shownTerm}」用在這裡是正確的！`;
+    }
+    document.getElementById('nextBtn').disabled = false;
+  }
+
+  function advance(item){
+    if (subStep === 0) {
+      subStep = item.isError ? 1 : 2;
+      renderStep();
+    } else if (subStep === 1) {
+      subStep = 2;
+      renderStep();
+    } else {
+      // finish this item
+      answers.push({
+        id: item.id,
+        judge: current.judge,
+        isError: item.isError,
+        shownTerm: item.shownTerm,
+        studentTerm: current.term,
+        correctTerm: item.isError ? item.correctTerm : item.shownTerm,
+        studentCategory: current.category,
+        correctCategory: item.category
+      });
+      current = { judge:null, term:null, category:null };
+      subStep = 0;
+      idx++;
+      if (idx >= ITEMS.length) {
+        screenQuiz.classList.add('hidden');
+        screenReflect.classList.remove('hidden');
+      } else {
+        renderStep();
+      }
+    }
+  }
+
+  document.getElementById('reflectDoneBtn').addEventListener('click', () => {
+    screenReflect.classList.add('hidden');
+    screenReview.classList.remove('hidden');
+    buildReview();
+  });
+
+  function buildReview(){
+    document.getElementById('reviewWho').textContent = `姓名：${student.name}　座號：${student.seat}`;
+    const tbody = document.getElementById('reviewBody');
+    tbody.innerHTML = '';
+    answers.forEach(a => {
+      const tr = document.createElement('tr');
+      const judgeOk = (a.judge === '錯') === a.isError;
+      const termOk = !a.isError || a.studentTerm === a.correctTerm;
+      const catOk = a.studentCategory === a.correctCategory;
+      const allOk = judgeOk && termOk && catOk;
+      tr.innerHTML = `
+        <td>第${a.id}題</td>
+        <td>${a.judge} <span class="${judgeOk?'mark-ok':'mark-fix'}">${judgeOk?'✓':'✗'}</span></td>
+        <td>${a.correctTerm}（${a.correctCategory}）${allOk?'<span class="mark-ok"> ✓ 全對</span>':'<span class="mark-fix"> 💡再複習</span>'}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+    const rTxt = document.getElementById('reflectRight').value.trim() || '（未填寫）';
+    const dTxt = document.getElementById('reflectDuty').value.trim() || '（未填寫）';
+    document.getElementById('reviewRight').textContent = rTxt;
+    document.getElementById('reviewDuty').textContent = dTxt;
+
+    let summary = `【權利義務抓錯大偵探－學習回顧】\n姓名：${student.name}　座號：${student.seat}\n\n`;
+    answers.forEach(a => {
+      summary += `第${a.id}題：原文說「${a.shownTerm}」→ 我的判斷：${a.judge}；正確答案：${a.correctTerm}（${a.correctCategory}）\n`;
+    });
+    summary += `\n我擁有的權利：${rTxt}\n我應盡的義務：${dTxt}\n`;
+    document.getElementById('copySource').value = summary;
+  }
+
+  document.getElementById('copyBtn').addEventListener('click', () => {
+    const text = document.getElementById('copySource').value;
+    const statusEl = document.getElementById('copyStatus');
+    function showStatus(ok){
+      statusEl.textContent = ok ? '✅ 已複製！可以貼到聯絡簿或表單囉～' : '⚠️ 複製失敗，請長按上方文字自行選取複製';
+      statusEl.style.color = ok ? '#2e7d32' : '#c0392b';
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => showStatus(true)).catch(() => fallbackCopy());
+    } else {
+      fallbackCopy();
+    }
+    function fallbackCopy(){
+      const ta = document.getElementById('copySource');
+      ta.classList.remove('hidden');
+      ta.select();
+      try {
+        const ok = document.execCommand('copy');
+        showStatus(ok);
+      } catch(e) {
+        showStatus(false);
+      }
+      ta.classList.add('hidden');
+    }
+  });
+})();
+</script>
+</body>
+</html>
