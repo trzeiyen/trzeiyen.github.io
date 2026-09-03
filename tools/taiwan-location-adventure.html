@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>臺灣位置大冒險</title>
+<style>
+  :root{
+    --teal:#0f7a7a; --teal-light:#e3f6f5; --blue:#2b6cb0; --blue-light:#ebf4ff;
+    --green:#2f855a; --green-light:#e6fffa; --red:#c53030; --red-light:#fff5f5;
+    --orange:#dd6b20; --gray:#4a5568; --bg:#f5faf9;
+  }
+  *{box-sizing:border-box;}
+  body{
+    font-family:"PingFang TC","Microsoft JhengHei","Helvetica Neue",Arial,sans-serif;
+    margin:0; background:var(--bg); color:#1a202c; line-height:1.7;
+  }
+  .wrap{max-width:720px; margin:0 auto; padding:20px 16px 60px;}
+  .screen{display:none;}
+  .screen.active{display:block; animation:fade .25s ease;}
+  @keyframes fade{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+  h1{font-size:1.4rem; color:var(--teal); margin:0 0 6px;}
+  h2{font-size:1.15rem; color:var(--teal); margin:0 0 12px; border-left:6px solid var(--teal); padding-left:10px;}
+  .tag{display:inline-block; background:var(--teal-light); color:var(--teal); font-size:.8rem; padding:3px 10px; border-radius:999px; margin-bottom:10px;}
+  .card{background:#fff; border-radius:14px; padding:18px; margin-bottom:16px; box-shadow:0 2px 8px rgba(0,0,0,.06);}
+  .lead{color:var(--gray); font-size:.95rem; margin-bottom:14px;}
+  label{display:block; font-weight:bold; margin:12px 0 6px;}
+  input[type=text]{
+    width:100%; padding:12px 14px; font-size:1rem; border:2px solid #cbd5e0; border-radius:10px;
+  }
+  input[type=text]:focus{outline:none; border-color:var(--teal);}
+  button{
+    font-size:1rem; padding:12px 20px; border-radius:10px; border:none; cursor:pointer;
+    font-weight:bold; transition:transform .1s;
+  }
+  button:active{transform:scale(.97);}
+  .btn-main{background:var(--teal); color:#fff; width:100%; padding:14px; font-size:1.05rem; margin-top:16px;}
+  .btn-main:disabled{background:#a0aec0; cursor:not-allowed;}
+  .btn-outline{background:#fff; border:2px solid var(--teal); color:var(--teal);}
+  .statement-box{background:var(--teal-light); border-radius:10px; padding:12px 14px; margin-bottom:8px; font-size:.95rem;}
+
+  .q-block{margin-bottom:22px;}
+  .q-title{font-weight:bold; margin-bottom:10px; font-size:.98rem;}
+  .opt-btn{
+    display:block; width:100%; text-align:left; background:#fff; border:2px solid #e2e8f0;
+    border-radius:10px; padding:12px 14px; margin-bottom:8px; font-size:.92rem; color:#1a202c;
+  }
+  .opt-btn.picked{border-color:var(--teal); background:var(--teal-light);}
+  .opt-btn.correct{border-color:var(--green); background:var(--green-light); color:var(--green);}
+  .opt-btn.wrong{border-color:var(--red); background:var(--red-light); color:var(--red);}
+  .opt-btn:disabled{cursor:default;}
+
+  .tf-row{background:#fff; border:2px solid #e2e8f0; border-radius:12px; padding:14px; margin-bottom:14px;}
+  .tf-text{font-size:.95rem; margin-bottom:10px;}
+  .tf-btns{display:flex; gap:10px;}
+  .tf-btns button{flex:1; padding:10px; border-radius:8px; border:2px solid #cbd5e0; background:#fff; font-size:.9rem;}
+  .tf-btns button.sel-true{background:var(--blue); color:#fff; border-color:var(--blue);}
+  .tf-btns button.sel-false{background:var(--orange); color:#fff; border-color:var(--orange);}
+  .tf-row.correct{border-color:var(--green); background:var(--green-light);}
+  .tf-row.wrong{border-color:var(--red); background:var(--red-light);}
+  .feedback{font-size:.85rem; font-weight:bold; margin-top:8px; display:none;}
+  .feedback.show{display:block;}
+  .feedback.ok{color:var(--green);}
+  .feedback.no{color:var(--red);}
+
+  .match-card{background:#fff; border:2px solid #e2e8f0; border-radius:12px; padding:14px; margin-bottom:14px;}
+  .match-loc{font-weight:bold; color:var(--teal); margin-bottom:4px;}
+  .match-desc{font-size:.9rem; color:var(--gray); margin-bottom:10px;}
+  .match-btns{display:flex; gap:8px; flex-wrap:wrap;}
+  .match-btns button{flex:1; min-width:80px; padding:10px; border-radius:8px; border:2px solid #cbd5e0; background:#fff; font-size:.88rem;}
+  .match-btns button.picked{background:var(--teal); color:#fff; border-color:var(--teal);}
+  .match-card.correct{border-color:var(--green); background:var(--green-light);}
+  .match-card.wrong{border-color:var(--red); background:var(--red-light);}
+
+  textarea{
+    width:100%; min-height:100px; padding:12px 14px; font-size:1rem; border:2px solid #cbd5e0; border-radius:10px; font-family:inherit; resize:vertical;
+  }
+  textarea:focus{outline:none; border-color:var(--teal);}
+
+  .score-banner{background:var(--green-light); color:var(--green); border-radius:10px; padding:12px 14px; font-weight:bold; text-align:center; margin-top:14px; display:none;}
+  .score-banner.show{display:block;}
+
+  .summary-block{background:#fff; border-radius:12px; padding:14px 16px; margin-bottom:12px; border-left:5px solid var(--teal);}
+  .summary-block h3{margin:0 0 8px; font-size:1rem; color:var(--teal);}
+  .summary-block p{margin:4px 0; font-size:.92rem;}
+  #copyArea{white-space:pre-wrap; background:#f1f5f9; border-radius:10px; padding:14px; font-size:.88rem; margin-top:14px; border:1px dashed #cbd5e0;}
+  .copy-status{margin-top:8px; font-size:.9rem; font-weight:bold; text-align:center; min-height:1.2em;}
+  .progress{text-align:right; font-size:.85rem; color:var(--gray); margin-bottom:6px;}
+  #hiddenTextarea{position:absolute; left:-9999px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Screen 0 -->
+  <div class="screen active" id="screen0">
+    <span class="tag">第一單元・臺灣的位置與先民足跡（第1課）</span>
+    <h1>🗺️ 臺灣位置大冒險</h1>
+    <p class="lead">配合課本第12～19頁。跟著地圖一起探索臺灣在世界上的位置、季風氣候，以及先民如何因應環境過生活！</p>
+    <div class="card">
+      <label for="stuName">姓名</label>
+      <input type="text" id="stuName" placeholder="請輸入你的姓名">
+      <label for="stuNum">座號</label>
+      <input type="text" id="stuNum" placeholder="請輸入你的座號">
+      <button class="btn-main" onclick="startGame()">開始闖關 →</button>
+    </div>
+  </div>
+
+  <!-- Screen 1: 位置知識大挑戰 -->
+  <div class="screen" id="screen1">
+    <div class="progress">關卡 1 / 4</div>
+    <h2>關卡一：位置知識大挑戰</h2>
+    <p class="lead">讀一讀課本地圖，選出正確答案。</p>
+    <div class="card" id="mcqList"></div>
+    <div class="score-banner" id="mcqScore"></div>
+    <button class="btn-main" id="mcqNextBtn" disabled onclick="goScreen(2)">先完成全部題目才能下一關</button>
+  </div>
+
+  <!-- Screen 2: 季風真假話 -->
+  <div class="screen" id="screen2">
+    <div class="progress">關卡 2 / 4</div>
+    <h2>關卡二：季風真假話</h2>
+    <p class="lead">判斷下列關於季風的說法是「真」還是「假」。</p>
+    <div class="card" id="tfList"></div>
+    <div class="score-banner" id="tfScore"></div>
+    <button class="btn-main" id="tfNextBtn" disabled onclick="goScreen(3)">先完成全部題目才能下一關</button>
+  </div>
+
+  <!-- Screen 3: 氣候智慧配對 -->
+  <div class="screen" id="screen3">
+    <div class="progress">關卡 3 / 4</div>
+    <h2>關卡三：氣候智慧配對</h2>
+    <p class="lead">臺灣各地居民善用當地氣候與資源，發展出不同的生活智慧。請幫每個地方配對正確的作法。</p>
+    <div class="card" id="matchList"></div>
+    <div class="score-banner" id="matchScore"></div>
+    <button class="btn-main" id="matchNextBtn" disabled onclick="goScreen(4)">先完成全部配對才能下一關</button>
+  </div>
+
+  <!-- Screen 4: 反思 -->
+  <div class="screen" id="screen4">
+    <div class="progress">關卡 4 / 4</div>
+    <h2>關卡四：換你當小導遊</h2>
+    <div class="statement-box">臺灣有豐富的海洋資源與文化，如果有外國朋友來臺灣，你會推薦他去哪些地點旅遊？為什麼？</div>
+    <div class="card">
+      <textarea id="feelingText" placeholder="寫下你的推薦與理由……"></textarea>
+    </div>
+    <button class="btn-main" onclick="finishGame()">完成！查看我的學習回顧 →</button>
+  </div>
+
+  <!-- Screen 5: 學習回顧 -->
+  <div class="screen" id="screen5">
+    <h1>🎉 學習回顧</h1>
+    <p class="lead">太棒了！這是你今天的闖關紀錄，記得按下方按鈕複製，貼到聯絡簿或回傳給老師。</p>
+    <div id="summaryContainer"></div>
+    <div id="copyArea"></div>
+    <button class="btn-main" onclick="copyReview()">📋 一鍵複製學習回顧</button>
+    <div class="copy-status" id="copyStatus"></div>
+    <textarea id="hiddenTextarea"></textarea>
+  </div>
+
+</div>
+
+<script>
+const mcqData = [
+  {q:'臺灣位於世界五大洲中的哪一洲？', opts:['亞洲','歐洲','美洲','大洋洲'], correct:0},
+  {q:'環繞五大洲的三大洋，不包括下列何者？', opts:['太平洋','大西洋','印度洋','北極洋'], correct:3},
+  {q:'下列何者「不」是我國目前的範圍？', opts:['澎湖群島','金門群島','馬祖列島','日本北海道'], correct:3},
+  {q:'臺灣與哪兩個國家的距離很近，中間分別隔著臺灣海峽與巴士海峽？', opts:['中國、菲律賓','日本、韓國','越南、泰國','印尼、馬來西亞'], correct:0}
+];
+
+const tfData = [
+  {text:'東北季風主要在夏天（6月中～9月中）吹，帶來全臺濕熱多雨。', answer:false},
+  {text:'西南季風從西南方海上帶來溫暖潮溼的空氣，使全臺濕熱多雨。', answer:true}
+];
+
+const matchData = [
+  {loc:'新竹．新埔', desc:'居民利用冬季強風與充足日晒，把盛產的柿子加工保存。', opts:['柿餅','騎樓','地下屋'], answer:'柿餅'},
+  {loc:'雲林．斗六', desc:'老街一樓設計特殊空間，讓民眾遮陽避雨、方便通行購物。', opts:['柿餅','騎樓','地下屋'], answer:'騎樓'},
+  {loc:'臺東．蘭嶼', desc:'傳統建築將主屋建在低於地面1～2公尺的地穴中。', opts:['柿餅','騎樓','地下屋'], answer:'地下屋'}
+];
+
+let student = {name:'', num:''};
+let mcqAnswers = {};
+let tfAnswers = {};
+let matchAnswers = {};
+
+function goScreen(n){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen'+n).classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function startGame(){
+  const name = document.getElementById('stuName').value.trim();
+  const num = document.getElementById('stuNum').value.trim();
+  if(!name || !num){ alert('請先輸入姓名和座號喔！'); return; }
+  student.name = name; student.num = num;
+  renderMcq();
+  renderTf();
+  renderMatch();
+  goScreen(1);
+}
+
+function renderMcq(){
+  const box = document.getElementById('mcqList');
+  box.innerHTML = '';
+  mcqData.forEach((item,i)=>{
+    const block = document.createElement('div');
+    block.className = 'q-block';
+    block.innerHTML = `<div class="q-title">${i+1}. ${item.q}</div>` +
+      item.opts.map((opt,j)=>`<button class="opt-btn" id="mcq${i}-${j}" onclick="pickMcq(${i},${j})">${opt}</button>`).join('');
+    box.appendChild(block);
+  });
+}
+
+function pickMcq(qi, oi){
+  if(mcqAnswers[qi] !== undefined) return;
+  mcqAnswers[qi] = oi;
+  const item = mcqData[qi];
+  item.opts.forEach((opt,j)=>{
+    const btn = document.getElementById(`mcq${qi}-${j}`);
+    btn.disabled = true;
+    if(j === item.correct) btn.classList.add('correct');
+    else if(j === oi) btn.classList.add('wrong');
+  });
+  if(Object.keys(mcqAnswers).length === mcqData.length){
+    const correctCount = mcqData.filter((it,idx)=>mcqAnswers[idx]===it.correct).length;
+    const banner = document.getElementById('mcqScore');
+    banner.classList.add('show');
+    banner.textContent = `完成！答對 ${correctCount} / ${mcqData.length} 題`;
+    const nextBtn = document.getElementById('mcqNextBtn');
+    nextBtn.disabled = false;
+    nextBtn.textContent = '下一關 →';
+  }
+}
+
+function renderTf(){
+  const box = document.getElementById('tfList');
+  box.innerHTML = '';
+  tfData.forEach((item,i)=>{
+    const row = document.createElement('div');
+    row.className = 'tf-row';
+    row.id = 'tf'+i;
+    row.innerHTML = `
+      <div class="tf-text">${i+1}. ${item.text}</div>
+      <div class="tf-btns">
+        <button onclick="pickTf(${i}, true)" id="tf${i}-true">真</button>
+        <button onclick="pickTf(${i}, false)" id="tf${i}-false">假</button>
+      </div>
+      <div class="feedback" id="tf${i}-fb"></div>
+    `;
+    box.appendChild(row);
+  });
+}
+
+function pickTf(i, choice){
+  tfAnswers[i] = choice;
+  const item = tfData[i];
+  const row = document.getElementById('tf'+i);
+  const fb = document.getElementById('tf'+i+'-fb');
+  document.getElementById(`tf${i}-true`).className = choice===true ? 'sel-true' : '';
+  document.getElementById(`tf${i}-false`).className = choice===false ? 'sel-false' : '';
+  const isRight = choice === item.answer;
+  row.classList.remove('correct','wrong');
+  row.classList.add(isRight ? 'correct' : 'wrong');
+  fb.classList.add('show');
+  fb.className = 'feedback show ' + (isRight ? 'ok' : 'no');
+  fb.textContent = isRight ? '✓ 答對了！' : '✗ 再想想看～';
+
+  if(Object.keys(tfAnswers).length === tfData.length){
+    const correctCount = tfData.filter((it,idx)=>tfAnswers[idx]===it.answer).length;
+    const banner = document.getElementById('tfScore');
+    banner.classList.add('show');
+    banner.textContent = `完成！答對 ${correctCount} / ${tfData.length} 題`;
+    const nextBtn = document.getElementById('tfNextBtn');
+    nextBtn.disabled = false;
+    nextBtn.textContent = '下一關 →';
+  }
+}
+
+function renderMatch(){
+  const box = document.getElementById('matchList');
+  box.innerHTML = '';
+  matchData.forEach((item,i)=>{
+    const div = document.createElement('div');
+    div.className = 'match-card';
+    div.id = 'match'+i;
+    div.innerHTML = `
+      <div class="match-loc">📍 ${item.loc}</div>
+      <div class="match-desc">${item.desc}</div>
+      <div class="match-btns">
+        ${item.opts.map(opt=>`<button onclick="pickMatch(${i}, '${opt}')" id="match${i}-${opt}">${opt}</button>`).join('')}
+      </div>
+    `;
+    box.appendChild(div);
+  });
+}
+
+function pickMatch(i, choice){
+  matchAnswers[i] = choice;
+  const item = matchData[i];
+  const div = document.getElementById('match'+i);
+  item.opts.forEach(opt=>{
+    document.getElementById(`match${i}-${opt}`).classList.toggle('picked', opt===choice);
+  });
+  const isRight = choice === item.answer;
+  div.classList.remove('correct','wrong');
+  div.classList.add(isRight ? 'correct' : 'wrong');
+
+  if(Object.keys(matchAnswers).length === matchData.length){
+    const correctCount = matchData.filter((it,idx)=>matchAnswers[idx]===it.answer).length;
+    const banner = document.getElementById('matchScore');
+    banner.classList.add('show');
+    banner.textContent = `完成配對！答對 ${correctCount} / ${matchData.length} 題`;
+    const nextBtn = document.getElementById('matchNextBtn');
+    nextBtn.disabled = false;
+    nextBtn.textContent = '下一關 →';
+  }
+}
+
+function finishGame(){
+  buildSummary();
+  goScreen(5);
+}
+
+function buildSummary(){
+  const mcqCorrect = mcqData.filter((it,idx)=>mcqAnswers[idx]===it.correct).length;
+  const mcqLines = mcqData.map((it,i)=>{
+    const picked = it.opts[mcqAnswers[i]] ?? '未作答';
+    const mark = mcqAnswers[i]===it.correct ? '✓' : '✗';
+    return `　${i+1}. ${picked} ${mark}`;
+  }).join('\n');
+
+  const tfCorrect = tfData.filter((it,idx)=>tfAnswers[idx]===it.answer).length;
+  const tfLines = tfData.map((it,i)=>{
+    const picked = tfAnswers[i]===true ? '真' : (tfAnswers[i]===false ? '假' : '未作答');
+    const mark = tfAnswers[i]===it.answer ? '✓' : '✗';
+    return `　${i+1}. ${picked} ${mark}`;
+  }).join('\n');
+
+  const matchCorrect = matchData.filter((it,idx)=>matchAnswers[idx]===it.answer).length;
+  const matchLines = matchData.map((it,i)=>{
+    const picked = matchAnswers[i] ?? '未作答';
+    const mark = matchAnswers[i]===it.answer ? '✓' : '✗';
+    return `　${it.loc}：${picked} ${mark}`;
+  }).join('\n');
+
+  const feeling = document.getElementById('feelingText').value.trim() || '（未填寫）';
+
+  const container = document.getElementById('summaryContainer');
+  container.innerHTML = `
+    <div class="summary-block">
+      <h3>基本資料</h3>
+      <p>姓名：${student.name}　座號：${student.num}</p>
+    </div>
+    <div class="summary-block">
+      <h3>關卡一：位置知識大挑戰（答對 ${mcqCorrect} / ${mcqData.length}）</h3>
+      <p style="white-space:pre-wrap;">${mcqLines}</p>
+    </div>
+    <div class="summary-block">
+      <h3>關卡二：季風真假話（答對 ${tfCorrect} / ${tfData.length}）</h3>
+      <p style="white-space:pre-wrap;">${tfLines}</p>
+    </div>
+    <div class="summary-block">
+      <h3>關卡三：氣候智慧配對（答對 ${matchCorrect} / ${matchData.length}）</h3>
+      <p style="white-space:pre-wrap;">${matchLines}</p>
+    </div>
+    <div class="summary-block">
+      <h3>關卡四：我的推薦</h3>
+      <p>${feeling}</p>
+    </div>
+  `;
+
+  const plain =
+`【臺灣位置大冒險・學習回顧】
+姓名：${student.name}　座號：${student.num}
+
+關卡一：位置知識大挑戰（答對 ${mcqCorrect}/${mcqData.length}）
+${mcqLines}
+
+關卡二：季風真假話（答對 ${tfCorrect}/${tfData.length}）
+${tfLines}
+
+關卡三：氣候智慧配對（答對 ${matchCorrect}/${matchData.length}）
+${matchLines}
+
+關卡四：我的推薦
+${feeling}`;
+
+  document.getElementById('copyArea').textContent = plain;
+  window._reviewText = plain;
+}
+
+function copyReview(){
+  const text = window._reviewText || '';
+  const statusEl = document.getElementById('copyStatus');
+  function showStatus(ok){
+    statusEl.textContent = ok ? '✅ 已複製到剪貼簿！可以貼到聯絡簿或傳給老師了。' : '⚠️ 複製失敗，請手動選取上方文字複製。';
+    statusEl.style.color = ok ? 'var(--green)' : 'var(--red)';
+  }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=>showStatus(true)).catch(()=>{
+      fallbackCopy(text, showStatus);
+    });
+  } else {
+    fallbackCopy(text, showStatus);
+  }
+}
+
+function fallbackCopy(text, cb){
+  try{
+    const ta = document.getElementById('hiddenTextarea');
+    ta.style.position = 'fixed';
+    ta.style.left = '0';
+    ta.style.top = '0';
+    ta.value = text;
+    ta.select();
+    ta.setSelectionRange(0, text.length);
+    const ok = document.execCommand('copy');
+    ta.style.position = 'absolute';
+    ta.style.left = '-9999px';
+    cb(ok);
+  }catch(e){
+    cb(false);
+  }
+}
+</script>
+</body>
+</html>
