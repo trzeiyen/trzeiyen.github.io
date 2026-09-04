@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>教育與族群變遷大探索</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif;
+    background: linear-gradient(160deg,#fef6e4,#e8f6ef);
+    min-height: 100vh; display: flex; justify-content: center; padding: 16px;
+  }
+  #app { width: 100%; max-width: 640px; }
+  .card {
+    background: #fff; border-radius: 20px; padding: 24px 20px; margin-bottom: 16px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+  }
+  h1 { font-size: 1.4em; color: #d9622b; margin: 0 0 6px; text-align:center; }
+  h2 { font-size: 1.1em; color: #2b7a78; margin: 0 0 12px; }
+  p.lead { color:#555; line-height:1.7; text-align:center; }
+  .station-badge { display:inline-block; background:#2b7a78; color:#fff; border-radius:20px; padding:4px 14px; font-size:.9em; font-weight:bold; margin-bottom:10px; }
+  .context { background:#fdf1e4; border-radius:14px; padding:16px; line-height:1.9; font-size:1.02em; color:#333; margin-bottom:16px; }
+  .context .target { color:#c0392b; font-weight:bold; }
+  .btn-row { display:flex; flex-wrap:wrap; gap:12px; margin-top: 10px; }
+  button.opt {
+    flex: 1 1 auto; min-width: 130px; padding: 16px 14px; font-size: 1.02em; border:none;
+    border-radius: 14px; background:#eef6f6; color:#2b7a78; font-weight:bold; cursor:pointer;
+    transition: transform .1s, background .15s; border: 2px solid #cfe9e8;
+  }
+  button.opt:active { transform: scale(0.96); }
+  button.opt.selected { background:#2b7a78; color:#fff; border-color:#2b7a78; }
+  button.opt.locked-correct { background:#2e7d32; color:#fff; border-color:#2e7d32; }
+  button.opt.locked-wrong { background:#c0392b; color:#fff; border-color:#c0392b; }
+  button.primary {
+    display:block; width:100%; padding:16px; font-size:1.1em; font-weight:bold; color:#fff;
+    background:#d9622b; border:none; border-radius:14px; margin-top:18px; cursor:pointer;
+  }
+  button.primary:disabled { background:#e0c4b0; cursor:not-allowed; }
+  button.primary:active:not(:disabled) { transform: scale(0.98); }
+  input[type=text] {
+    width:100%; padding:14px; font-size:1.05em; border-radius:12px; border:2px solid #cfe9e8;
+    margin-bottom:12px;
+  }
+  textarea {
+    width:100%; padding:14px; font-size:1.02em; border-radius:12px; border:2px solid #cfe9e8;
+    min-height: 90px; font-family: inherit; resize: vertical;
+  }
+  .feedback { margin-top:14px; padding:14px; border-radius:12px; font-size:1em; line-height:1.6; display:none; }
+  .feedback.correct { background:#e3f6e0; color:#2e7d32; display:block; }
+  .feedback.wrong { background:#fde9e7; color:#c0392b; display:block; }
+  .progress { text-align:center; color:#888; font-size:.9em; margin-bottom:8px; }
+  table.review { width:100%; border-collapse: collapse; margin-top:10px; font-size:.92em; }
+  table.review th, table.review td { border:1px solid #ddd; padding:8px; text-align:left; }
+  table.review th { background:#f3f3f3; }
+  .mark-ok { color:#2e7d32; font-weight:bold; }
+  .mark-fix { color:#c0392b; font-weight:bold; }
+  .review-text-block { background:#fdf1e4; padding:12px; border-radius:10px; margin-top:6px; margin-bottom:14px; line-height:1.7; }
+  #copyBtn { background:#2b7a78; }
+  #copyStatus { text-align:center; margin-top:8px; font-weight:bold; min-height:1.4em; }
+  .hidden { display:none !important; }
+  .small-note { font-size:.85em; color:#888; text-align:center; margin-top:6px; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="card" id="screen-intro">
+    <h1>🏫 教育與族群變遷大探索</h1>
+    <p class="lead">今天要一起走過兩個關卡：<br>
+    關卡一「教育大不同」——早期與現在的學校教育、性別平等有什麼變化？<br>
+    關卡二「萬金教堂大探索」——一座老教堂裡藏著什麼族群文化交流的故事？</p>
+    <input type="text" id="inputName" placeholder="請輸入姓名">
+    <input type="text" id="inputSeat" placeholder="請輸入座號">
+    <button class="primary" id="startBtn">開始探索！</button>
+  </div>
+
+  <div class="card hidden" id="screen-quiz">
+    <div class="station-badge" id="stationBadge"></div>
+    <div class="progress" id="progressText"></div>
+    <h2 id="questionTitle"></h2>
+    <div class="context hidden" id="contextBox"></div>
+    <div id="stepArea"></div>
+  </div>
+
+  <div class="card hidden" id="screen-review">
+    <h2>📋 學習回顧</h2>
+    <p class="small-note" id="reviewWho"></p>
+    <table class="review">
+      <thead><tr><th>題目</th><th>你的答案</th><th>正確答案</th></tr></thead>
+      <tbody id="reviewBody"></tbody>
+    </table>
+    <div id="reviewTextArea"></div>
+    <button class="primary" id="copyBtn">📋 一鍵複製學習回顧</button>
+    <div id="copyStatus"></div>
+    <textarea id="copySource" class="hidden"></textarea>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  const ITEMS = [
+    { id:1, station:'關卡一：教育大不同', type:'choice',
+      context: '<b>日治時期</b>：臺灣人和日本人就讀不同的學校，師資及學校設備也有差異，小學教育相當注重生活技能的養成，男女生要學習農業技術，女生還要學習裁縫、烹飪等課程。',
+      question: '日治時期，男女生都要學習的是什麼技術？',
+      choices: ['農業技術','商業技術','手工藝技術','音樂技術'],
+      correctIndex: 0,
+      explain: '日治時期教育注重生活技能養成，男女生都要學習農業技術，女生還要多學裁縫、烹飪。' },
+    { id:2, station:'關卡一：教育大不同', type:'choice',
+      context: '課本提到，日治時期臺灣人和日本人讀書的情況並不相同。',
+      question: '日治時期，臺灣人和日本人的就學情況是？',
+      choices: ['讀同一所學校，待遇相同','讀不同的學校，師資設備也不同','只有臺灣人可以上學','只有日本人可以上學'],
+      correctIndex: 1,
+      explain: '日治時期臺灣人和日本人就讀不同的學校，師資及學校設備也有差異。' },
+    { id:3, station:'關卡一：教育大不同', type:'choice',
+      context: '<b>戰後時期</b>：政府持續推動國民教育，每個人都有機會接受教育，透過「學習」，每個人都能發揮所長，所以小學會舉辦遊藝會。',
+      question: '戰後時期，小學舉辦遊藝會的用意是？',
+      choices: ['讓學生表演節目，展現所長','純粹放假娛樂','用來選拔運動選手','增加老師的工作'],
+      correctIndex: 0,
+      explain: '戰後時期政府推動國民教育，讓每個人都有機會發揮所長，遊藝會就是讓學生有表現及展演的機會。' },
+    { id:4, station:'關卡一：教育大不同', type:'choice',
+      context: '新聞資料：內政部指出，新一屆女性當選地方民意代表占29.56%，創下近20年來新高。',
+      question: '女性地方民意代表比例創新高，最適合的推論是？',
+      choices: ['地方民代工作繁雜，較適合男性擔任','女性民代人數比上一屆少','女性觀點增加，公共事務討論更能納入不同性別的意見'],
+      correctIndex: 2,
+      explain: '女性參政比例提高，代表討論公共事務時，較能納入不同性別的觀點。' },
+    { id:5, station:'關卡一：教育大不同', type:'multi',
+      context: '資料：育嬰留職停薪——受僱者任職滿6個月、小孩3歲前可申請，須於10日前以書面向雇主提出；申請期間可領取津貼，雇主不得拒絕。',
+      question: '關於「育嬰留職停薪」，下列哪些敘述正確？（可複選）',
+      choices: ['如果公司業務太繁重，雇主可以拒絕申請','爸爸或媽媽都可以申請，但須在10日前向雇主提出','若已提出育嬰留職停薪，還可以領取津貼'],
+      correctIndexes: [1,2],
+      explain: '雇主不得拒絕受僱者申請；申請須於10日前提出；申請期間可領取津貼（最多6個月，平均月投保薪資80%）。' },
+    { id:6, station:'關卡一：教育大不同', type:'text',
+      question: '想一想：教育方式與內容的改變，對個人發展有什麼影響？政府為什麼要訂定「性別平等教育日」？',
+      placeholder: '例如：現在男女生可以學習一樣的課程、發展自己的興趣……' },
+    { id:7, station:'關卡二：萬金教堂大探索', type:'choice',
+      context: '屏東縣萬巒鄉萬金村有座古老的西班牙古堡式教堂，融合了閩南建築特色（花崗岩石牌、對聯等）。',
+      question: '萬金天主教堂是在哪個時期、由誰所興建？',
+      choices: ['大航海時代的貿易商','清帝國時期的傳教士','日治時期的總督府','中華民國時期的鄉長'],
+      correctIndex: 1,
+      explain: '清帝國時期，西班牙籍的郭德剛神父以土塊建立了萬金天主教堂。' },
+    { id:8, station:'關卡二：萬金教堂大探索', type:'text',
+      question: '因郭德剛神父勤勉傳教，加上居民對天主教的接受程度高，萬金村居民的生活發生了哪些改變？',
+      placeholder: '例如：萬金村成為臺灣少數以天主教教徒為主的聚落……' },
+    { id:9, station:'關卡二：萬金教堂大探索', type:'text',
+      question: '根據這篇文章，我們可以從哪裡發現「文化交流」的現象？（提示：教堂建築融合了哪些不同文化的特色？）',
+      placeholder: '例如：西班牙古堡式建築融合了閩南建築的花崗岩石牌、對聯等設計……' }
+  ];
+
+  let student = { name:'', seat:'' };
+  let idx = 0;
+  let answers = [];
+
+  const screenIntro = document.getElementById('screen-intro');
+  const screenQuiz = document.getElementById('screen-quiz');
+  const screenReview = document.getElementById('screen-review');
+
+  document.getElementById('startBtn').addEventListener('click', () => {
+    const name = document.getElementById('inputName').value.trim();
+    const seat = document.getElementById('inputSeat').value.trim();
+    if (!name) { alert('請先輸入姓名喔！'); return; }
+    student.name = name; student.seat = seat || '（未填）';
+    screenIntro.classList.add('hidden');
+    screenQuiz.classList.remove('hidden');
+    renderStep();
+  });
+
+  function renderStep(){
+    const item = ITEMS[idx];
+    document.getElementById('stationBadge').textContent = item.station;
+    document.getElementById('progressText').textContent = `第 ${idx+1} / ${ITEMS.length} 題`;
+    document.getElementById('questionTitle').textContent = item.question;
+    const contextBox = document.getElementById('contextBox');
+    if (item.context) {
+      contextBox.innerHTML = item.context;
+      contextBox.classList.remove('hidden');
+    } else {
+      contextBox.classList.add('hidden');
+    }
+    const stepArea = document.getElementById('stepArea');
+    stepArea.innerHTML = '';
+
+    if (item.type === 'choice') {
+      const row = document.createElement('div');
+      row.className = 'btn-row';
+      let chosen = -1;
+      const fb = document.createElement('div');
+      fb.className = 'feedback';
+      item.choices.forEach((choice, i) => {
+        const b = document.createElement('button');
+        b.className = 'opt'; b.textContent = choice;
+        b.onclick = () => {
+          if (chosen !== -1) return;
+          chosen = i;
+          [...row.children].forEach((c, ci) => {
+            c.disabled = true;
+            if (ci === item.correctIndex) c.classList.add('locked-correct');
+            else if (ci === i) c.classList.add('locked-wrong');
+          });
+          const isCorrect = (i === item.correctIndex);
+          fb.className = 'feedback ' + (isCorrect ? 'correct' : 'wrong');
+          fb.textContent = isCorrect ? ('答對了！' + item.explain) : ('再想想～' + item.explain);
+          document.getElementById('nextBtn').disabled = false;
+        };
+        row.appendChild(b);
+      });
+      stepArea.appendChild(row);
+      stepArea.appendChild(fb);
+      const next = document.createElement('button');
+      next.className = 'primary'; next.textContent = (idx === ITEMS.length-1) ? '完成，查看學習回顧' : '下一題';
+      next.id = 'nextBtn'; next.disabled = true;
+      next.onclick = () => {
+        answers.push({ id:item.id, question:item.question, type:'choice',
+          yourAnswer: item.choices[chosen], correctAnswer: item.choices[item.correctIndex],
+          isCorrect: chosen === item.correctIndex });
+        advance();
+      };
+      stepArea.appendChild(next);
+    } else if (item.type === 'multi') {
+      const row = document.createElement('div');
+      row.className = 'btn-row';
+      const selected = new Set();
+      let locked = false;
+      item.choices.forEach((choice, i) => {
+        const b = document.createElement('button');
+        b.className = 'opt'; b.textContent = choice;
+        b.onclick = () => {
+          if (locked) return;
+          if (selected.has(i)) { selected.delete(i); b.classList.remove('selected'); }
+          else { selected.add(i); b.classList.add('selected'); }
+        };
+        row.appendChild(b);
+      });
+      stepArea.appendChild(row);
+      const confirmBtn = document.createElement('button');
+      confirmBtn.className = 'primary'; confirmBtn.textContent = '確認答案';
+      const fb = document.createElement('div');
+      fb.className = 'feedback';
+      confirmBtn.onclick = () => {
+        if (locked) return;
+        locked = true;
+        const correctSet = new Set(item.correctIndexes);
+        const isCorrect = selected.size === correctSet.size && [...selected].every(v => correctSet.has(v));
+        [...row.children].forEach((c, ci) => {
+          c.disabled = true;
+          if (correctSet.has(ci)) c.classList.add('locked-correct');
+          else if (selected.has(ci)) c.classList.add('locked-wrong');
+        });
+        fb.className = 'feedback ' + (isCorrect ? 'correct' : 'wrong');
+        fb.textContent = (isCorrect ? '答對了！' : '再想想～') + item.explain;
+        document.getElementById('nextBtn').disabled = false;
+      };
+      stepArea.appendChild(confirmBtn);
+      stepArea.appendChild(fb);
+      const next = document.createElement('button');
+      next.className = 'primary'; next.textContent = (idx === ITEMS.length-1) ? '完成，查看學習回顧' : '下一題';
+      next.id = 'nextBtn'; next.disabled = true;
+      next.onclick = () => {
+        const correctSet = new Set(item.correctIndexes);
+        const isCorrect = selected.size === correctSet.size && [...selected].every(v => correctSet.has(v));
+        answers.push({ id:item.id, question:item.question, type:'multi',
+          yourAnswer: [...selected].map(i => item.choices[i]).join('、') || '（未選）',
+          correctAnswer: item.correctIndexes.map(i => item.choices[i]).join('、'),
+          isCorrect });
+        advance();
+      };
+      stepArea.appendChild(next);
+    } else if (item.type === 'text') {
+      const ta = document.createElement('textarea');
+      ta.placeholder = item.placeholder || '請輸入你的想法……';
+      stepArea.appendChild(ta);
+      const next = document.createElement('button');
+      next.className = 'primary'; next.textContent = (idx === ITEMS.length-1) ? '完成，查看學習回顧' : '下一題';
+      next.id = 'nextBtn';
+      next.onclick = () => {
+        answers.push({ id:item.id, question:item.question, type:'text',
+          yourAnswer: ta.value.trim() || '（未填寫）' });
+        advance();
+      };
+      stepArea.appendChild(next);
+    }
+  }
+
+  function advance(){
+    idx++;
+    if (idx >= ITEMS.length) {
+      screenQuiz.classList.add('hidden');
+      screenReview.classList.remove('hidden');
+      buildReview();
+    } else {
+      renderStep();
+    }
+  }
+
+  function buildReview(){
+    document.getElementById('reviewWho').textContent = `姓名：${student.name}　座號：${student.seat}`;
+    const tbody = document.getElementById('reviewBody');
+    tbody.innerHTML = '';
+    const textArea = document.getElementById('reviewTextArea');
+    textArea.innerHTML = '';
+    let summary = `【教育與族群變遷大探索－學習回顧】\n姓名：${student.name}　座號：${student.seat}\n\n`;
+
+    answers.forEach(a => {
+      if (a.type === 'text') {
+        const block = document.createElement('div');
+        block.innerHTML = `<p style="font-weight:bold;color:#555;margin-bottom:4px;">✏️ ${a.question}</p>
+          <div class="review-text-block">${a.yourAnswer}</div>`;
+        textArea.appendChild(block);
+        summary += `【問答】${a.question}\n→ ${a.yourAnswer}\n\n`;
+      } else {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${a.question}</td>
+          <td>${a.yourAnswer} <span class="${a.isCorrect?'mark-ok':'mark-fix'}">${a.isCorrect?'✓':'✗'}</span></td>
+          <td>${a.correctAnswer}</td>
+        `;
+        tbody.appendChild(tr);
+        summary += `【選擇】${a.question}\n我的答案：${a.yourAnswer}（${a.isCorrect?'答對':'需再複習'}）　正確答案：${a.correctAnswer}\n\n`;
+      }
+    });
+    document.getElementById('copySource').value = summary;
+  }
+
+  document.getElementById('copyBtn').addEventListener('click', () => {
+    const text = document.getElementById('copySource').value;
+    const statusEl = document.getElementById('copyStatus');
+    function showStatus(ok){
+      statusEl.textContent = ok ? '✅ 已複製！可以貼到聯絡簿或表單囉～' : '⚠️ 複製失敗，請長按上方文字自行選取複製';
+      statusEl.style.color = ok ? '#2e7d32' : '#c0392b';
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => showStatus(true)).catch(() => fallbackCopy());
+    } else {
+      fallbackCopy();
+    }
+    function fallbackCopy(){
+      const ta = document.getElementById('copySource');
+      ta.classList.remove('hidden');
+      ta.select();
+      try {
+        const ok = document.execCommand('copy');
+        showStatus(ok);
+      } catch(e) {
+        showStatus(false);
+      }
+      ta.classList.add('hidden');
+    }
+  });
+})();
+</script>
+</body>
+</html>
