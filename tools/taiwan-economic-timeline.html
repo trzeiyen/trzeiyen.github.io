@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>臺灣經濟發展時光機</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; font-family: "PingFang TC","Microsoft JhengHei","Noto Sans TC",sans-serif;
+    background: linear-gradient(135deg,#eef6f9,#fdf3e7); color:#2c3e50; min-height:100vh;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 20px 16px 60px; }
+  h1 { font-size: 1.5em; text-align:center; color:#1f5f5b; margin-bottom:4px;}
+  .subtitle { text-align:center; color:#57726f; margin-bottom:20px; font-size:0.95em;}
+  .card-panel {
+    background:#fff; border-radius:18px; padding:22px 18px; margin-bottom:18px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  }
+  .step-badge {
+    display:inline-block; background:#1f8a70; color:#fff; font-weight:bold;
+    padding:4px 14px; border-radius:20px; font-size:0.85em; margin-bottom:10px;
+  }
+  label { font-weight:bold; display:block; margin-bottom:6px; }
+  input[type=text] {
+    width:100%; padding:14px; font-size:1.1em; border-radius:12px; border:2px solid #cfe3df;
+    margin-bottom:14px;
+  }
+  textarea {
+    width:100%; padding:14px; font-size:1.05em; border-radius:12px; border:2px solid #cfe3df;
+    min-height:90px; font-family:inherit; resize:vertical;
+  }
+  button {
+    font-family:inherit; cursor:pointer; border:none; border-radius:14px;
+    font-size:1.05em; padding:16px 20px; font-weight:bold; touch-action:manipulation;
+  }
+  .btn-primary { background:#1f8a70; color:#fff; width:100%; margin-top:10px; }
+  .btn-primary:active { background:#166b57; }
+  .btn-secondary { background:#e9f2f0; color:#1f5f5b; }
+  .hidden { display:none !important; }
+
+  .story-box { background:#fff8e8; border-left:5px solid #e0a94c; padding:14px 16px; border-radius:10px; margin-bottom:14px; line-height:1.7; font-size:0.98em;}
+
+  .sort-card {
+    background:#f6faf9; border:2px solid #d7e8e4; border-radius:14px; padding:14px;
+    margin-bottom:12px; line-height:1.6;
+  }
+  .sort-card .tag { display:inline-block; font-size:0.8em; background:#1f8a70; color:#fff; padding:2px 10px; border-radius:10px; margin-bottom:6px;}
+  .sort-card .tag.era2 { background:#c9622a; }
+  .sort-buttons { display:flex; gap:10px; margin-top:10px; }
+  .sort-buttons button { flex:1; padding:12px 8px; font-size:0.95em; border:2px solid #cfe3df; background:#fff; color:#2c3e50; }
+  .sort-buttons button.chosen { background:#1f8a70; color:#fff; border-color:#1f8a70; }
+  .sort-buttons button.chosen.era2 { background:#c9622a; border-color:#c9622a; }
+
+  .col-title { font-weight:bold; margin: 16px 0 6px; color:#1f5f5b; }
+  .bin { min-height:36px; padding:6px 0; }
+  .bin-item { background:#eef7f4; border-radius:10px; padding:8px 12px; margin-bottom:6px; font-size:0.9em; }
+
+  .quiz-item { padding:14px; border-radius:12px; background:#f6faf9; margin-bottom:12px; }
+  .quiz-item p { margin:0 0 10px; font-weight:bold; }
+  .tf-buttons { display:flex; gap:10px; }
+  .tf-buttons button { flex:1; padding:14px; border:2px solid #cfe3df; background:#fff; }
+  .tf-buttons button.selected-true { background:#1f8a70; color:#fff; border-color:#1f8a70; }
+  .tf-buttons button.selected-false { background:#c9622a; color:#fff; border-color:#c9622a; }
+  .feedback { margin-top:8px; font-weight:bold; font-size:0.9em; }
+  .feedback.correct { color:#1f8a70; }
+  .feedback.wrong { color:#c9622a; }
+
+  .progress { text-align:center; color:#7a938f; font-size:0.85em; margin-bottom:14px;}
+
+  #reviewText { width:100%; min-height:220px; font-family:monospace; font-size:0.85em; padding:12px; border-radius:10px; border:2px solid #cfe3df; }
+  .copy-status { text-align:center; margin-top:10px; font-weight:bold; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🚀 臺灣經濟發展時光機</h1>
+  <div class="subtitle">從農地到科技島：民國40年代 → 現代</div>
+
+  <!-- 開場：姓名座號 -->
+  <div id="screen-start" class="card-panel">
+    <span class="step-badge">開始前</span>
+    <label for="nameInput">姓名 / 座號</label>
+    <input type="text" id="nameInput" placeholder="例：五年3班 12號 王小明">
+    <button class="btn-primary" onclick="goTo('screen-story')">🎬 出發！</button>
+  </div>
+
+  <!-- 故事導讀 -->
+  <div id="screen-story" class="card-panel hidden">
+    <span class="step-badge">故事導讀</span>
+    <div class="story-box">
+      <strong>故事一（民國40〜50年代）：</strong>政府把土地分給農民、鼓勵大家開工廠做生活用品（紡織、罐頭），臺灣從「農業社會」慢慢變成「輕工業社會」。
+    </div>
+    <div class="story-box">
+      <strong>故事二（民國80年代之後）：</strong>忠銘大學畢業後選擇留在臺灣的科學園區工作，做過主機板代工＋自有品牌、晶圓代工、機器人研發，臺灣變成了「科技島」。
+    </div>
+    <button class="btn-primary" onclick="goTo('screen-sort')">➡️ 進入第1關：時代分類</button>
+  </div>
+
+  <!-- 關卡1：分類 -->
+  <div id="screen-sort" class="card-panel hidden">
+    <span class="step-badge">第1關・時代分類</span>
+    <div class="progress">請幫每張卡片選擇屬於哪個時代</div>
+    <div id="sortCards"></div>
+    <button class="btn-primary" id="sortNextBtn" onclick="checkSortDone()">➡️ 進入第2關：資料判讀</button>
+  </div>
+
+  <!-- 關卡2：資料判讀 -->
+  <div id="screen-data" class="card-panel hidden">
+    <span class="step-badge">第2關・資料判讀</span>
+    <div class="story-box">
+      臺灣16〜25歲女性從事製造業人口數：<br>
+      民國49年 77,145人 → 53年 206,544人 → 59年 325,479人 → 69年 1,008,330人
+    </div>
+    <label for="trendText">你發現這些數字有什麼變化趨勢？請寫下你的發現（至少一句話）</label>
+    <textarea id="trendText" placeholder="例如：從民國49年到69年，女性從事製造業的人數..."></textarea>
+    <button class="btn-primary" onclick="submitData()">➡️ 進入第3關：是非閃電戰</button>
+  </div>
+
+  <!-- 關卡3：是非題 -->
+  <div id="screen-quiz" class="card-panel hidden">
+    <span class="step-badge">第3關・是非閃電戰</span>
+    <div id="quizList"></div>
+    <button class="btn-primary hidden" id="quizNextBtn" onclick="goTo('screen-robot')">➡️ 進入第4關：機器人小小發明家</button>
+  </div>
+
+  <!-- 關卡4：機器人發明 -->
+  <div id="screen-robot" class="card-panel hidden">
+    <span class="step-badge">第4關・機器人小小發明家</span>
+    <div class="story-box">忠銘的公司研發機器人，希望能協助人類做家事。如果換你設計一個機器人，你想讓它幫忙做什麼？</div>
+    <label for="robotText">我發明的機器人可以幫忙...</label>
+    <textarea id="robotText" placeholder="例如：作業機器人可以幫忙檢查功課有沒有寫完..."></textarea>
+    <button class="btn-primary" onclick="finish()">🏁 完成！查看學習回顧</button>
+  </div>
+
+  <!-- 學習回顧 -->
+  <div id="screen-review" class="card-panel hidden">
+    <span class="step-badge">🎉 學習回顧</span>
+    <div id="reviewSummary"></div>
+    <label for="reviewText" style="margin-top:14px;">可複製的學習回顧文字：</label>
+    <textarea id="reviewText" readonly></textarea>
+    <button class="btn-primary" onclick="copyReview()">📋 一鍵複製學習回顧</button>
+    <div class="copy-status" id="copyStatus"></div>
+  </div>
+</div>
+
+<script>
+const sortCardsData = [
+  { id:1, text:"阿伯說：政府把土地分給我們農民，我們終於有自己的地了！", era:1 },
+  { id:2, text:"紡織廠老闆說：我用補償金開紡織廠，向美國買棉花做布料。", era:1 },
+  { id:3, text:"罐頭工廠老闆說：政府鼓勵我開鳳梨罐頭工廠，最近還多請了很多女工。", era:1 },
+  { id:4, text:"種稻阿姨說：我家的稻米產量變多了，政府還幫忙賣到國外。", era:1 },
+  { id:5, text:"忠銘的第一份工作：幫主機板代工，後來做出自己的品牌，行銷全世界。", era:2 },
+  { id:6, text:"忠銘的第二份工作：專門做晶圓代工，很多科技產品都要靠它。", era:2 },
+  { id:7, text:"忠銘的第三份工作：研發機器人，希望能幫忙做家事。", era:2 }
+];
+const sortChoices = {};
+
+function renderSortCards(){
+  const container = document.getElementById('sortCards');
+  container.innerHTML = '';
+  sortCardsData.forEach(c=>{
+    const div = document.createElement('div');
+    div.className = 'sort-card';
+    div.innerHTML = `
+      <div>${c.text}</div>
+      <div class="sort-buttons">
+        <button id="btn-${c.id}-1" onclick="chooseEra(${c.id},1)">🌾 戰後民生經濟(40〜50年代)</button>
+        <button id="btn-${c.id}-2" onclick="chooseEra(${c.id},2)">💻 科技產業(80年代後)</button>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function chooseEra(id, era){
+  sortChoices[id] = era;
+  const b1 = document.getElementById(`btn-${id}-1`);
+  const b2 = document.getElementById(`btn-${id}-2`);
+  b1.classList.remove('chosen');
+  b2.classList.remove('chosen','era2');
+  if(era===1){ b1.classList.add('chosen'); }
+  else { b2.classList.add('chosen','era2'); }
+}
+
+function checkSortDone(){
+  const total = sortCardsData.length;
+  const answered = Object.keys(sortChoices).length;
+  if(answered < total){
+    alert('還有卡片沒有分類喔，請每張都選一個時代！');
+    return;
+  }
+  goTo('screen-data');
+}
+
+let trendAnswer = '';
+function submitData(){
+  trendAnswer = document.getElementById('trendText').value.trim();
+  if(!trendAnswer){
+    alert('請寫下你發現的趨勢再繼續喔！');
+    return;
+  }
+  goTo('screen-quiz');
+}
+
+const quizData = [
+  { q:"1. 臺灣科技產業的發展只靠代工，沒有自己的品牌。", answer:false },
+  { q:"2. 政府設立科學園區，是希望讓科技人才願意留在臺灣發展。", answer:true },
+  { q:"3. 民國四十年代，政府徵收地主土地並開放農民購買，是為了讓農民擁有自己的土地。", answer:true },
+  { q:"4. 民生工業發展後，只有男性能到工廠工作，女性仍然只能在家做家事。", answer:false },
+  { q:"5. 從圖表數字來看，臺灣16〜25歲女性投入製造業的人口，從民國49年到69年是持續增加的。", answer:true }
+];
+const quizAnswers = {};
+
+function renderQuiz(){
+  const container = document.getElementById('quizList');
+  container.innerHTML = '';
+  quizData.forEach((item,idx)=>{
+    const div = document.createElement('div');
+    div.className = 'quiz-item';
+    div.innerHTML = `
+      <p>${item.q}</p>
+      <div class="tf-buttons">
+        <button id="q${idx}-true" onclick="answerQuiz(${idx}, true)">✅ 對</button>
+        <button id="q${idx}-false" onclick="answerQuiz(${idx}, false)">❌ 錯</button>
+      </div>
+      <div class="feedback" id="q${idx}-feedback"></div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function answerQuiz(idx, val){
+  quizAnswers[idx] = val;
+  const tBtn = document.getElementById(`q${idx}-true`);
+  const fBtn = document.getElementById(`q${idx}-false`);
+  tBtn.classList.remove('selected-true');
+  fBtn.classList.remove('selected-false');
+  if(val){ tBtn.classList.add('selected-true'); } else { fBtn.classList.add('selected-false'); }
+  const fb = document.getElementById(`q${idx}-feedback`);
+  const correct = quizData[idx].answer;
+  if(val === correct){
+    fb.textContent = '答對了！👍';
+    fb.className = 'feedback correct';
+  } else {
+    fb.textContent = `再想想～老師的解讀是「${correct ? '對' : '錯'}」`;
+    fb.className = 'feedback wrong';
+  }
+  if(Object.keys(quizAnswers).length === quizData.length){
+    document.getElementById('quizNextBtn').classList.remove('hidden');
+  }
+}
+
+let robotAnswer = '';
+function finish(){
+  robotAnswer = document.getElementById('robotText').value.trim();
+  if(!robotAnswer){
+    alert('請寫下你的機器人點子再完成喔！');
+    return;
+  }
+  buildReview();
+  goTo('screen-review');
+}
+
+function buildReview(){
+  const name = document.getElementById('nameInput').value.trim() || '（未填寫姓名）';
+  const era1List = sortCardsData.filter(c=>sortChoices[c.id]===1).map(c=>'・'+c.text).join('\n');
+  const era2List = sortCardsData.filter(c=>sortChoices[c.id]===2).map(c=>'・'+c.text).join('\n');
+  let quizSummary = quizData.map((item,idx)=>{
+    const myAns = quizAnswers[idx] ? '對' : '錯';
+    const correct = item.answer ? '對' : '錯';
+    const mark = quizAnswers[idx]===item.answer ? '✔' : '✘';
+    return `${mark} ${item.q}\n   我的答案：${myAns}（解讀：${correct}）`;
+  }).join('\n');
+
+  document.getElementById('reviewSummary').innerHTML = `
+    <p><strong>姓名/座號：</strong>${name}</p>
+    <div class="col-title">🌾 戰後民生經濟時期</div>
+    <div class="bin">${sortCardsData.filter(c=>sortChoices[c.id]===1).map(c=>`<div class="bin-item">${c.text}</div>`).join('')}</div>
+    <div class="col-title">💻 科技產業時期</div>
+    <div class="bin">${sortCardsData.filter(c=>sortChoices[c.id]===2).map(c=>`<div class="bin-item">${c.text}</div>`).join('')}</div>
+    <div class="col-title">📊 資料判讀發現</div>
+    <div class="bin-item">${trendAnswer}</div>
+    <div class="col-title">🤖 我的機器人發明</div>
+    <div class="bin-item">${robotAnswer}</div>
+  `;
+
+  const fullText =
+`【臺灣經濟發展時光機・學習回顧】
+姓名/座號：${name}
+
+🌾 戰後民生經濟時期（我分類的卡片）：
+${era1List || '（無）'}
+
+💻 科技產業時期（我分類的卡片）：
+${era2List || '（無）'}
+
+📊 資料判讀發現：
+${trendAnswer}
+
+✅ 是非閃電戰作答紀錄：
+${quizSummary}
+
+🤖 我的機器人發明：
+${robotAnswer}
+`;
+  document.getElementById('reviewText').value = fullText;
+}
+
+function copyReview(){
+  const text = document.getElementById('reviewText').value;
+  const statusEl = document.getElementById('copyStatus');
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=>{
+      statusEl.textContent = '✅ 已複製！可以貼到聯絡簿或表單囉～';
+      statusEl.style.color = '#1f8a70';
+    }).catch(()=>{ fallbackCopy(text, statusEl); });
+  } else {
+    fallbackCopy(text, statusEl);
+  }
+}
+
+function fallbackCopy(text, statusEl){
+  const ta = document.getElementById('reviewText');
+  ta.focus();
+  ta.select();
+  try {
+    const ok = document.execCommand('copy');
+    if(ok){
+      statusEl.textContent = '✅ 已複製！可以貼到聯絡簿或表單囉～';
+      statusEl.style.color = '#1f8a70';
+    } else {
+      throw new Error('copy failed');
+    }
+  } catch(e){
+    statusEl.textContent = '⚠️ 複製失敗，請長按文字框自行選取複製';
+    statusEl.style.color = '#c9622a';
+  }
+}
+
+function goTo(id){
+  document.querySelectorAll('.card-panel').forEach(el=>el.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+renderSortCards();
+renderQuiz();
+</script>
+</body>
+</html>
