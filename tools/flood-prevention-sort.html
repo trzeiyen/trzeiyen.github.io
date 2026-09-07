@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>防洪妙招分類站｜六上4-3</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; padding: 0;
+    font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif;
+    background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+    min-height: 100vh;
+    color: #1e293b;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 20px 16px 60px; }
+  .screen { display: none; animation: fadeIn 0.3s ease; }
+  .screen.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  h1 { font-size: 1.4rem; color: #0c4a6e; text-align: center; margin-bottom: 4px; }
+  h2 { font-size: 1.15rem; color: #0369a1; margin-top: 0; }
+  .card {
+    background: #fff; border-radius: 18px; padding: 20px;
+    box-shadow: 0 4px 16px rgba(14,116,144,0.15); margin-bottom: 16px;
+  }
+  .subtitle { text-align: center; color: #0369a1; margin-bottom: 20px; font-size: 0.95rem; }
+  label { display: block; font-weight: bold; margin-bottom: 6px; color: #0c4a6e; }
+  input[type=text], textarea {
+    width: 100%; padding: 12px; border: 2px solid #7dd3fc; border-radius: 10px;
+    font-size: 1rem; font-family: inherit; margin-bottom: 14px;
+  }
+  textarea { min-height: 80px; resize: vertical; }
+  .big-btn {
+    display: block; width: 100%; padding: 16px; font-size: 1.1rem; font-weight: bold;
+    background: #0284c7; color: #fff; border: none; border-radius: 14px;
+    cursor: pointer; margin-top: 10px; transition: background 0.15s, transform 0.1s;
+  }
+  .big-btn:active { transform: scale(0.98); background: #075985; }
+  .big-btn.secondary { background: #64748b; }
+  .big-btn.secondary:active { background: #475569; }
+  .method-item {
+    background: #f0f9ff; border: 2px solid #bae6fd; border-radius: 14px;
+    padding: 14px; margin-bottom: 14px;
+  }
+  .method-item .desc { font-size: 0.95rem; margin: 6px 0 10px; color: #334155; }
+  .choice-row { display: flex; gap: 10px; }
+  .choice-btn {
+    flex: 1; padding: 12px 6px; border: 2px solid #7dd3fc; border-radius: 10px;
+    background: #fff; font-size: 0.95rem; font-weight: bold; color: #0369a1;
+    cursor: pointer;
+  }
+  .choice-btn.selected { background: #0284c7; color: #fff; border-color: #0284c7; }
+  .radio-option {
+    display: flex; align-items: center; gap: 10px; padding: 12px;
+    border: 2px solid #bae6fd; border-radius: 10px; margin-bottom: 10px; cursor: pointer;
+    background: #f8fbff;
+  }
+  .radio-option.selected { background: #dbeafe; border-color: #0284c7; }
+  .radio-option .dot {
+    width: 18px; height: 18px; border-radius: 50%; border: 2px solid #7dd3fc; flex-shrink: 0;
+  }
+  .radio-option.selected .dot { background: #0284c7; border-color: #0284c7; }
+  .yn-row { display: flex; gap: 12px; margin-bottom: 14px; }
+  .yn-btn { flex: 1; padding: 14px; border-radius: 12px; border: 2px solid #7dd3fc; background: #fff; font-weight: bold; font-size: 1rem; cursor: pointer; }
+  .yn-btn.selected { background: #0284c7; color: #fff; }
+  .progress { text-align: center; color: #0369a1; font-size: 0.85rem; margin-bottom: 10px; }
+  .review-block { background: #f0f9ff; border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+  .review-block h3 { margin: 0 0 8px; color: #0369a1; font-size: 1rem; }
+  .review-block p { margin: 4px 0; font-size: 0.95rem; }
+  #copyStatus { text-align: center; margin-top: 10px; font-weight: bold; min-height: 20px; }
+  .hint { font-size: 0.85rem; color: #64748b; margin-top: -6px; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 開始畫面 -->
+  <div class="screen active" id="screen-start">
+    <h1>💧 防洪妙招分類站</h1>
+    <p class="subtitle">六上第四單元 4-3｜都市與鄉村為什麼需要邁向永續發展？</p>
+    <div class="card">
+      <label>姓名</label>
+      <input type="text" id="studentName" placeholder="請輸入姓名">
+      <label>座號</label>
+      <input type="text" id="studentNumber" placeholder="請輸入座號">
+      <p style="font-size:0.95rem;color:#334155;">今天要挑戰的任務：判斷三種防洪做法屬於「圍堵治水」還是「與水共生」，接著想想自己居住的地方適合哪種做法，最後動動腦想想全世界的永續發展趨勢！</p>
+      <button class="big-btn" onclick="goToStage(1)">開始挑戰 🚀</button>
+    </div>
+  </div>
+
+  <!-- 關卡1：分類任務 -->
+  <div class="screen" id="screen-1">
+    <div class="progress">關卡 1 / 4</div>
+    <div class="card">
+      <h2>一、防洪做法分類</h2>
+      <p class="hint">閱讀每個做法的說明，判斷它比較接近「圍堵治水」還是「與水共生」。</p>
+
+      <div class="method-item">
+        <strong>做法1：興建堤防、設水門</strong>
+        <div class="desc">在河川附近興建堤防、設置水門(疏散門)來擋水，以圍堵的方式防止淹水災害發生。</div>
+        <div class="choice-row" data-item="1">
+          <button class="choice-btn" onclick="selectChoice(1,'圍堵治水',this)">圍堵治水</button>
+          <button class="choice-btn" onclick="selectChoice(1,'與水共生',this)">與水共生</button>
+        </div>
+      </div>
+
+      <div class="method-item">
+        <strong>做法2：還地於河</strong>
+        <div class="desc">將河岸堤防建在更遠離河川的地方，擴大河岸區域，河水上漲時有更多空間容納河水。</div>
+        <div class="choice-row" data-item="2">
+          <button class="choice-btn" onclick="selectChoice(2,'圍堵治水',this)">圍堵治水</button>
+          <button class="choice-btn" onclick="selectChoice(2,'與水共生',this)">與水共生</button>
+        </div>
+      </div>
+
+      <div class="method-item">
+        <strong>做法3：興建滯洪池</strong>
+        <div class="desc">在校園、公園綠地、運動場等融入滯洪概念，容納宣洩不及的水量，之後再緩慢排出積水。</div>
+        <div class="choice-row" data-item="3">
+          <button class="choice-btn" onclick="selectChoice(3,'圍堵治水',this)">圍堵治水</button>
+          <button class="choice-btn" onclick="selectChoice(3,'與水共生',this)">與水共生</button>
+        </div>
+      </div>
+
+      <button class="big-btn" onclick="checkStage1()">送出，前往下一關 →</button>
+      <p id="stage1Feedback" style="text-align:center;font-weight:bold;"></p>
+    </div>
+  </div>
+
+  <!-- 關卡2：居住地做法 -->
+  <div class="screen" id="screen-2">
+    <div class="progress">關卡 2 / 4</div>
+    <div class="card">
+      <h2>二、觀察你居住的地方</h2>
+      <p class="hint">你居住的地方，採用上述哪一種做法防洪？</p>
+      <div id="livingOptions">
+        <div class="radio-option" onclick="selectRadio(this,'興建堤防、設水門')"><div class="dot"></div>1. 興建堤防、設水門</div>
+        <div class="radio-option" onclick="selectRadio(this,'還地於河')"><div class="dot"></div>2. 還地於河</div>
+        <div class="radio-option" onclick="selectRadio(this,'興建滯洪池')"><div class="dot"></div>3. 興建滯洪池</div>
+        <div class="radio-option" onclick="selectRadio(this,'其他')"><div class="dot"></div>4. 其他</div>
+      </div>
+      <input type="text" id="livingOther" placeholder="若選「其他」，請說明" style="display:none;">
+      <button class="big-btn" onclick="goToStage(3)">下一關 →</button>
+    </div>
+  </div>
+
+  <!-- 關卡3：適合與否 -->
+  <div class="screen" id="screen-3">
+    <div class="progress">關卡 3 / 4</div>
+    <div class="card">
+      <h2>三、這個做法適合嗎？</h2>
+      <p class="hint">想一想你居住的地方，適合關卡2選的做法嗎？</p>
+      <div class="yn-row">
+        <button class="yn-btn" id="ynYes" onclick="selectYN('適合')">✅ 適合</button>
+        <button class="yn-btn" id="ynNo" onclick="selectYN('不適合')">❌ 不適合</button>
+      </div>
+      <label>理由：</label>
+      <textarea id="reasonText" placeholder="請說明你的理由"></textarea>
+      <button class="big-btn" onclick="goToStage(4)">下一關 →</button>
+    </div>
+  </div>
+
+  <!-- 關卡4：延伸思考 -->
+  <div class="screen" id="screen-4">
+    <div class="progress">關卡 4 / 4</div>
+    <div class="card">
+      <h2>四、世界各國的永續發展</h2>
+      <p class="hint">世界各國都努力推動都市與鄉村的永續發展，你覺得這種做法會為人民的生活帶來什麼改變與影響？（配合課本第106～111頁，先寫下你的想法，等一下老師會補充說明）</p>
+      <textarea id="worldThought" placeholder="寫下你的想法..." style="min-height:100px;"></textarea>
+      <button class="big-btn" onclick="showReview()">完成挑戰，查看學習回顧 🎉</button>
+    </div>
+  </div>
+
+  <!-- 學習回顧畫面 -->
+  <div class="screen" id="screen-review">
+    <div class="card">
+      <h1 style="text-align:left;">📋 學習回顧</h1>
+      <div class="review-block">
+        <h3>基本資料</h3>
+        <p id="rvName"></p>
+      </div>
+      <div class="review-block">
+        <h3>一、防洪做法分類</h3>
+        <p id="rvStage1"></p>
+      </div>
+      <div class="review-block">
+        <h3>二、居住地做法</h3>
+        <p id="rvStage2"></p>
+      </div>
+      <div class="review-block">
+        <h3>三、適合與否</h3>
+        <p id="rvStage3"></p>
+      </div>
+      <div class="review-block">
+        <h3>四、世界永續發展的想法</h3>
+        <p id="rvStage4"></p>
+      </div>
+      <button class="big-btn" onclick="copyReview()">📋 一鍵複製學習回顧</button>
+      <p id="copyStatus"></p>
+      <textarea id="copySource" style="position:absolute;left:-9999px;"></textarea>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let stage1Choices = {1:null, 2:null, 3:null};
+let livingChoice = null;
+let ynChoice = null;
+
+function goToStage(n) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + n).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function selectChoice(itemNum, value, btn) {
+  stage1Choices[itemNum] = value;
+  const row = btn.parentElement;
+  row.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+function checkStage1() {
+  if (stage1Choices[1] === null || stage1Choices[2] === null || stage1Choices[3] === null) {
+    document.getElementById('stage1Feedback').textContent = '請先完成三個做法的分類喔！';
+    document.getElementById('stage1Feedback').style.color = '#dc2626';
+    return;
+  }
+  document.getElementById('stage1Feedback').textContent = '';
+  goToStage(2);
+}
+
+function selectRadio(el, value) {
+  document.querySelectorAll('#livingOptions .radio-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  livingChoice = value;
+  document.getElementById('livingOther').style.display = (value === '其他') ? 'block' : 'none';
+}
+
+function selectYN(value) {
+  ynChoice = value;
+  document.getElementById('ynYes').classList.toggle('selected', value === '適合');
+  document.getElementById('ynNo').classList.toggle('selected', value === '不適合');
+}
+
+function showReview() {
+  const name = document.getElementById('studentName').value || '(未填寫)';
+  const number = document.getElementById('studentNumber').value || '(未填寫)';
+  document.getElementById('rvName').textContent = `姓名：${name}　座號：${number}`;
+
+  const labelMap = {1:'做法1 興建堤防、設水門', 2:'做法2 還地於河', 3:'做法3 興建滯洪池'};
+  let s1 = '';
+  for (let i=1;i<=3;i++) {
+    s1 += `${labelMap[i]} → ${stage1Choices[i] || '(未作答)'}\n`;
+  }
+  document.getElementById('rvStage1').innerText = s1;
+
+  let livingOther = document.getElementById('livingOther').value;
+  let s2 = livingChoice || '(未作答)';
+  if (livingChoice === '其他' && livingOther) s2 += `：${livingOther}`;
+  document.getElementById('rvStage2').textContent = s2;
+
+  const reason = document.getElementById('reasonText').value || '(未填寫)';
+  document.getElementById('rvStage3').innerText = `${ynChoice || '(未作答)'}\n理由：${reason}`;
+
+  const worldThought = document.getElementById('worldThought').value || '(未填寫)';
+  document.getElementById('rvStage4').innerText = worldThought;
+
+  goToStage('review');
+}
+
+function copyReview() {
+  const name = document.getElementById('studentName').value || '(未填寫)';
+  const number = document.getElementById('studentNumber').value || '(未填寫)';
+  const labelMap = {1:'興建堤防、設水門', 2:'還地於河', 3:'興建滯洪池'};
+  let text = `【防洪妙招分類站 學習回顧】\n姓名：${name}　座號：${number}\n\n`;
+  text += `一、防洪做法分類：\n`;
+  for (let i=1;i<=3;i++) {
+    text += `　${labelMap[i]} → ${stage1Choices[i] || '(未作答)'}\n`;
+  }
+  text += `\n二、居住地採用做法：${document.getElementById('rvStage2').textContent}\n`;
+  text += `\n三、適合與否：${ynChoice || '(未作答)'}\n理由：${document.getElementById('reasonText').value || '(未填寫)'}\n`;
+  text += `\n四、對世界永續發展的想法：\n${document.getElementById('worldThought').value || '(未填寫)'}\n`;
+
+  const statusEl = document.getElementById('copyStatus');
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      statusEl.textContent = '✅ 已複製！可以貼到聯絡簿或表單囉～';
+      statusEl.style.color = '#16a34a';
+    }).catch(() => {
+      fallbackCopy(text, statusEl);
+    });
+  } else {
+    fallbackCopy(text, statusEl);
+  }
+}
+
+function fallbackCopy(text, statusEl) {
+  const ta = document.getElementById('copySource');
+  ta.style.position = 'static';
+  ta.value = text;
+  ta.select();
+  try {
+    const ok = document.execCommand('copy');
+    statusEl.textContent = ok ? '✅ 已複製！可以貼到聯絡簿或表單囉～' : '⚠️ 複製失敗，請手動選取文字複製。';
+    statusEl.style.color = ok ? '#16a34a' : '#dc2626';
+  } catch (e) {
+    statusEl.textContent = '⚠️ 複製失敗，請手動選取文字複製。';
+    statusEl.style.color = '#dc2626';
+  }
+  ta.style.position = 'absolute';
+  ta.style.left = '-9999px';
+}
+</script>
+</body>
+</html>
