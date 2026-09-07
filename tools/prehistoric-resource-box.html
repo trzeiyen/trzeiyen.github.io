@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>史前資源時光箱｜五上第一單元第2課</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; padding: 0;
+    font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif;
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    min-height: 100vh;
+    color: #422006;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 20px 16px 60px; }
+  .screen { display: none; animation: fadeIn 0.3s ease; }
+  .screen.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  h1 { font-size: 1.4rem; color: #78350f; text-align: center; margin-bottom: 4px; }
+  h2 { font-size: 1.15rem; color: #92400e; margin-top: 0; }
+  .card {
+    background: #fffbeb; border-radius: 18px; padding: 20px;
+    box-shadow: 0 4px 16px rgba(146,64,14,0.15); margin-bottom: 16px;
+    border: 2px solid #fde68a;
+  }
+  .subtitle { text-align: center; color: #92400e; margin-bottom: 20px; font-size: 0.95rem; }
+  label { display: block; font-weight: bold; margin-bottom: 6px; color: #78350f; }
+  input[type=text], textarea {
+    width: 100%; padding: 12px; border: 2px solid #d97706; border-radius: 10px;
+    font-size: 1rem; font-family: inherit; margin-bottom: 14px; background:#fff;
+  }
+  textarea { min-height: 80px; resize: vertical; }
+  .big-btn {
+    display: block; width: 100%; padding: 16px; font-size: 1.1rem; font-weight: bold;
+    background: #b45309; color: #fff; border: none; border-radius: 14px;
+    cursor: pointer; margin-top: 10px; transition: background 0.15s, transform 0.1s;
+  }
+  .big-btn:active { transform: scale(0.98); background: #92400e; }
+  .era-box {
+    border: 2px dashed #d97706; border-radius: 14px; padding: 12px; margin-bottom: 10px;
+    background: #fffdf5; min-height: 56px;
+  }
+  .era-box h3 { margin: 0 0 8px; color: #92400e; font-size: 1rem; }
+  .era-box .items { display: flex; flex-wrap: wrap; gap: 6px; min-height: 30px; }
+  .era-tag {
+    background: #fde68a; border-radius: 8px; padding: 4px 8px; font-size: 0.85rem; font-weight: bold;
+  }
+  .item-card {
+    background: #f0f9ff; border: 2px solid #7dd3fc; border-radius: 12px;
+    padding: 12px; margin-bottom: 10px;
+  }
+  .item-card .desc { font-size: 0.9rem; color: #334155; margin: 4px 0 8px; }
+  .era-choice-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .era-btn {
+    flex: 1; min-width: 90px; padding: 10px 4px; border: 2px solid #d97706; border-radius: 10px;
+    background: #fff; font-size: 0.85rem; font-weight: bold; color: #92400e; cursor: pointer;
+  }
+  .era-btn.selected { background: #b45309; color: #fff; }
+  .progress { text-align: center; color: #92400e; font-size: 0.85rem; margin-bottom: 10px; }
+  .review-block { background: #fffdf5; border-radius: 12px; padding: 14px; margin-bottom: 12px; border: 1px solid #fde68a; }
+  .review-block h3 { margin: 0 0 8px; color: #92400e; font-size: 1rem; }
+  .review-block p { margin: 4px 0; font-size: 0.95rem; white-space: pre-line; }
+  #copyStatus { text-align: center; margin-top: 10px; font-weight: bold; min-height: 20px; }
+  .hint { font-size: 0.85rem; color: #78350f; margin-top: -6px; margin-bottom: 12px; }
+  .radio-option {
+    display: flex; align-items: center; gap: 10px; padding: 12px;
+    border: 2px solid #fde68a; border-radius: 10px; margin-bottom: 10px; cursor: pointer;
+    background: #fffdf5;
+  }
+  .radio-option.selected { background: #fde68a; border-color: #b45309; }
+  .radio-option .dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #d97706; flex-shrink: 0; }
+  .radio-option.selected .dot { background: #b45309; border-color: #b45309; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 開始畫面 -->
+  <div class="screen active" id="screen-start">
+    <h1>🏺 史前資源時光箱</h1>
+    <p class="subtitle">五上第一單元 第2課｜史前人們如何善用資源維持生活？</p>
+    <div class="card">
+      <label>姓名</label>
+      <input type="text" id="studentName" placeholder="請輸入姓名">
+      <label>座號</label>
+      <input type="text" id="studentNumber" placeholder="請輸入座號">
+      <p style="font-size:0.95rem;">臺灣史前人類經歷了舊石器時代、新石器時代、金屬器時代，善用資源的方式也不斷改變。今天要挑戰：把史前器物分類到正確的時代，並想想聚落、貿易是怎麼出現的！</p>
+      <button class="big-btn" onclick="goToStage(1)">開始挑戰 🚀</button>
+    </div>
+  </div>
+
+  <!-- 關卡1：器物時代分類 -->
+  <div class="screen" id="screen-1">
+    <div class="progress">關卡 1 / 4</div>
+    <div class="card">
+      <h2>一、器物時代分類站</h2>
+      <p class="hint">閱讀每個器物／技術的說明，判斷它屬於舊石器時代、新石器時代，還是金屬器時代。</p>
+
+      <div class="item-card">
+        <strong>① 打製石器、骨角器</strong>
+        <div class="desc">臺灣最早的史前人們，直接利用自然環境中的石頭、獸骨打造簡單工具，靠狩獵、採集、漁撈維持生活，還不會農耕。</div>
+        <div class="era-choice-row" data-item="1">
+          <button class="era-btn" onclick="selectEra(1,'舊石器時代',this)">舊石器時代</button>
+          <button class="era-btn" onclick="selectEra(1,'新石器時代',this)">新石器時代</button>
+          <button class="era-btn" onclick="selectEra(1,'金屬器時代',this)">金屬器時代</button>
+        </div>
+      </div>
+
+      <div class="item-card">
+        <strong>② 石刀、石板棺、陶器（卑南遺址）</strong>
+        <div class="desc">人們開始用石刀收割農作物、用石板組成石棺，也用陶土製作各種陶器，並開始飼養家畜、種植芋頭和稻米，食物來源穩定，人口逐漸成長，形成聚落。</div>
+        <div class="era-choice-row" data-item="2">
+          <button class="era-btn" onclick="selectEra(2,'舊石器時代',this)">舊石器時代</button>
+          <button class="era-btn" onclick="selectEra(2,'新石器時代',this)">新石器時代</button>
+          <button class="era-btn" onclick="selectEra(2,'金屬器時代',this)">金屬器時代</button>
+        </div>
+      </div>
+
+      <div class="item-card">
+        <strong>③ 煉鐵技術、鐵刀（十三行遺址）</strong>
+        <div class="desc">臺灣北部十三行遺址的人們，學會由海外傳入煉鐵及製造鐵器的技術，用鐵刀採收，提高作物產量，被稱為金屬器時代。</div>
+        <div class="era-choice-row" data-item="3">
+          <button class="era-btn" onclick="selectEra(3,'舊石器時代',this)">舊石器時代</button>
+          <button class="era-btn" onclick="selectEra(3,'新石器時代',this)">新石器時代</button>
+          <button class="era-btn" onclick="selectEra(3,'金屬器時代',this)">金屬器時代</button>
+        </div>
+      </div>
+
+      <button class="big-btn" onclick="checkStage1()">送出，前往下一關 →</button>
+      <p id="stage1Feedback" style="text-align:center;font-weight:bold;"></p>
+    </div>
+  </div>
+
+  <!-- 關卡2：聚落形成 -->
+  <div class="screen" id="screen-2">
+    <div class="progress">關卡 2 / 4</div>
+    <div class="card">
+      <h2>二、聚落是怎麼形成的？</h2>
+      <p class="hint">卑南遺址出土二千多具石板棺，可見當時已有較大規模的聚落。你覺得下面哪一項，是新石器時代人口成長、形成聚落最主要的原因？</p>
+      <div id="settleOptions">
+        <div class="radio-option" onclick="selectRadio(this,'開始農耕、飼養家畜，食物來源變穩定')"><div class="dot"></div>開始農耕、飼養家畜，食物來源變穩定</div>
+        <div class="radio-option" onclick="selectRadio(this,'學會製作打製石器')"><div class="dot"></div>學會製作打製石器</div>
+        <div class="radio-option" onclick="selectRadio(this,'發現了金屬礦產')"><div class="dot"></div>發現了金屬礦產</div>
+      </div>
+      <label>說說你的理由：</label>
+      <textarea id="settleReason" placeholder="請說明你的想法"></textarea>
+      <button class="big-btn" onclick="goToStage(3)">下一關 →</button>
+    </div>
+  </div>
+
+  <!-- 關卡3：器物交流網 -->
+  <div class="screen" id="screen-3">
+    <div class="progress">關卡 3 / 4</div>
+    <div class="card">
+      <h2>三、千里之外的器物交流</h2>
+      <p class="hint">新石器時代以來，臺灣各聚落間盛行物品交換：花蓮的臺灣玉，在臺東卑南遺址、臺灣多處遺址都有出土；十三行遺址中出土來自東南亞的琉璃珠，及臺灣史前玉器也出現在東南亞地區。這些交流，代表史前人們已具備什麼能力？</p>
+      <div id="tradeOptions">
+        <div class="radio-option" onclick="selectRadio2(this,'具備航海技術，能跨海進行交易')"><div class="dot"></div>具備航海技術，能跨海進行交易</div>
+        <div class="radio-option" onclick="selectRadio2(this,'已經會使用文字記錄')"><div class="dot"></div>已經會使用文字記錄</div>
+        <div class="radio-option" onclick="selectRadio2(this,'已經有汽車等交通工具')"><div class="dot"></div>已經有汽車等交通工具</div>
+      </div>
+      <label>如果你是史前人，你會想用臺灣的什麼東西，去跟外地人交換？為什麼？</label>
+      <textarea id="tradeIdea" placeholder="寫下你的想法..."></textarea>
+      <button class="big-btn" onclick="goToStage(4)">下一關 →</button>
+    </div>
+  </div>
+
+  <!-- 關卡4：總結 -->
+  <div class="screen" id="screen-4">
+    <div class="progress">關卡 4 / 4</div>
+    <div class="card">
+      <h2>四、時代演進總整理</h2>
+      <p class="hint">用一句話說說看：從舊石器時代到金屬器時代，臺灣史前人們善用資源的方式，發生了什麼樣的改變？</p>
+      <textarea id="summaryThought" placeholder="寫下你的總結..." style="min-height:100px;"></textarea>
+      <button class="big-btn" onclick="showReview()">完成挑戰，查看學習回顧 🎉</button>
+    </div>
+  </div>
+
+  <!-- 學習回顧畫面 -->
+  <div class="screen" id="screen-review">
+    <div class="card">
+      <h1 style="text-align:left;">📋 學習回顧</h1>
+      <div class="review-block">
+        <h3>基本資料</h3>
+        <p id="rvName"></p>
+      </div>
+      <div class="review-block">
+        <h3>一、器物時代分類</h3>
+        <p id="rvStage1"></p>
+      </div>
+      <div class="review-block">
+        <h3>二、聚落形成的原因</h3>
+        <p id="rvStage2"></p>
+      </div>
+      <div class="review-block">
+        <h3>三、器物交流與我的交換提案</h3>
+        <p id="rvStage3"></p>
+      </div>
+      <div class="review-block">
+        <h3>四、時代演進總結</h3>
+        <p id="rvStage4"></p>
+      </div>
+      <button class="big-btn" onclick="copyReview()">📋 一鍵複製學習回顧</button>
+      <p id="copyStatus"></p>
+      <textarea id="copySource" style="position:absolute;left:-9999px;"></textarea>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let eraChoices = {1:null, 2:null, 3:null};
+let settleChoice = null;
+let tradeChoice = null;
+
+function goToStage(n) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + n).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function selectEra(itemNum, value, btn) {
+  eraChoices[itemNum] = value;
+  const row = btn.parentElement;
+  row.querySelectorAll('.era-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+function checkStage1() {
+  if (eraChoices[1] === null || eraChoices[2] === null || eraChoices[3] === null) {
+    document.getElementById('stage1Feedback').textContent = '請先完成三個器物的時代分類喔！';
+    document.getElementById('stage1Feedback').style.color = '#dc2626';
+    return;
+  }
+  document.getElementById('stage1Feedback').textContent = '';
+  goToStage(2);
+}
+
+function selectRadio(el, value) {
+  document.querySelectorAll('#settleOptions .radio-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  settleChoice = value;
+}
+
+function selectRadio2(el, value) {
+  document.querySelectorAll('#tradeOptions .radio-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  tradeChoice = value;
+}
+
+function showReview() {
+  const name = document.getElementById('studentName').value || '(未填寫)';
+  const number = document.getElementById('studentNumber').value || '(未填寫)';
+  document.getElementById('rvName').textContent = `姓名：${name}　座號：${number}`;
+
+  const labelMap = {1:'①打製石器、骨角器', 2:'②石刀/石板棺/陶器(卑南遺址)', 3:'③煉鐵技術/鐵刀(十三行遺址)'};
+  let s1 = '';
+  for (let i=1;i<=3;i++) {
+    s1 += `${labelMap[i]} → ${eraChoices[i] || '(未作答)'}\n`;
+  }
+  document.getElementById('rvStage1').innerText = s1;
+
+  const reason = document.getElementById('settleReason').value || '(未填寫)';
+  document.getElementById('rvStage2').innerText = `${settleChoice || '(未作答)'}\n理由：${reason}`;
+
+  const tradeIdea = document.getElementById('tradeIdea').value || '(未填寫)';
+  document.getElementById('rvStage3').innerText = `${tradeChoice || '(未作答)'}\n我的交換提案：${tradeIdea}`;
+
+  const summary = document.getElementById('summaryThought').value || '(未填寫)';
+  document.getElementById('rvStage4').innerText = summary;
+
+  goToStage('review');
+}
+
+function copyReview() {
+  const name = document.getElementById('studentName').value || '(未填寫)';
+  const number = document.getElementById('studentNumber').value || '(未填寫)';
+  const labelMap = {1:'打製石器、骨角器', 2:'石刀/石板棺/陶器(卑南遺址)', 3:'煉鐵技術/鐵刀(十三行遺址)'};
+  let text = `【史前資源時光箱 學習回顧】\n姓名：${name}　座號：${number}\n\n`;
+  text += `一、器物時代分類：\n`;
+  for (let i=1;i<=3;i++) {
+    text += `　${labelMap[i]} → ${eraChoices[i] || '(未作答)'}\n`;
+  }
+  text += `\n二、聚落形成的原因：${settleChoice || '(未作答)'}\n理由：${document.getElementById('settleReason').value || '(未填寫)'}\n`;
+  text += `\n三、器物交流代表的能力：${tradeChoice || '(未作答)'}\n我的交換提案：${document.getElementById('tradeIdea').value || '(未填寫)'}\n`;
+  text += `\n四、時代演進總結：\n${document.getElementById('summaryThought').value || '(未填寫)'}\n`;
+
+  const statusEl = document.getElementById('copyStatus');
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      statusEl.textContent = '✅ 已複製！可以貼到聯絡簿或表單囉～';
+      statusEl.style.color = '#16a34a';
+    }).catch(() => {
+      fallbackCopy(text, statusEl);
+    });
+  } else {
+    fallbackCopy(text, statusEl);
+  }
+}
+
+function fallbackCopy(text, statusEl) {
+  const ta = document.getElementById('copySource');
+  ta.style.position = 'static';
+  ta.value = text;
+  ta.select();
+  try {
+    const ok = document.execCommand('copy');
+    statusEl.textContent = ok ? '✅ 已複製！可以貼到聯絡簿或表單囉～' : '⚠️ 複製失敗，請手動選取文字複製。';
+    statusEl.style.color = ok ? '#16a34a' : '#dc2626';
+  } catch (e) {
+    statusEl.textContent = '⚠️ 複製失敗，請手動選取文字複製。';
+    statusEl.style.color = '#dc2626';
+  }
+  ta.style.position = 'absolute';
+  ta.style.left = '-9999px';
+}
+</script>
+</body>
+</html>
