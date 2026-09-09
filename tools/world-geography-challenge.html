@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>世界地理三關挑戰</title>
+<style>
+  :root{
+    --ink:#233a2c; --paper:#f3ead6; --paper2:#fbf6ea; --line:#e2d4b6;
+    --clay:#c65f3a; --clay-soft:#e8a583;
+    --sky:#4a7a8c; --gold:#d9a441; --olive:#7a8a5a;
+    --miss:#b8462f; --sea:#cfe0e4;
+    --shadow:rgba(35,58,44,.16);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;overflow:hidden}
+  body{
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+    background:radial-gradient(circle at 12% 10%,#f8f1e0 0%,transparent 45%),
+               radial-gradient(circle at 88% 90%,#efe3c8 0%,transparent 50%),var(--paper);
+    color:var(--ink);height:100dvh;display:flex;flex-direction:column;
+  }
+  /* ---- top bar ---- */
+  header{padding:12px 20px;border-bottom:2px solid var(--ink);display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  h1{margin:0;font-size:clamp(18px,2.6vw,26px);font-weight:900;letter-spacing:.05em}
+  .steps{display:flex;gap:6px;margin-left:6px}
+  .step{width:30px;height:30px;border-radius:50%;border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;background:var(--paper)}
+  .step.active{background:var(--clay);color:#fff;border-color:var(--clay)}
+  .step.done{background:var(--olive);color:#fff;border-color:var(--olive)}
+  .runtotal{margin-left:auto;font-size:15px;font-weight:700}
+  .runtotal b{font-size:22px;color:var(--clay);font-variant-numeric:tabular-nums}
+
+  main{flex:1;position:relative;min-height:0}
+  .screen{position:absolute;inset:0;display:none;flex-direction:column}
+  .screen.on{display:flex}
+
+  /* ---- level 1: draw ---- */
+  .l1{flex-direction:row}
+  .stage{flex:1;display:flex;align-items:center;justify-content:center;padding:12px;min-width:0;position:relative}
+  .board-wrap{position:relative;aspect-ratio:1/1;height:100%;max-height:100%;max-width:100%}
+  canvas{position:absolute;inset:0;width:100%;height:100%;border-radius:4px;touch-action:none}
+  #boardBg{background:linear-gradient(var(--line) 1px,transparent 1px) 0 0/100% 6.25%,
+               linear-gradient(90deg,var(--line) 1px,transparent 1px) 0 0/6.25% 100%,var(--paper2);
+    border:3px solid var(--ink);box-shadow:0 10px 28px var(--shadow)}
+  #board{background:transparent;cursor:crosshair;border:3px solid transparent}
+  #compass{position:absolute;top:8px;right:10px;font-weight:700;opacity:.5;text-align:center;font-size:12px;pointer-events:none}
+  #compass span{font-size:18px;display:block}
+  aside{width:min(290px,34vw);border-left:2px solid var(--ink);padding:16px 18px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;background:linear-gradient(180deg,#f0e6cd,transparent 26%)}
+  .whichcont{font-size:14px;opacity:.7}
+  .contname{font-size:26px;font-weight:900;color:var(--clay);margin:-4px 0 2px}
+  .prompt{font-size:14.5px;line-height:1.5}
+  .prompt b{color:var(--clay)}
+  .hint-toggle{display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;user-select:none}
+  .hint-toggle input{position:absolute;opacity:0;width:0;height:0}
+  .switch{width:42px;height:23px;border-radius:12px;background:var(--line);border:2px solid var(--ink);position:relative;transition:.2s}
+  .switch::after{content:"";position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:var(--ink);transition:.2s}
+  .hint-toggle input:checked + .switch{background:var(--clay-soft)}
+  .hint-toggle input:checked + .switch::after{transform:translateX(19px);background:var(--clay)}
+  .tools{display:flex;gap:7px;flex-wrap:wrap}
+  button{font-family:inherit;font-size:14.5px;font-weight:700;padding:8px 13px;border-radius:6px;border:2px solid var(--ink);background:var(--paper);color:var(--ink);cursor:pointer;transition:transform .08s,background .15s}
+  button:active{transform:translateY(1px)}
+  button.primary{background:var(--clay);color:#fff;border-color:var(--clay)}
+  button.primary:disabled{opacity:.4;cursor:not-allowed}
+  button.ghost{background:transparent}
+  .scores{display:flex;flex-direction:column;gap:10px}
+  .srow{opacity:.35;transition:opacity .4s}
+  .srow.live{opacity:1}
+  .shead{display:flex;justify-content:space-between;align-items:baseline;font-size:14px}
+  .shead .val{font-size:22px;font-weight:900;font-variant-numeric:tabular-nums}
+  .shead .val .pct{font-size:13px;opacity:.6}
+  .bar{height:8px;border-radius:5px;background:var(--line);overflow:hidden;margin-top:4px;border:1px solid rgba(35,58,44,.16)}
+  .bar>i{display:block;height:100%;width:0;border-radius:5px;transition:width .7s cubic-bezier(.2,.8,.2,1)}
+  .bar.shape>i{background:var(--gold)} .bar.pos>i{background:var(--sky)} .bar.size>i{background:var(--clay)}
+  .legend{display:flex;gap:12px;font-size:12px;flex-wrap:wrap;opacity:.85}
+  .legend span{display:inline-flex;align-items:center;gap:4px}
+  .legend i{width:12px;height:12px;border-radius:3px}
+  .l1-total{margin-top:auto;padding-top:12px;border-top:2px dashed var(--ink);display:flex;align-items:center;justify-content:space-between}
+  .l1-total .big{font-size:34px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1}
+  .grade{font-size:16px;font-weight:900;color:var(--clay)}
+  .cont-progress{display:flex;gap:5px;flex-wrap:wrap}
+  .chip{font-size:11.5px;padding:3px 8px;border-radius:11px;border:1.5px solid var(--ink);opacity:.5}
+  .chip.done{background:var(--olive);color:#fff;border-color:var(--olive);opacity:1}
+  .chip.cur{background:var(--clay);color:#fff;border-color:var(--clay);opacity:1}
+
+  /* ---- level 2 & 3: world map ---- */
+  .maparea{flex:1;display:flex;flex-direction:column;min-height:0}
+  .l-head{padding:12px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .l-head h2{margin:0;font-size:clamp(17px,2.4vw,22px);font-weight:900}
+  .l-head .desc{font-size:14px;opacity:.75;flex:1 1 240px}
+  .worldbox{flex:1;display:flex;align-items:center;justify-content:center;padding:8px 16px 12px;min-height:0}
+  .world{position:relative;aspect-ratio:2/1;width:100%;max-width:min(96%,168vh);
+    background:var(--sea);border:3px solid var(--ink);border-radius:6px;box-shadow:0 10px 28px var(--shadow);overflow:hidden;touch-action:none}
+  .grid-svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:.35}
+  .slot{position:absolute;transform:translate(-50%,-50%);border:2.5px dashed rgba(35,58,44,.4);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:rgba(35,58,44,.5);text-align:center;pointer-events:none}
+  .slot.filled{border-color:transparent}
+  .piece{position:absolute;transform:translate(-50%,-50%);cursor:grab;touch-action:none;user-select:none;filter:drop-shadow(0 3px 5px rgba(35,58,44,.3))}
+  .piece.dragging{cursor:grabbing;z-index:20;filter:drop-shadow(0 8px 14px rgba(35,58,44,.4))}
+  .piece.locked{cursor:default}
+  .piece svg{display:block;overflow:visible}
+  .piece .lbl{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:12px;font-weight:900;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5);pointer-events:none;white-space:nowrap}
+  .tray{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;padding:6px 16px 10px}
+  /* level 2 continent tray */
+  .piece-tray{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center;
+    padding:8px 14px;min-height:96px;border-top:2px dashed var(--ink);margin:0 16px;
+    background:linear-gradient(180deg,rgba(207,224,228,.35),transparent)}
+  .piece-tray .piece{position:relative;transform:none;left:auto!important;top:auto!important;
+    padding:6px;min-height:40px;display:flex;align-items:center;justify-content:center}
+  .piece-tray .piece.locked{display:none}
+  .otoken{padding:9px 16px;border-radius:22px;border:2.5px solid var(--ink);background:var(--paper);font-weight:900;font-size:15px;cursor:grab;touch-action:none;user-select:none;box-shadow:0 3px 0 var(--shadow)}
+  .otoken.placed{opacity:.35;pointer-events:none;text-decoration:line-through}
+  .odrop{position:absolute;transform:translate(-50%,-50%);width:110px;height:52px;border:2.5px dashed rgba(35,58,44,.45);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:12px;color:rgba(35,58,44,.5);font-weight:700}
+  .odrop.ok{border-color:var(--olive);background:rgba(122,138,90,.18);color:var(--olive)}
+  .l-foot{padding:10px 20px;border-top:2px solid var(--ink);display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .l-foot .msg{font-size:15px;font-weight:700;flex:1}
+  .l-foot .msg b{color:var(--clay)}
+
+  /* ---- final ---- */
+  /* ---- mode select ---- */
+  .mode-select{align-items:center;justify-content:center;padding:24px;overflow-y:auto}
+  .mode-inner{max-width:760px;width:100%;text-align:center}
+  .mode-title{font-size:clamp(24px,4vw,34px);font-weight:900}
+  .mode-sub{opacity:.7;margin:4px 0 22px;font-size:15px}
+  .mode-cards{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+  .mode-card{flex:1 1 260px;max-width:320px;text-align:left;padding:22px;border:2.5px solid var(--ink);border-radius:14px;background:var(--paper2);cursor:pointer;transition:transform .1s,box-shadow .15s}
+  .mode-card:hover{transform:translateY(-3px);box-shadow:0 10px 24px var(--shadow)}
+  .mode-card.sel{background:var(--clay);color:#fff;border-color:var(--clay)}
+  .mc-emoji{font-size:38px}
+  .mc-name{font-size:20px;font-weight:900;margin:8px 0 6px}
+  .mc-desc{font-size:14px;line-height:1.5;opacity:.85}
+  .cont-pick{margin-top:26px}
+  .cp-title{font-size:17px;font-weight:900;margin-bottom:12px}
+  .cp-grid{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+  .cp-btn{padding:12px 20px;border:2.5px solid var(--ink);border-radius:10px;background:var(--paper);font-weight:800;font-size:16px;cursor:pointer;transition:transform .08s,background .15s}
+  .cp-btn:hover{background:var(--clay-soft)}
+  .cp-btn:active{transform:translateY(1px)}
+  /* ---- timer ---- */
+  .timer{margin-left:auto;font-size:20px;font-weight:900;font-variant-numeric:tabular-nums;padding:4px 12px;border:2px solid var(--ink);border-radius:8px;background:var(--paper2)}
+  .timer.warn{color:#fff;background:var(--clay);border-color:var(--clay);animation:pulse 1s infinite}
+  @keyframes pulse{50%{opacity:.6}}
+
+  .final{align-items:center;justify-content:center;text-align:center;padding:24px}
+  .final .medal{font-size:70px;margin-bottom:6px}
+  .final h2{margin:0;font-size:30px;font-weight:900}
+  .final .fbig{font-size:64px;font-weight:900;color:var(--clay);line-height:1;margin:10px 0;font-variant-numeric:tabular-nums}
+  .final .breakdown{display:flex;gap:24px;margin:14px 0 20px;flex-wrap:wrap;justify-content:center}
+  .final .bd{font-size:15px}
+  .final .bd b{display:block;font-size:26px;font-variant-numeric:tabular-nums}
+
+  @media (max-width:820px), (orientation:portrait){
+    .l1{flex-direction:column}
+    aside{width:auto;border-left:none;border-top:2px solid var(--ink);flex-direction:row;flex-wrap:wrap;align-items:center;gap:10px 16px;padding:10px 14px}
+    .whichcont{order:0} .contname{order:1;margin:0}
+    .prompt{flex:1 1 100%;order:2;font-size:13.5px}
+    .tools{order:4} .scores{flex-direction:row;flex:1 1 100%;gap:12px;order:3}
+    .srow{flex:1}
+    .l1-total{margin:0;border-top:none;border-left:2px dashed var(--ink);padding:2px 0 2px 14px;order:5}
+    .cont-progress{order:6;flex:1 1 100%}
+    .board-wrap{height:auto;width:min(90vw,54vh)}
+    .runtotal{width:100%;order:9;margin:0}
+    header{gap:8px}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>世界地理三關挑戰</h1>
+  <div class="steps">
+    <div class="step active" id="st1">1</div>
+    <div class="step" id="st2">2</div>
+    <div class="step" id="st3">3</div>
+  </div>
+  <div class="runtotal">累積總分 <b id="runTotal">0</b></div>
+</header>
+
+<main>
+  <!-- ===================== MODE SELECT ===================== -->
+  <section class="screen on mode-select" id="screenMode">
+    <div class="mode-inner">
+      <div class="mode-title">選擇第一關模式</div>
+      <div class="mode-sub">徒手畫大陸輪廓的挑戰方式</div>
+      <div class="mode-cards">
+        <button class="mode-card" id="modeOne">
+          <div class="mc-emoji">🎯</div>
+          <div class="mc-name">選一洲挑戰</div>
+          <div class="mc-desc">挑一個洲來畫，快速一回合。適合單元練習或當暖身。</div>
+        </button>
+        <button class="mode-card" id="modeAll">
+          <div class="mc-emoji">🌍</div>
+          <div class="mc-name">全部畫（七大洲）</div>
+          <div class="mc-desc">七大洲依序全畫一遍，完整挑戰。接著進第二、三關。</div>
+        </button>
+      </div>
+      <div class="cont-pick" id="contPick" style="display:none">
+        <div class="cp-title">要畫哪一洲？</div>
+        <div class="cp-grid" id="cpGrid"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== LEVEL 1 ===================== -->
+  <section class="screen l1" id="screen1">
+    <div class="stage">
+      <div class="board-wrap">
+        <canvas id="boardBg"></canvas>
+        <canvas id="board"></canvas>
+        <div id="compass"><span>↑</span>北</div>
+      </div>
+    </div>
+    <aside>
+      <div>
+        <div class="whichcont">第一關 · 徒手畫（<span id="contIdx">1</span>/7）</div>
+        <div class="contname" id="contName">非洲</div>
+      </div>
+      <label class="hint-toggle"><input type="checkbox" id="hintToggle" checked><span class="switch"></span>淡底圖提示</label>
+      <div class="prompt" id="prompt1">用手指或滑鼠<b>一筆</b>畫出這一洲的輪廓，畫完按「完成」。</div>
+      <div class="tools">
+        <button class="ghost" id="undoBtn">復原</button>
+        <button class="ghost" id="clearBtn">清除</button>
+        <button class="primary" id="doneBtn" disabled>完成</button>
+        <button class="primary" id="nextContBtn" style="display:none">下一洲 →</button>
+      </div>
+      <div class="scores">
+        <div class="srow" id="rowShape"><div class="shead"><span>形狀</span><span class="val" id="vShape">0<span class="pct">%</span></span></div><div class="bar shape"><i id="bShape"></i></div></div>
+        <div class="srow" id="rowPos"><div class="shead"><span>位置</span><span class="val" id="vPos">0<span class="pct">%</span></span></div><div class="bar pos"><i id="bPos"></i></div></div>
+        <div class="srow" id="rowSize"><div class="shead"><span>大小</span><span class="val" id="vSize">0<span class="pct">%</span></span></div><div class="bar size"><i id="bSize"></i></div></div>
+      </div>
+      <div class="legend" id="legend" style="display:none">
+        <span><i style="background:var(--sky)"></i>畫對</span><span><i style="background:var(--olive)"></i>多畫</span><span><i style="background:var(--miss)"></i>少畫</span>
+      </div>
+      <div class="l1-total">
+        <div><div class="big" id="l1total">—</div><div class="grade" id="grade"></div></div>
+      </div>
+      <div class="cont-progress" id="contProgress"></div>
+    </aside>
+  </section>
+
+  <!-- ===================== LEVEL 2 ===================== -->
+  <section class="screen" id="screen2">
+    <div class="maparea">
+      <div class="l-head">
+        <h2>第二關 · 把七大洲放回正確位置</h2>
+        <div class="desc">從下方托盤把每一塊大陸拖到地圖上它該在的地方，拼成完整世界地圖。全部放對後，剩餘時間越多、加分越多。</div>
+        <div class="timer" id="timer2">⏱ 3:00</div>
+      </div>
+      <div class="worldbox">
+        <div class="world" id="world2">
+          <svg class="grid-svg" viewBox="0 0 1000 500" preserveAspectRatio="none" id="grid2"></svg>
+        </div>
+      </div>
+      <div class="piece-tray" id="pieceTray2"></div>
+      <div class="l-foot">
+        <div class="msg" id="msg2"><span id="msgTxt2">已放對</span> <b id="placed2">0</b> / 7</div>
+        <button class="primary" id="finish2" disabled>進入第三關 →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== LEVEL 3 ===================== -->
+  <section class="screen" id="screen3">
+    <div class="maparea">
+      <div class="l-head">
+        <h2>第三關 · 三大洋名稱配對</h2>
+        <div class="desc">把下方三個海洋名稱，拖到地圖上正確的海域。</div>
+      </div>
+      <div class="worldbox">
+        <div class="world" id="world3">
+          <svg class="grid-svg" viewBox="0 0 1000 500" preserveAspectRatio="none" id="grid3"></svg>
+        </div>
+      </div>
+      <div class="tray" id="oceanTray"></div>
+      <div class="l-foot">
+        <div class="msg" id="msg3"><span id="msgTxt3">已配對</span> <b id="placed3">0</b> / 3</div>
+        <button class="primary" id="finish3" disabled>看最終成績 →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== FINAL ===================== -->
+  <section class="screen final" id="screenF">
+    <div class="medal" id="medal">🌍</div>
+    <h2 id="fgrade">完成！</h2>
+    <div class="fbig" id="fscore">0</div>
+    <div class="breakdown">
+      <div class="bd">第一關 徒手畫<b id="f1">0</b></div>
+      <div class="bd">第二關 定位<b id="f2">0</b></div>
+      <div class="bd">第三關 海洋<b id="f3">0</b></div>
+    </div>
+    <button class="primary" id="restart">再玩一次</button>
+  </section>
+</main>
+
+<script>
+// global guard: log real errors to console so they don't surface as opaque "Script error"
+window.addEventListener('error',function(ev){try{console.warn('caught:',ev.message,ev.filename,ev.lineno);}catch(_){}});
+window.addEventListener('unhandledrejection',function(ev){try{console.warn('caught rejection:',ev.reason);}catch(_){}});
+// ============ DATA ============
+const DATA = {"africa": {"outline": [[420.6,70],[536.8,130.8],[682.6,142.8],[813,377.7],[907.9,374.2],[784.6,545.9],[779.8,640.2],[686.2,823.8],[603.2,920.5],[536.8,930],[517.8,924],[458.5,785.7],[453.8,619.9],[409.9,523.3],[399.2,463.6],[339.9,438.6],[210.7,462.4],[143.1,413.5],[92.1,339.6],[98,264.4],[183.4,152.3],[229.6,87.9],[336.4,76],[420.6,70]], "world": [[528.3,146.4],[555.6,160.6],[589.7,163.3],[620.3,218.1],[642.5,217.2],[613.6,257.2],[612.5,279.2],[590.6,321.9],[571.1,344.4],[555.6,346.7],[551.1,345.3],[537.2,313.1],[536.1,274.4],[525.8,251.9],[523.3,238.1],[509.4,232.2],[479.2,237.8],[463.3,226.4],[451.4,209.2],[452.8,191.7],[472.8,165.6],[483.6,150.6],[508.6,147.8],[528.3,146.4]], "centroid": [537.6,232.7]},
+"europe": {"outline": [[78.6,842.5],[216.2,714],[297,727.4],[374.4,708.7],[457,756.8],[560.2,805],[649.6,861.2],[697.8,802.3],[723.6,780.9],[740.8,673.9],[775.2,633.8],[895.6,647.2],[930,593.6],[758,272.6],[654.8,138.8],[603.2,138.8],[422.6,178.9],[328,245.8],[310.8,326.1],[379.6,352.8],[414,433.1],[293.6,459.9],[211,486.6],[156,540.1],[164.6,433.1],[104.4,406.4],[70,433.1],[138.8,486.6],[70,486.6],[78.6,842.5]], "world": [[473.6,142.5],[495.8,129.2],[508.9,130.6],[521.4,128.6],[534.7,133.6],[551.4,138.6],[565.8,144.4],[573.6,138.3],[577.8,136.1],[580.6,125],[586.1,120.8],[605.6,122.2],[611.1,116.7],[583.3,83.3],[566.7,69.4],[558.3,69.4],[529.2,73.6],[513.9,80.6],[511.1,88.9],[522.2,91.7],[527.8,100],[508.3,102.8],[495,105.6],[486.1,111.1],[487.5,100],[477.8,97.2],[472.2,100],[483.3,105.6],[472.2,105.6],[473.6,142.5]], "centroid": [528.5,111.1]},
+"asia": {"outline": [[70,505.9],[117.6,533.4],[120.4,574.1],[190.5,581.6],[235.3,611.2],[257.7,618.6],[296.9,618.6],[324.9,655.7],[352.9,744.7],[369.7,707.6],[414.6,648.3],[437,648.3],[470.6,744.7],[504.2,744.7],[515.4,729.8],[532.2,692.8],[526.6,648.3],[605,581.6],[599.4,522.2],[627.5,507.4],[644.3,544.5],[705.9,537.1],[717.1,477.8],[722.7,433.3],[817.9,359.1],[874,314.6],[930,314.6],[874,285],[705.9,262.7],[537.8,255.3],[369.7,262.7],[313.7,262.7],[257.7,277.6],[229.7,299.8],[285.7,314.6],[257.7,396.2],[190.5,462.9],[145.6,448.1],[134.4,462.9],[95.2,459.2],[84,470.3],[78.4,500],[70,505.9]], "world": [[573.6,138.3],[597.2,148.6],[598.6,163.9],[633.3,166.7],[655.6,177.8],[666.7,180.6],[686.1,180.6],[700,194.4],[713.9,227.8],[722.2,213.9],[744.4,191.7],[755.6,191.7],[772.2,227.8],[788.9,227.8],[794.4,222.2],[802.8,208.3],[800,191.7],[838.9,166.7],[836.1,144.4],[850,138.9],[858.3,152.8],[888.9,150],[894.4,127.8],[897.2,111.1],[944.4,83.3],[972.2,66.7],[1000,66.7],[972.2,55.6],[888.9,47.2],[805.6,44.4],[722.2,47.2],[694.4,47.2],[666.7,52.8],[652.8,61.1],[680.6,66.7],[666.7,97.2],[633.3,122.2],[611.1,116.7],[605.6,122.2],[586.1,120.8],[580.6,125],[577.8,136.1],[573.6,138.3]], "centroid": [742,136.3]},
+"north_america": {"outline": [[70,249.4],[93,314.8],[146.8,358.4],[192.9,336.6],[285,314.8],[361.8,380.2],[407.9,445.5],[407.9,532.7],[438.6,598],[461.6,619.8],[515.4,717.9],[553.8,750.6],[615.2,794.1],[653.6,805],[684.3,794.1],[692,739.7],[668.9,652.5],[715,641.6],[738,696.1],[745.7,619.8],[776.4,587.2],[822.5,510.9],[845.5,478.2],[899.3,456.4],[930,402],[868.6,314.8],[761.1,293],[630.5,227.7],[515.4,227.7],[400.2,205.9],[285,205.9],[162.1,195],[70,249.4]], "world": [[33.3,66.7],[41.7,83.3],[61.1,94.4],[77.8,88.9],[111.1,83.3],[138.9,100],[155.6,116.7],[155.6,138.9],[166.7,155.6],[175,161.1],[194.4,186.1],[208.3,194.4],[230.6,205.6],[244.4,208.3],[255.6,205.6],[258.3,191.7],[250,169.4],[266.7,166.7],[275,180.6],[277.8,161.1],[288.9,152.8],[305.6,133.3],[313.9,125],[333.3,119.4],[344.4,105.6],[322.2,83.3],[283.3,77.8],[236.1,61.1],[194.4,61.1],[152.8,55.6],[111.1,55.6],[66.7,52.8],[33.3,66.7]], "centroid": [198.9,124.5]},
+"south_america": {"outline": [[209.4,136.2],[260,109.7],[323.1,70],[424.2,83.2],[474.7,149.4],[575.8,149.4],[601.1,215.5],[676.9,242],[752.7,281.7],[790.6,321.4],[740,387.5],[727.4,480.2],[626.3,546.3],[563.2,665.4],[500,718.3],[449.5,744.8],[411.6,810.9],[373.7,877.1],[348.4,930],[297.9,903.5],[310.5,810.9],[285.2,705.1],[335.8,612.5],[348.4,480.2],[348.4,347.8],[285.2,281.7],[222.1,242],[209.4,136.2]], "world": [[275,233.3],[286.1,227.8],[300,219.4],[322.2,222.2],[333.3,236.1],[355.6,236.1],[361.1,250],[377.8,255.6],[394.4,263.9],[402.8,272.2],[391.7,286.1],[388.9,305.6],[366.7,319.4],[352.8,344.4],[338.9,355.6],[327.8,361.1],[319.4,375],[311.1,388.9],[305.6,400],[294.4,394.4],[297.2,375],[291.7,352.8],[302.8,333.3],[305.6,305.6],[305.6,277.8],[291.7,263.9],[277.8,255.6],[275,233.3]], "centroid": [326.9,298]},
+"australia": {"outline": [[91.5,440.2],[70,535.9],[113,727.1],[285,727.1],[414,679.3],[521.5,703.2],[607.5,751.1],[672,822.8],[801,822.8],[865.5,798.9],[930,655.4],[930,512],[779.5,368.5],[693.5,177.2],[564.5,201.1],[435.5,201.1],[349.5,248.9],[263.5,344.6],[91.5,440.2]], "world": [[816.7,311.1],[813.9,322.2],[819.4,344.4],[841.7,344.4],[858.3,338.9],[872.2,341.7],[883.3,347.2],[891.7,355.6],[908.3,355.6],[916.7,352.8],[925,336.1],[925,319.4],[905.6,302.8],[894.4,280.6],[877.8,283.3],[861.1,283.3],[850,288.9],[838.9,300],[816.7,311.1]], "centroid": [869.3,322.1]},
+"antarctica": {"outline": [[930,500],[919.2,456.9],[887.4,415.9],[836.2,379.1],[768.1,348.5],[686.6,325.4],[595.7,311],[500,306.2],[404.3,311],[313.4,325.4],[231.9,348.5],[163.8,379.1],[112.6,415.9],[80.8,456.9],[70,500],[80.8,543.1],[112.6,584.1],[163.8,620.9],[231.9,651.5],[313.4,674.6],[404.3,689],[500,693.8],[595.7,689],[686.6,674.6],[768.1,651.5],[836.2,620.9],[887.4,584.1],[919.2,543.1]], "world": [[666.7,458.3],[662.5,454],[650.2,449.9],[630.3,446.2],[603.9,443.1],[572.3,440.8],[537.1,439.4],[500,438.9],[462.9,439.4],[427.7,440.8],[396.1,443.1],[369.7,446.2],[349.8,449.9],[337.5,454],[333.3,458.3],[337.5,462.7],[349.8,466.8],[369.7,470.5],[396.1,473.5],[427.7,475.9],[462.9,477.3],[500,477.8],[537.1,477.3],[572.3,475.9],[603.9,473.5],[630.3,470.5],[650.2,466.8],[662.5,462.7]], "centroid": [500,458.3]}};
+
+const CN = {africa:"非洲",europe:"歐洲",asia:"亞洲",north_america:"北美洲",south_america:"南美洲",australia:"大洋洲",antarctica:"南極洲"};
+const ORDER = ["africa","south_america","north_america","australia","europe","asia","antarctica"];
+const OCEANS = [
+  {id:"pacific", name:"太平洋", targets:[{x:90,y:250},{x:955,y:250}]},   // wraps: valid on both left & right
+  {id:"atlantic", name:"大西洋", targets:[{x:430,y:250}]},
+  {id:"indian", name:"印度洋", targets:[{x:715,y:335}]},
+];
+
+// ============ STATE ============
+let state={ level:1, contI:0, l1Scores:[], l2:0, l3:0, mode:'all', playlist:ORDER.slice() };
+
+// ============ LEVEL 1 : DRAW ============
+const canvas=document.getElementById('board'), ctx=canvas.getContext('2d');
+const bgCanvas=document.getElementById('boardBg'), bgCtx=bgCanvas.getContext('2d');
+let DPR=Math.min(window.devicePixelRatio||1,2);
+let strokes=[],cur=null,drawing=false,scored=false,showHint=true,lastCells=null,lastStep=0;
+
+function curCont(){return state.playlist[state.contI];}
+function curOutline(){const c=curCont();if(!c||!DATA[c])return[];return DATA[c].outline.map(p=>({x:p[0],y:p[1]}));}
+
+function fitCanvas(){
+  const r=canvas.getBoundingClientRect();
+  if(r.width<2){return;} // hidden; skip
+  canvas.width=r.width*DPR;canvas.height=r.height*DPR;
+  bgCanvas.width=r.width*DPR;bgCanvas.height=r.height*DPR;
+  renderBg();renderStrokes();
+}
+function toSpace(cx,cy){const r=canvas.getBoundingClientRect();return{x:(cx-r.left)/r.width*1000,y:(cy-r.top)/r.height*1000};}
+const sx=x=>x/1000*canvas.width, sy=y=>y/1000*canvas.height;
+
+// background layer: hint outline OR score view. Drawn only when continent/state changes.
+function renderBg(){
+  bgCtx.clearRect(0,0,bgCanvas.width,bgCanvas.height);
+  if(scored){renderScoreView();return;}
+  if(showHint){
+    const ref=curOutline();
+    bgCtx.save();bgCtx.beginPath();ref.forEach((p,i)=>i?bgCtx.lineTo(sx(p.x),sy(p.y)):bgCtx.moveTo(sx(p.x),sy(p.y)));bgCtx.closePath();
+    bgCtx.fillStyle='rgba(198,95,58,.07)';bgCtx.fill();
+    bgCtx.lineWidth=2*DPR;bgCtx.setLineDash([8*DPR,8*DPR]);bgCtx.strokeStyle='rgba(198,95,58,.28)';bgCtx.stroke();bgCtx.restore();
+  }
+}
+// foreground layer: only the user's strokes. Fast, called on every pointer move.
+function renderStrokes(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  if(scored)return; // strokes shown on bg score view instead
+  ctx.save();ctx.lineWidth=5*DPR;ctx.lineJoin='round';ctx.lineCap='round';ctx.strokeStyle='#233a2c';
+  strokes.concat(cur?[cur]:[]).forEach(st=>{if(st.length<1)return;ctx.beginPath();st.forEach((p,i)=>i?ctx.lineTo(sx(p.x),sy(p.y)):ctx.moveTo(sx(p.x),sy(p.y)));ctx.stroke();});
+  ctx.restore();
+}
+// keep renderL1 as a compatibility wrapper
+function renderL1(scoreView){ if(scoreView){scored=true;} renderBg(); renderStrokes(); }
+
+function renderScoreView(){
+  if(!lastCells)return;
+  ctx.clearRect(0,0,canvas.width,canvas.height); // clear foreground; score view lives on bg
+  bgCtx.save();
+  for(const[gx,gy,t]of lastCells){
+    const x=sx(gx*lastStep),y=sy(gy*lastStep),w=sx(lastStep)-sx(0)+1,h=sy(lastStep)-sy(0)+1;
+    bgCtx.fillStyle=t===1?'rgba(74,122,140,.55)':t===2?'rgba(184,70,47,.42)':'rgba(122,138,90,.42)';
+    bgCtx.fillRect(x,y,w,h);
+  }
+  bgCtx.lineWidth=3*DPR;bgCtx.lineJoin='round';bgCtx.lineCap='round';bgCtx.strokeStyle='rgba(35,58,44,.9)';
+  strokes.forEach(st=>{bgCtx.beginPath();st.forEach((p,i)=>i?bgCtx.lineTo(sx(p.x),sy(p.y)):bgCtx.moveTo(sx(p.x),sy(p.y)));bgCtx.stroke();});
+  bgCtx.restore();
+}
+function allPts(){return strokes.flat();}
+function bbox(pts){let a=1e9,b=1e9,c=-1e9,d=-1e9;pts.forEach(p=>{a=Math.min(a,p.x);b=Math.min(b,p.y);c=Math.max(c,p.x);d=Math.max(d,p.y)});return{minx:a,miny:b,maxx:c,maxy:d,w:c-a,h:d-b,cx:(a+c)/2,cy:(b+d)/2};}
+function pip(x,y,poly){let ins=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const xi=poly[i].x,yi=poly[i].y,xj=poly[j].x,yj=poly[j].y;if(((yi>y)!=(yj>y))&&(x<(xj-xi)*(y-yi)/(yj-yi)+xi))ins=!ins;}return ins;}
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+function computeScore(){
+  const user=allPts();if(user.length<3)return null;const ref=curOutline();
+  const N=80,step=1000/N;let inter=0,oR=0,oU=0;const cells=[];
+  for(let gy=0;gy<N;gy++)for(let gx=0;gx<N;gx++){const x=gx*step+step/2,y=gy*step+step/2;const R=pip(x,y,ref),U=pip(x,y,user);
+    if(R&&U){inter++;cells.push([gx,gy,1]);}else if(R){oR++;cells.push([gx,gy,2]);}else if(U){oU++;cells.push([gx,gy,3]);}}
+  const iou=inter/(inter+oR+oU||1);const shape=Math.round(clamp(iou*100*1.08,0,100));
+  const rb=bbox(ref),ub=bbox(user);const diag=Math.hypot(rb.w,rb.h);const d=Math.hypot(rb.cx-ub.cx,rb.cy-ub.cy);
+  const pos=Math.round(clamp((1-d/(diag*0.6))*100,0,100));
+  const rA=rb.w*rb.h,uA=ub.w*ub.h;const ratio=uA&&rA?Math.min(uA,rA)/Math.max(uA,rA):0;const size=Math.round(clamp(ratio*100,0,100));
+  const total=Math.round(shape*0.55+pos*0.25+size*0.2);
+  return{shape,pos,size,total,cells,step};
+}
+function gradeOf(t){return t>=90?"神手 🌍":t>=75?"精準 👏":t>=60?"不錯 👍":t>=40?"再練 ✏️":"重新認識 🧭";}
+function animateVal(el,target,plain){let t0=performance.now();function step(t){const k=Math.min((t-t0)/550,1);const v=Math.round(target*(0.5-Math.cos(Math.PI*k)/2));el.innerHTML=plain?v:v+'<span class="pct">%</span>';if(k<1)requestAnimationFrame(step);}requestAnimationFrame(step);}
+
+// pointer
+function evtXY(e){if(e.touches&&e.touches[0])return[e.touches[0].clientX,e.touches[0].clientY];if(e.changedTouches&&e.changedTouches[0])return[e.changedTouches[0].clientX,e.changedTouches[0].clientY];return[e.clientX,e.clientY];}
+function pStart(e){if(scored)return;drawing=true;cur=[toSpace(...evtXY(e))];renderStrokes();}
+function pMove(e){if(!drawing||scored)return;const p=toSpace(...evtXY(e));const last=cur[cur.length-1];if(!last||Math.hypot(p.x-last.x,p.y-last.y)>3)cur.push(p);renderStrokes();}
+function pEnd(){if(!drawing)return;drawing=false;if(cur&&cur.length>1)strokes.push(cur);cur=null;document.getElementById('doneBtn').disabled=allPts().length<8;renderStrokes();}
+canvas.addEventListener('mousedown',pStart);canvas.addEventListener('mousemove',pMove);window.addEventListener('mouseup',pEnd);
+canvas.addEventListener('touchstart',e=>{e.preventDefault();pStart(e)},{passive:false});
+canvas.addEventListener('touchmove',e=>{e.preventDefault();pMove(e)},{passive:false});
+canvas.addEventListener('touchend',e=>{e.preventDefault();pEnd(e)},{passive:false});
+
+const doneBtn=document.getElementById('doneBtn'),nextContBtn=document.getElementById('nextContBtn');
+document.getElementById('undoBtn').onclick=()=>{if(scored)return;strokes.pop();doneBtn.disabled=allPts().length<8;renderStrokes();};
+document.getElementById('clearBtn').onclick=()=>{if(scored)return;strokes=[];cur=null;doneBtn.disabled=true;renderStrokes();};
+document.getElementById('hintToggle').addEventListener('change',e=>{showHint=e.target.checked;renderBg();});
+
+doneBtn.onclick=()=>{
+  const s=computeScore();if(!s)return;scored=true;doneBtn.style.display='none';
+  lastCells=s.cells;lastStep=s.step;
+  [['Shape',s.shape],['Pos',s.pos],['Size',s.size]].forEach(([k,v],i)=>setTimeout(()=>{document.getElementById('row'+k).classList.add('live');animateVal(document.getElementById('v'+k),v);document.getElementById('b'+k).style.width=v+'%';},i*180));
+  setTimeout(()=>{animateVal(document.getElementById('l1total'),s.total,true);document.getElementById('grade').textContent=gradeOf(s.total);},560);
+  document.getElementById('legend').style.display='flex';
+  renderL1(true);
+  state.l1Scores[state.contI]=s.total;
+  updateRunTotal();
+  nextContBtn.style.display='';
+  const last = state.contI >= state.playlist.length-1;
+  nextContBtn.textContent = last ? '進入第二關 →' : '下一洲 →';
+};
+nextContBtn.onclick=()=>{
+  const last = state.contI >= state.playlist.length-1;
+  if(!last){state.contI++;loadCont();}
+  else{ gotoLevel(2); }
+};
+function loadCont(){
+  strokes=[];cur=null;scored=false;lastCells=null;
+  doneBtn.style.display='';doneBtn.disabled=true;nextContBtn.style.display='none';
+  document.getElementById('legend').style.display='none';
+  ['Shape','Pos','Size'].forEach(k=>{document.getElementById('v'+k).innerHTML='0<span class="pct">%</span>';document.getElementById('b'+k).style.width='0%';document.getElementById('row'+k).classList.remove('live');});
+  document.getElementById('l1total').textContent='—';document.getElementById('grade').textContent='';
+  document.getElementById('contName').textContent=CN[curCont()];
+  document.getElementById('contIdx').textContent=state.contI+1;
+  // header label reflects mode
+  const whichEl=document.querySelector('#screen1 .whichcont');
+  if(whichEl) whichEl.innerHTML = state.mode==='one' ? '第一關 · 徒手畫（單洲挑戰）' : '第一關 · 徒手畫（<span>'+(state.contI+1)+'</span>/'+state.playlist.length+'）';
+  renderProgress();renderL1();
+}
+function renderProgress(){
+  const box=document.getElementById('contProgress');box.innerHTML='';
+  if(state.mode==='one'){box.style.display='none';return;} box.style.display='';
+  state.playlist.forEach((c,i)=>{const el=document.createElement('span');el.className='chip'+(i<state.contI?' done':i===state.contI?' cur':'');el.textContent=CN[c]+(state.l1Scores[i]!=null?' '+state.l1Scores[i]:'');box.appendChild(el);});
+}
+function updateRunTotal(){
+  const n=state.playlist.length||1;
+  const l1sum=state.l1Scores.filter(x=>x!=null).reduce((a,b)=>a+b,0);
+  const l1avg=l1sum/n;
+  const run = Math.round(l1avg*0.5 + state.l2*0.3 + state.l3*0.2);
+  document.getElementById('runTotal').textContent=run;
+}
+
+// ============ WORLD GRID ============
+function drawGrid(svg){
+  let s='';for(let x=0;x<=1000;x+=1000/12)s+=`<line x1="${x}" y1="0" x2="${x}" y2="500" stroke="#233a2c" stroke-width="1"/>`;
+  for(let y=0;y<=500;y+=500/6)s+=`<line x1="0" y1="${y}" x2="1000" y2="${y}" stroke="#233a2c" stroke-width="1"/>`;
+  s+=`<line x1="0" y1="250" x2="1000" y2="250" stroke="#c65f3a" stroke-width="2" stroke-dasharray="6 5"/>`;
+  svg.innerHTML=s;
+}
+
+// ============ LEVEL 2 : PLACE CONTINENTS ============
+const COLORS={africa:"#c9863f",europe:"#6f9b7d",asia:"#c86f52",north_america:"#5b86a3",south_america:"#c7a03f",australia:"#a3705f",antarctica:"#9fb8c2"};
+function polyStr(pts){return pts.map(p=>p.join(',')).join(' ');}
+
+// ---- timer ----
+let timer2Int=null, timer2Left=180;
+function fmt(s){const m=Math.floor(s/60),ss=String(s%60).padStart(2,'0');return m+':'+ss;}
+function startTimer2(){
+  stopTimer2();timer2Left=180;
+  const el=document.getElementById('timer2');el.textContent='⏱ '+fmt(timer2Left);el.classList.remove('warn');
+  timer2Int=setInterval(()=>{
+    timer2Left--;
+    el.textContent='⏱ '+fmt(Math.max(0,timer2Left));
+    if(timer2Left<=30)el.classList.add('warn');
+    if(timer2Left<=0){stopTimer2();onTimeUp2();}
+  },1000);
+}
+function stopTimer2(){if(timer2Int){clearInterval(timer2Int);timer2Int=null;}}
+function onTimeUp2(){
+  // time's up: lock remaining pieces, tally what was placed, allow proceeding
+  document.getElementById('msgTxt2').textContent='⏰ 時間到！已放對';
+  document.getElementById('finish2').disabled=false;
+  document.querySelectorAll('#pieceTray2 .piece:not(.locked)').forEach(p=>{p.style.pointerEvents='none';p.style.opacity='.3';});
+}
+
+function buildLevel2(){
+  const world=document.getElementById('world2');
+  const tray=document.getElementById('pieceTray2');
+  world.querySelectorAll('.slot,.piece').forEach(e=>e.remove());
+  tray.innerHTML='';
+  drawGrid(document.getElementById('grid2'));
+  state.l2placed=0;document.getElementById('placed2').textContent='0';document.getElementById('finish2').disabled=true;
+  document.getElementById('msgTxt2').textContent='已放對';
+  startTimer2();
+
+  const SHRINK=1.0;
+  // tray pieces are drawn at a fixed pixel scale so the row stays tidy
+  const TRAY_MAX=76; // max px dimension for a tray thumbnail
+  const shuffled=[...ORDER].sort(()=>Math.random()-0.5);
+  shuffled.forEach(cont=>{
+    const wp=DATA[cont].world, wb=worldBox(wp);
+    // faint target slot on the map, sized to the SHRUNK piece
+    const slot=document.createElement('div');slot.className='slot';slot.dataset.cont=cont;
+    slot.style.left=(wb.cx/1000*100)+'%';slot.style.top=(wb.cy/500*100)+'%';
+    slot.style.width=(wb.w*SHRINK/1000*100)+'%';slot.style.height=(wb.h*SHRINK/500*100)+'%';
+    world.appendChild(slot);
+    // piece
+    const piece=document.createElement('div');piece.className='piece';piece.dataset.cont=cont;
+    const localPts=wp.map(p=>[p[0]-wb.minx+4,p[1]-wb.miny+4]);
+    const svgW=wb.w+8, svgH=wb.h+8;
+    const k=TRAY_MAX/Math.max(svgW,svgH);
+    piece.innerHTML=`<svg width="${(svgW*k).toFixed(0)}" height="${(svgH*k).toFixed(0)}" viewBox="0 0 ${svgW} ${svgH}"><polygon points="${polyStr(localPts)}" fill="${COLORS[cont]}" stroke="#233a2c" stroke-width="2"/></svg><div class="lbl">${CN[cont]}</div>`;
+    piece._wb=wb; piece._target={x:wb.cx,y:wb.cy};
+    piece._svgScale=k; piece._svgW=svgW; piece._svgH=svgH; piece._localPts=localPts; piece._cont=cont;
+    tray.appendChild(piece);
+    makeDraggable(piece,world,tray);
+  });
+}
+function worldBox(pts){let a=1e9,b=1e9,c=-1e9,d=-1e9;pts.forEach(p=>{a=Math.min(a,p[0]);b=Math.min(b,p[1]);c=Math.max(c,p[0]);d=Math.max(d,p[1])});return{minx:a,miny:b,w:c-a,h:d-b,cx:(a+c)/2,cy:(b+d)/2};}
+
+function makeDraggable(piece,world,tray){
+  const SHRINK=1.0; // map pieces render at half real size so big continents don't overlap
+  let ghost=null,start=null;
+  function down(e){
+    if(piece.classList.contains('locked'))return;
+    e.preventDefault();
+    const p=evtXY(e);
+    // ghost sized to MAP scale * SHRINK, matching how it will lock down
+    const r=world.getBoundingClientRect();
+    const mapK=r.width/1000*SHRINK;
+    const gw=piece._svgW*mapK, gh=piece._svgH*mapK;
+    ghost=document.createElement('div');
+    ghost.style.cssText=`position:fixed;z-index:999;pointer-events:none;transform:translate(-50%,-50%);filter:drop-shadow(0 8px 14px rgba(35,58,44,.4));left:${p[0]}px;top:${p[1]}px`;
+    ghost.innerHTML=`<svg width="${gw}" height="${gh}" viewBox="0 0 ${piece._svgW} ${piece._svgH}"><polygon points="${polyStr(piece._localPts)}" fill="${COLORS[piece._cont]}" stroke="#233a2c" stroke-width="2"/></svg><div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:12px;font-weight:900;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5);white-space:nowrap">${CN[piece._cont]}</div>`;
+    document.body.appendChild(ghost);
+    piece.style.opacity='.3';
+    start=true;
+    window.addEventListener('mousemove',move);window.addEventListener('mouseup',up);
+    window.addEventListener('touchmove',move,{passive:false});window.addEventListener('touchend',up);
+  }
+  function move(e){if(!ghost)return;e.preventDefault();const p=evtXY(e);ghost.style.left=p[0]+'px';ghost.style.top=p[1]+'px';}
+  function up(e){
+    if(!ghost)return;const p=evtXY(e);
+    const r=world.getBoundingClientRect();
+    const wx=(p[0]-r.left)/r.width*1000, wy=(p[1]-r.top)/r.height*500;
+    ghost.remove();ghost=null;piece.style.opacity='';start=null;
+    window.removeEventListener('mousemove',move);window.removeEventListener('mouseup',up);
+    window.removeEventListener('touchmove',move);window.removeEventListener('touchend',up);
+    const t=piece._target;const d=Math.hypot(wx-t.x,wy-t.y);
+    // tolerance scales with piece size but is capped tighter so neighbouring
+    // continents (Europe/Africa/Asia) can't be satisfied by the wrong spot
+    const tol=Math.max(70,Math.min(110,piece._wb.w*0.5+55));
+    const onMap = wx>=0&&wx<=1000&&wy>=0&&wy<=500;
+    if(onMap && d<tol){
+      piece.classList.add('locked');
+      const mapPiece=document.createElement('div');mapPiece.className='piece locked';
+      mapPiece.style.left=(t.x/1000*100)+'%';mapPiece.style.top=(t.y/500*100)+'%';
+      mapPiece.innerHTML=`<svg viewBox="0 0 ${piece._svgW} ${piece._svgH}" style="width:100%"><polygon points="${polyStr(piece._localPts)}" fill="${COLORS[piece._cont]}" stroke="#233a2c" stroke-width="2"/></svg><div class="lbl">${CN[piece._cont]}</div>`;
+      mapPiece.style.width=((piece._wb.w+8)*SHRINK/1000*100)+'%';
+      world.appendChild(mapPiece);
+      const sl=world.querySelector(`.slot[data-cont="${piece._cont}"]`);if(sl)sl.classList.add('filled');
+      state.l2placed++;
+      const pc=document.getElementById('placed2');if(pc)pc.textContent=state.l2placed;
+      if(state.l2placed>=7){stopTimer2();document.getElementById('finish2').disabled=false;document.getElementById('msgTxt2').textContent='七大洲都放對了！做得好 —';}
+      else{document.getElementById('msgTxt2').textContent='已放對';}
+    }else{
+      document.getElementById('msgTxt2').textContent='再試一次 — 已放對';
+    }
+  }
+  piece.addEventListener('mousedown',down);piece.addEventListener('touchstart',down,{passive:false});
+}
+function computeL2Score(){
+  const frac=state.l2placed/7;                 // fraction placed correctly
+  const base=frac*75;                          // correctness worth up to 75
+  // time bonus: only on full completion, proportional to time left (max 25)
+  const timeBonus = (state.l2placed>=7) ? (timer2Left/180)*25 : 0;
+  return Math.round(base+timeBonus);
+}
+document.getElementById('finish2').onclick=()=>{
+  stopTimer2();state.l2=computeL2Score();updateRunTotal();gotoLevel(3);
+};
+
+// ============ LEVEL 3 : OCEANS ============
+function buildLevel3(){
+  const world=document.getElementById('world3');
+  world.querySelectorAll('.odrop').forEach(e=>e.remove());
+  drawGrid(document.getElementById('grid3'));
+  // faint continent silhouettes for reference
+  let sil=world.querySelector('.sil-svg');
+  if(!sil){sil=document.createElementNS('http://www.w3.org/2000/svg','svg');sil.setAttribute('class','grid-svg sil-svg');sil.setAttribute('viewBox','0 0 1000 500');sil.setAttribute('preserveAspectRatio','none');sil.style.opacity='.5';world.insertBefore(sil,world.firstChild);}
+  sil.innerHTML=ORDER.map(c=>`<polygon points="${polyStr(DATA[c].world)}" fill="#8a9c86" stroke="#233a2c" stroke-width="1.5"/>`).join('');
+  // drop targets — one box per target (Pacific has two: left & right)
+  OCEANS.forEach(o=>{
+    o.targets.forEach((t,ti)=>{
+      const d=document.createElement('div');d.className='odrop';d.dataset.ocean=o.id;d.dataset.ti=ti;d.textContent='?';
+      d.style.left=(t.x/1000*100)+'%';d.style.top=(t.y/500*100)+'%';
+      world.appendChild(d);
+    });
+  });
+  // tray tokens
+  const tray=document.getElementById('oceanTray');tray.innerHTML='';
+  const shuffled=[...OCEANS].sort(()=>Math.random()-0.5);
+  shuffled.forEach(o=>{const t=document.createElement('div');t.className='otoken';t.textContent=o.name;t.dataset.ocean=o.id;tray.appendChild(t);makeOceanDraggable(t,world);});
+  state.l3placed=0;document.getElementById('placed3').textContent='0';document.getElementById('finish3').disabled=true;
+  document.getElementById('msgTxt3').textContent='已配對';
+}
+function makeOceanDraggable(token,world){
+  let ghost=null,start=null;
+  function down(e){
+    if(token.classList.contains('placed'))return;e.preventDefault();
+    const p=evtXY(e);
+    ghost=token.cloneNode(true);ghost.style.position='fixed';ghost.style.zIndex=999;ghost.style.pointerEvents='none';
+    ghost.style.left=p[0]+'px';ghost.style.top=p[1]+'px';ghost.style.transform='translate(-50%,-50%)';
+    document.body.appendChild(ghost);token.style.opacity='.3';
+    start=true;
+    window.addEventListener('mousemove',move);window.addEventListener('mouseup',up);
+    window.addEventListener('touchmove',move,{passive:false});window.addEventListener('touchend',up);
+  }
+  function move(e){if(!ghost)return;e.preventDefault();const p=evtXY(e);ghost.style.left=p[0]+'px';ghost.style.top=p[1]+'px';}
+  function up(e){
+    if(!ghost)return;const p=evtXY(e);
+    const r=world.getBoundingClientRect();
+    const wx=(p[0]-r.left)/r.width*1000, wy=(p[1]-r.top)/r.height*500;
+    // nearest target point across every ocean's target list
+    let hit=null,best=1e9;
+    OCEANS.forEach(o=>{o.targets.forEach(t=>{const d=Math.hypot(wx-t.x,wy-t.y);if(d<best){best=d;hit=o;}});});
+    ghost.remove();ghost=null;token.style.opacity='';start=null;
+    window.removeEventListener('mousemove',move);window.removeEventListener('mouseup',up);
+    window.removeEventListener('touchmove',move);window.removeEventListener('touchend',up);
+    if(hit && hit.id===token.dataset.ocean && best<150){
+      // mark every drop box belonging to this ocean (Pacific: both)
+      world.querySelectorAll(`.odrop[data-ocean="${token.dataset.ocean}"]`).forEach(dp=>{dp.classList.add('ok');dp.textContent=hit.name;});
+      token.classList.add('placed');
+      state.l3placed++;
+      const pc3=document.getElementById('placed3');if(pc3)pc3.textContent=state.l3placed;
+      if(state.l3placed>=3){document.getElementById('finish3').disabled=false;document.getElementById('msgTxt3').textContent='三大洋全對！太厲害了 —';}
+      else{document.getElementById('msgTxt3').textContent='已配對';}
+    }else{
+      document.getElementById('msgTxt3').textContent='再試一次，放到正確海域 —';
+    }
+  }
+  token.addEventListener('mousedown',down);token.addEventListener('touchstart',down,{passive:false});
+}
+document.getElementById('finish3').onclick=()=>{
+  state.l3=Math.round(state.l3placed/3*100);updateRunTotal();showFinal();
+};
+
+// ============ MODE SELECT ============
+function buildContPick(){
+  const grid=document.getElementById('cpGrid');grid.innerHTML='';
+  ORDER.forEach(c=>{const b=document.createElement('button');b.className='cp-btn';b.textContent=CN[c];b.onclick=()=>startGame('one',[c]);grid.appendChild(b);});
+}
+document.getElementById('modeAll').onclick=()=>startGame('all',ORDER.slice());
+document.getElementById('modeOne').onclick=()=>{
+  document.getElementById('modeOne').classList.add('sel');
+  document.getElementById('contPick').style.display='';
+  document.getElementById('contPick').scrollIntoView({behavior:'smooth',block:'nearest'});
+};
+function startGame(mode,list){
+  state={level:1,contI:0,l1Scores:[],l2:0,l3:0,mode:mode,playlist:list};
+  document.getElementById('runTotal').textContent='0';
+  document.querySelectorAll('.step').forEach((s,i)=>{s.classList.toggle('active',i===0);s.classList.remove('done');s.style.opacity='';});
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  document.getElementById('screen1').classList.add('on');
+  loadCont();fitCanvas();
+}
+
+// ============ NAV ============
+function gotoLevel(n){
+  state.level=n;
+  if(n!==2)stopTimer2();
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  document.getElementById('screen'+n).classList.add('on');
+  document.querySelectorAll('.step').forEach((s,i)=>{s.classList.toggle('active',i===n-1);s.classList.toggle('done',i<n-1);});
+  if(n===2)buildLevel2();
+  if(n===3)buildLevel3();
+}
+function showFinal(){
+  stopTimer2();
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  document.getElementById('screenF').classList.add('on');
+  document.querySelectorAll('.step').forEach(s=>s.classList.add('done'));
+  const l1=Math.round(state.l1Scores.reduce((a,b)=>a+(b||0),0)/(state.playlist.length||1));
+  const total=Math.round(l1*0.5+state.l2*0.3+state.l3*0.2);
+  document.getElementById('f1').textContent=l1;document.getElementById('f2').textContent=state.l2;document.getElementById('f3').textContent=state.l3;
+  animateVal(document.getElementById('fscore'),total,true);
+  const g=total>=90?["🏆","地理大師！"]:total>=75?["🥇","表現優異"]:total>=60?["🥈","穩紮穩打"]:total>=40?["🥉","繼續加油"]:["🧭","再來一輪吧"];
+  document.getElementById('medal').textContent=g[0];document.getElementById('fgrade').textContent=g[1];
+}
+document.getElementById('restart').onclick=()=>{
+  stopTimer2();
+  document.getElementById('modeOne').classList.remove('sel');
+  document.getElementById('contPick').style.display='none';
+  document.getElementById('st2').style.opacity='';document.getElementById('st3').style.opacity='';
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  document.getElementById('screenMode').classList.add('on');
+  document.querySelectorAll('.step').forEach((s,i)=>{s.classList.toggle('active',i===0);s.classList.remove('done');});
+  document.getElementById('runTotal').textContent='0';
+};
+
+window.addEventListener('resize',()=>{if(state.level===1&&document.getElementById('screen1').classList.contains('on'))fitCanvas();});
+// init
+buildContPick();
+</script>
+</body>
+</html>
