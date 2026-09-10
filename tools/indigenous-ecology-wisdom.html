@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>原住民生態智慧任務站</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0;
+    font-family: "Microsoft JhengHei", "PingFang TC", "Heiti TC", sans-serif;
+    background: linear-gradient(160deg, #eaf6f2 0%, #dcefe6 100%);
+    color: #23433a;
+    min-height: 100vh;
+  }
+  #app { max-width: 720px; margin: 0 auto; padding: 16px 16px 60px; }
+  .card {
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.10);
+    padding: 22px 20px;
+    margin-bottom: 16px;
+  }
+  h1 { font-size: 1.45rem; color: #1f7a5c; text-align: center; margin: 10px 0 4px; }
+  h2 { font-size: 1.1rem; color: #2a8f6c; margin: 0 0 10px; }
+  .subtitle { text-align: center; color: #5c7a70; margin-bottom: 18px; font-size: 0.92rem; }
+  .progress-bar { display: flex; justify-content: center; gap: 6px; margin-bottom: 18px; }
+  .dot { width: 28px; height: 8px; border-radius: 4px; background: #d7ebe2; transition: background 0.3s; }
+  .dot.active { background: #1f7a5c; }
+  .dot.done { background: #6fbf9c; }
+  label { display: block; font-weight: bold; margin-bottom: 6px; color: #2a5c4c; }
+  input[type="text"], textarea {
+    width: 100%; padding: 14px; font-size: 1.05rem;
+    border: 2px solid #d7ebe2; border-radius: 12px; margin-bottom: 14px; font-family: inherit;
+  }
+  textarea { min-height: 90px; resize: vertical; }
+  .tribe-tag {
+    display: inline-block; background: #1f7a5c; color: #fff; font-weight: bold;
+    padding: 4px 14px; border-radius: 20px; font-size: 0.88rem; margin-bottom: 10px;
+  }
+  .scene-box {
+    background: #f3faf6; border-left: 5px solid #6fbf9c; border-radius: 10px;
+    padding: 14px 16px; margin-bottom: 16px; line-height: 1.75; font-size: 1rem;
+  }
+  .choice-btn {
+    display: block; width: 100%; text-align: left; background: #f6fbf9;
+    border: 2px solid #d7ebe2; border-radius: 14px; padding: 16px 18px;
+    font-size: 1rem; line-height: 1.5; margin-bottom: 12px; color: #23433a; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .choice-btn:active { transform: scale(0.98); }
+  .choice-btn.selected { background: #1f7a5c; color: #fff; border-color: #1f7a5c; }
+  .choice-btn.correct { background: #2a8f6c; color: #fff; border-color: #2a8f6c; }
+  .choice-btn.wrong { background: #d9694a; color: #fff; border-color: #d9694a; }
+  .feedback-box {
+    background: #eef7ee; border-left: 5px solid #6fa96f; border-radius: 10px;
+    padding: 14px 16px; margin-top: 6px; line-height: 1.75; font-size: 0.97rem; display: none;
+  }
+  .feedback-box.show { display: block; }
+  .think-q { margin-top: 10px; color: #b8701e; font-weight: bold; font-size: 0.93rem; }
+  .nav-row { display: flex; justify-content: flex-end; margin-top: 18px; }
+  .btn-main {
+    background: #1f7a5c; color: #fff; border: none; padding: 14px 30px;
+    font-size: 1.05rem; border-radius: 30px; font-weight: bold; cursor: pointer;
+    box-shadow: 0 4px 10px rgba(31,122,92,0.35);
+  }
+  .btn-main:disabled { background: #b9d9cc; box-shadow: none; cursor: not-allowed; }
+  .btn-main:active:not(:disabled) { transform: scale(0.97); }
+  .screen { display: none; }
+  .screen.active { display: block; }
+  .review-item { background: #f3faf6; border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; }
+  .review-item .tag { font-weight: bold; color: #1f7a5c; display: block; margin-bottom: 4px; }
+  #copyStatus { text-align: center; margin-top: 10px; font-weight: bold; min-height: 20px; }
+  .top-emoji { font-size: 2.1rem; text-align: center; display: block; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- 開始畫面 -->
+  <div class="screen active" id="screen-start">
+    <div class="card">
+      <span class="top-emoji">🌿</span>
+      <h1>原住民生態智慧任務站</h1>
+      <p class="subtitle">第一單元 臺灣的位置與先民足跡・第3課 原住民族的文化與環境有何關聯</p>
+      <div class="scene-box">
+        歡迎加入部落任務！你即將認識蘭嶼雅美族（達悟族）與泰雅族的生態智慧，完成三項任務，看看原住民族的祖先如何順應自然、與土地共存。
+      </div>
+      <label for="stuName">姓名</label>
+      <input type="text" id="stuName" placeholder="請輸入你的姓名">
+      <label for="stuSeat">座號</label>
+      <input type="text" id="stuSeat" placeholder="請輸入你的座號">
+      <div class="nav-row">
+        <button class="btn-main" onclick="startJourney()">進入部落 →</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="progressWrap" style="display:none; max-width:720px; margin:0 auto;">
+    <div class="progress-bar" id="progressBar">
+      <div class="dot" data-i="1"></div>
+      <div class="dot" data-i="2"></div>
+      <div class="dot" data-i="3"></div>
+    </div>
+  </div>
+
+  <!-- 任務1：飛魚祭的祕密（單選＋回饋） -->
+  <div class="screen" id="screen-s1">
+    <div class="card">
+      <span class="tribe-tag">蘭嶼・雅美族（達悟族）</span>
+      <h2>任務一：飛魚祭的祕密</h2>
+      <div class="scene-box">
+        雅美族（達悟族）相信飛魚是上天賜予的神聖物品，捕魚時也不會一網打盡，讓飛魚能持續繁衍。<br><br>
+        <strong>請問：雅美族（達悟族）規定飛魚只能在哪段期間食用？</strong>
+      </div>
+      <button class="choice-btn" data-station="1" data-value="wrong">A. 全年都可以，沒有限制</button>
+      <button class="choice-btn" data-station="1" data-value="correct">B. 每年3月到10月間</button>
+      <button class="choice-btn" data-station="1" data-value="wrong">C. 只有農曆過年前後一個月</button>
+      <div class="feedback-box" id="fb-1">
+        <strong>正確答案：B．每年3～10月間。</strong>雅美族（達悟族）相信飛魚為上天賜予的神聖物品，只能在每年3～10月間食用，並規範族人可以捕魚的季節，讓飛魚不因人類大量捕食而滅絕，維持海洋生態平衡。
+        <div class="think-q">想一想：蘭嶼的自然環境有什麼特色？為什麼雅美族（達悟族）有許多傳說和文化都與海洋有關？</div>
+      </div>
+      <div class="nav-row"><button class="btn-main" id="next-1" onclick="nextStation(1)" disabled>前往任務二 →</button></div>
+    </div>
+  </div>
+
+  <!-- 任務2：狩獵禁忌大考驗（是非題組） -->
+  <div class="screen" id="screen-s2">
+    <div class="card">
+      <span class="tribe-tag">泰雅族</span>
+      <h2>任務二：狩獵禁忌大考驗</h2>
+      <div class="scene-box">
+        泰雅族在山林裡狩獵有許多禁忌，也很重視共食、共勞的互助文化。請判斷下面兩個說法，哪一個才是正確的？
+      </div>
+      <button class="choice-btn" data-station="2" data-value="wrong">A. 部落所有大小事都是由頭目一人決定，其他族人不需要遵守</button>
+      <button class="choice-btn" data-station="2" data-value="correct">B. 泰雅族只在11月到4月間狩獵，讓動物有繁殖生長的時間</button>
+      <div class="feedback-box" id="fb-2">
+        <strong>正確答案：B。</strong>泰雅族只在11月到4月間狩獵，讓動物有繁殖生長的時間，狩獵期間獵人還會住在獵寮裡。至於部落事務，其實有些由頭目或祭司決定，有些則由部落會議決議，<u>所有部落成員都必須共同承擔與遵守</u>，並不是頭目一人說了算。此外，泰雅族族人也會共食團體分享獵物、共勞團體相互幫忙建造房屋，這種共享互助的文化，是穩定部落與凝聚族群的力量。
+        <div class="think-q">想一想：原住民族為什麼會發展出互助與分享的生活方式？</div>
+      </div>
+      <div class="nav-row"><button class="btn-main" id="next-2" onclick="nextStation(2)" disabled>前往任務三 →</button></div>
+    </div>
+  </div>
+
+  <!-- 任務3：你是部落頭目（情境選擇） -->
+  <div class="screen" id="screen-s3">
+    <div class="card">
+      <span class="tribe-tag">情境任務</span>
+      <h2>任務三：你是部落頭目</h2>
+      <div class="scene-box">
+        你是一位泰雅族部落的頭目。族人發現最近山林裡的獵物數量好像變少了，大家來問你該怎麼辦。<span style="color:#1f7a5c; font-weight:bold;">你會怎麼決定？</span>
+      </div>
+      <button class="choice-btn" data-station="3" data-value="A">A. 訂立狩獵季節的禁忌，只在特定月份狩獵，讓動物有時間繁殖生長</button>
+      <button class="choice-btn" data-station="3" data-value="B">B. 開放族人全年隨時狩獵，才能獵到更多食物</button>
+      <button class="choice-btn" data-station="3" data-value="C">C. 乾脆禁止所有狩獵活動，永遠不再打獵</button>
+      <div class="feedback-box" id="fb-3">
+        <strong>課本裡的做法：</strong>這正是泰雅族老祖先真正的智慧——選項A！泰雅族只在11月到4月間狩獵，並且有「不可獵殺幼小的動物」等禁忌，學習祖先傳遞下來的山林知識，在保持狩獵傳統的同時，也維持了生態平衡。全年狩獵（B）容易讓動物滅絕，完全禁獵（C）則會讓部落失去重要的食物與文化傳統，兩者都不是最好的做法。
+        <div class="think-q">想一想：除了狩獵，你還記得雅美族（達悟族）的哪一項規定，也是用同樣的道理來保護資源的？</div>
+      </div>
+      <div class="nav-row"><button class="btn-main" id="next-3" onclick="goReview()" disabled>完成任務，查看學習回顧 →</button></div>
+    </div>
+  </div>
+
+  <!-- 學習回顧 -->
+  <div class="screen" id="screen-review">
+    <div class="card">
+      <span class="top-emoji">🏆</span>
+      <h1>學習回顧</h1>
+      <p class="subtitle" id="reviewNameLine"></p>
+      <div id="reviewList"></div>
+      <label for="reflection">最後，寫下你的想法：原住民族的哪一項生態智慧，讓你覺得現代社會也可以學習？為什麼？</label>
+      <textarea id="reflection" placeholder="請寫下至少一句你的想法……"></textarea>
+      <div class="nav-row" style="justify-content:center; flex-direction:column; align-items:center; gap:10px;">
+        <button class="btn-main" onclick="copyReview()">📋 一鍵複製學習回顧</button>
+        <div id="copyStatus"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+var state = { name: '', seat: '', choices: {} };
+
+var choiceTexts = {
+  1: { wrong1: '全年都可以，沒有限制', correct: '每年3月到10月間', wrong2: '只有農曆過年前後一個月' },
+  2: { wrong1: '部落所有大小事都是由頭目一人決定，其他族人不需要遵守', correct: '泰雅族只在11月到4月間狩獵，讓動物有繁殖生長的時間' },
+  3: { A: '訂立狩獵季節的禁忌，只在特定月份狩獵，讓動物有時間繁殖生長',
+       B: '開放族人全年隨時狩獵，才能獵到更多食物',
+       C: '乾脆禁止所有狩獵活動，永遠不再打獵' }
+};
+
+var stationTitle = {
+  1: '任務一・飛魚祭的祕密（雅美族/達悟族）',
+  2: '任務二・狩獵禁忌大考驗（泰雅族）',
+  3: '任務三・你是部落頭目（情境選擇）'
+};
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function updateProgress(current) {
+  var wrap = document.getElementById('progressWrap');
+  wrap.style.display = 'block';
+  document.querySelectorAll('#progressBar .dot').forEach(function(d){
+    var i = parseInt(d.getAttribute('data-i'));
+    d.classList.remove('active','done');
+    if (i < current) d.classList.add('done');
+    if (i === current) d.classList.add('active');
+  });
+}
+
+function startJourney() {
+  var name = document.getElementById('stuName').value.trim();
+  var seat = document.getElementById('stuSeat').value.trim();
+  if (!name) { alert('請先輸入姓名喔！'); return; }
+  state.name = name;
+  state.seat = seat;
+  updateProgress(1);
+  showScreen('screen-s1');
+}
+
+document.querySelectorAll('.choice-btn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var station = this.getAttribute('data-station');
+    var value = this.getAttribute('data-value');
+    var group = document.querySelectorAll('.choice-btn[data-station="' + station + '"]');
+
+    if (station === '1' || station === '2') {
+      // 是非/單選題：標示對錯
+      group.forEach(function(b){ b.classList.remove('selected','correct','wrong'); b.disabled = true; });
+      if (value === 'correct') {
+        this.classList.add('correct');
+      } else {
+        this.classList.add('wrong');
+        group.forEach(function(b){ if (b.getAttribute('data-value') === 'correct') b.classList.add('correct'); });
+      }
+      state.choices[station] = { text: this.textContent.trim(), result: (value === 'correct' ? '答對了' : '選錯了，正確答案已標示') };
+    } else {
+      // 情境選擇題：單純記錄選擇
+      group.forEach(function(b){ b.classList.remove('selected'); });
+      this.classList.add('selected');
+      state.choices[station] = { text: this.textContent.trim(), result: '' };
+    }
+
+    document.getElementById('fb-' + station).classList.add('show');
+    var nextBtn = document.getElementById('next-' + station);
+    if (nextBtn) nextBtn.disabled = false;
+  });
+});
+
+function nextStation(current) {
+  var next = current + 1;
+  updateProgress(next);
+  showScreen('screen-s' + next);
+}
+
+function goReview() {
+  document.getElementById('progressWrap').style.display = 'none';
+  var line = state.name + (state.seat ? '（座號 ' + state.seat + '）' : '');
+  document.getElementById('reviewNameLine').textContent = line + ' 的部落任務紀錄';
+  var listEl = document.getElementById('reviewList');
+  listEl.innerHTML = '';
+  for (var i = 1; i <= 3; i++) {
+    var c = state.choices[i];
+    var div = document.createElement('div');
+    div.className = 'review-item';
+    div.innerHTML = '<span class="tag">' + stationTitle[i] + '</span>你的選擇：' + (c ? c.text + (c.result ? '（' + c.result + '）' : '') : '（未作答）');
+    listEl.appendChild(div);
+  }
+  showScreen('screen-review');
+}
+
+function copyReview() {
+  var line = state.name + (state.seat ? '（座號 ' + state.seat + '）' : '');
+  var text = '原住民生態智慧任務站 － 學習回顧\n' + line + '\n\n';
+  for (var i = 1; i <= 3; i++) {
+    var c = state.choices[i];
+    text += stationTitle[i] + '\n選擇：' + (c ? c.text + (c.result ? '（' + c.result + '）' : '') : '（未作答）') + '\n\n';
+  }
+  var reflection = document.getElementById('reflection').value.trim();
+  text += '我的感想：\n' + (reflection || '（未填寫）') + '\n';
+
+  var statusEl = document.getElementById('copyStatus');
+  function showStatus(msg, ok) {
+    statusEl.textContent = msg;
+    statusEl.style.color = ok ? '#1f7a5c' : '#b83a3a';
+  }
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function(){
+      showStatus('✅ 已複製到剪貼簿！可以貼到學習單或訊息中囉～', true);
+    }).catch(function(){
+      fallbackCopy(text, showStatus);
+    });
+  } else {
+    fallbackCopy(text, showStatus);
+  }
+}
+
+function fallbackCopy(text, showStatus) {
+  try {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    var ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    if (ok) {
+      showStatus('✅ 已複製到剪貼簿！可以貼到學習單或訊息中囉～', true);
+    } else {
+      showStatus('⚠️ 複製失敗，請長按上方文字手動複製。', false);
+    }
+  } catch (e) {
+    showStatus('⚠️ 複製失敗，請長按上方文字手動複製。', false);
+  }
+}
+</script>
+</body>
+</html>
