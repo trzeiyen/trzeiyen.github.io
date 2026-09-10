@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>民主自由號：臺灣民主時光列車</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0;
+    font-family: "Microsoft JhengHei", "PingFang TC", "Heiti TC", sans-serif;
+    background: linear-gradient(160deg, #fdf3e7 0%, #fbe4d0 100%);
+    color: #3a2c1e;
+    min-height: 100vh;
+  }
+  #app {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 16px 16px 60px;
+  }
+  .card {
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.10);
+    padding: 22px 20px;
+    margin-bottom: 16px;
+  }
+  h1 {
+    font-size: 1.5rem;
+    color: #d9622b;
+    text-align: center;
+    margin: 10px 0 4px;
+  }
+  h2 {
+    font-size: 1.15rem;
+    color: #b8501e;
+    margin: 0 0 10px;
+  }
+  .subtitle {
+    text-align: center;
+    color: #8a6f57;
+    margin-bottom: 18px;
+    font-size: 0.95rem;
+  }
+  .progress-bar {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 18px;
+  }
+  .dot {
+    width: 30px;
+    height: 8px;
+    border-radius: 4px;
+    background: #eadfce;
+    transition: background 0.3s;
+  }
+  .dot.active { background: #d9622b; }
+  .dot.done { background: #f0a86a; }
+  label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 6px;
+    color: #6b4a2b;
+  }
+  input[type="text"], textarea {
+    width: 100%;
+    padding: 14px;
+    font-size: 1.05rem;
+    border: 2px solid #eadfce;
+    border-radius: 12px;
+    margin-bottom: 14px;
+    font-family: inherit;
+  }
+  textarea { min-height: 90px; resize: vertical; }
+  .year-tag {
+    display: inline-block;
+    background: #d9622b;
+    color: #fff;
+    font-weight: bold;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+  }
+  .scene-box {
+    background: #fdf6ec;
+    border-left: 5px solid #e8a24b;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    line-height: 1.75;
+    font-size: 1rem;
+  }
+  .scene-box .role {
+    color: #b8501e;
+    font-weight: bold;
+  }
+  .choice-btn {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: #fff8f0;
+    border: 2px solid #f0d9be;
+    border-radius: 14px;
+    padding: 16px 18px;
+    font-size: 1rem;
+    line-height: 1.5;
+    margin-bottom: 12px;
+    color: #3a2c1e;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .choice-btn:active { transform: scale(0.98); }
+  .choice-btn.selected {
+    background: #d9622b;
+    color: #fff;
+    border-color: #d9622b;
+  }
+  .feedback-box {
+    background: #eef7ee;
+    border-left: 5px solid #6fa96f;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-top: 6px;
+    line-height: 1.75;
+    font-size: 0.98rem;
+    display: none;
+  }
+  .feedback-box.show { display: block; }
+  .think-q {
+    margin-top: 10px;
+    color: #8a5a1e;
+    font-weight: bold;
+    font-size: 0.95rem;
+  }
+  .nav-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 18px;
+  }
+  .btn-main {
+    background: #d9622b;
+    color: #fff;
+    border: none;
+    padding: 14px 30px;
+    font-size: 1.05rem;
+    border-radius: 30px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(217,98,43,0.35);
+  }
+  .btn-main:disabled {
+    background: #e8c9b0;
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+  .btn-main:active:not(:disabled) { transform: scale(0.97); }
+  .btn-secondary {
+    background: #fff;
+    color: #d9622b;
+    border: 2px solid #d9622b;
+    padding: 12px 26px;
+    font-size: 1rem;
+    border-radius: 30px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .screen { display: none; }
+  .screen.active { display: block; }
+  .review-item {
+    background: #fdf6ec;
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+  }
+  .review-item .tag {
+    font-weight: bold;
+    color: #b8501e;
+    display: block;
+    margin-bottom: 4px;
+  }
+  #copyStatus {
+    text-align: center;
+    margin-top: 10px;
+    font-weight: bold;
+    min-height: 20px;
+  }
+  .train-emoji { font-size: 2.2rem; text-align: center; display: block; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- 開始畫面 -->
+  <div class="screen active" id="screen-start">
+    <div class="card">
+      <span class="train-emoji">🚂</span>
+      <h1>民主自由號：臺灣民主時光列車</h1>
+      <p class="subtitle">第一單元 民主政治的發展・第1課 臺灣人民爭取民主自由的歷程為何？</p>
+      <div class="scene-box">
+        叭～叭～「民主自由號」時光列車即將出發！你將穿越民國34年到105年間的臺灣，親身經歷臺灣人民爭取民主自由的重要時刻。每一站，你都要站在當時人民的立場做出選擇，看看歷史上真正發生了什麼事。準備好了嗎？
+      </div>
+      <label for="stuName">姓名</label>
+      <input type="text" id="stuName" placeholder="請輸入你的姓名">
+      <label for="stuSeat">座號</label>
+      <input type="text" id="stuSeat" placeholder="請輸入你的座號">
+      <div class="nav-row">
+        <button class="btn-main" onclick="startJourney()">上車出發 →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 進度條（各站共用） -->
+  <div id="progressWrap" style="display:none; max-width:720px; margin:0 auto;">
+    <div class="progress-bar" id="progressBar">
+      <div class="dot" data-i="1"></div>
+      <div class="dot" data-i="2"></div>
+      <div class="dot" data-i="3"></div>
+      <div class="dot" data-i="4"></div>
+      <div class="dot" data-i="5"></div>
+    </div>
+  </div>
+
+  <!-- 站1：民國34年 戰後接收 -->
+  <div class="screen" id="screen-s1">
+    <div class="card">
+      <span class="year-tag">民國34年（西元1945年）</span>
+      <h2>第一站：中華民國接收臺灣</h2>
+      <div class="scene-box">
+        第二次世界大戰結束，日本戰敗投降，中華民國政府接收臺灣、澎湖。街上民眾熱烈歡迎，脫離了日本的殖民統治。<br><br>
+        <span class="role">你是當時臺灣的一位農民</span>，看著街上歡慶的人群，你心裡想的是……
+      </div>
+      <button class="choice-btn" data-station="1" data-value="A">A. 我種的甘蔗以後可以自由買賣了，不用再被日本企業束縛，生活應該會變好！</button>
+      <button class="choice-btn" data-station="1" data-value="B">B. 脫離殖民統治，臺灣人應該有更多機會擔任公職、參與政治了！</button>
+      <button class="choice-btn" data-station="1" data-value="C">C. 我還是有點擔心，不知道新政府會怎麼對待我們……</button>
+      <div class="feedback-box" id="fb-1">
+        <strong>歷史上真正發生的事：</strong>當時臺灣人民不論是農民、知識分子或一般民眾，大多對中華民國政府充滿期待，以為能獲得平等、自由的生活。<u>但事實上，臺灣人民迎來的卻是動盪的戰後時期</u>——物資缺乏、失業嚴重，政府也很少任用臺灣人擔任公職，米糖等物資更被嚴密管控。
+        <div class="think-q">想一想：如果是你，發現期待落空，心裡會有什麼感受？</div>
+      </div>
+      <div class="nav-row"><button class="btn-main" id="next-1" onclick="nextStation(1)" disabled>前往下一站 →</button></div>
+    </div>
+  </div>
+
+  <!-- 站2：民國36年 二二八事件 -->
+  <div class="screen" id="screen-s2">
+    <div class="card">
+      <span class="year-tag">民國36年（西元1947年）</span>
+      <h2>第二站：二二八事件爆發</h2>
+      <div class="scene-box">
+        政府查緝私菸處理不當，造成菸販與圍觀民眾傷亡，隔天民眾向政府抗議，卻遭開槍驅離，衝突迅速蔓延全臺。<br><br>
+        <span class="role">你是當時臺北街頭的一位臺灣人民</span>，面對政府一連串的施政問題與這場衝突，你會怎麼做？
+      </div>
+      <button class="choice-btn" data-station="2" data-value="A">A. 向政府提出改革要求，例如要求任用臺灣人擔任公職</button>
+      <button class="choice-btn" data-station="2" data-value="B">B. 和地方軍警溝通調解，要求他們不要任意攻擊人民</button>
+      <button class="choice-btn" data-station="2" data-value="C">C. 我會害怕，選擇先躲起來保護家人安全</button>
+      <div class="feedback-box" id="fb-2">
+        <strong>歷史上真正發生的事：</strong>當時臺灣人民確實一方面向政府提出改革要求，另一方面也嘗試與軍警調解。<u>但政府不但沒有採納，反而採取更激烈的武力鎮壓</u>，造成許多民眾傷亡，連希望調解的畫家陳澄波都被軍隊扣押殺害。這對臺灣的政治發展留下難以抹滅的傷痛。
+        <div class="think-q">想一想：為什麼當時的政府會選擇用武力鎮壓不滿的人民呢？</div>
+      </div>
+      <div class="nav-row"><button class="btn-main" id="next-2" onclick="nextStation(2)" disabled>前往下一站 →</button></div>
+    </div>
+  </div>
+
+  <!-- 站3：民國38年 戒嚴 -->
+  <div class="screen" id="screen-s3">
+    <div class="card">
+      <span class="year-tag">民國38年（西元1949年）</span>
+      <h2>第三站：戒嚴令頒布</h2>
+      <div class="scene-box">
+        政府宣布臺灣戒嚴，嚴格限制人民言論、集會等自由，連歌曲、書籍都可能被查禁。你最喜歡的歌曲〈望春風〉，因為歌詞被認為「有礙青少年身心發展」而被列為禁歌。<br><br>
+        <span class="role">你是當時喜愛這首歌的臺灣青年</span>，你會怎麼想、怎麼做？
+      </div>
+      <button class="choice-btn" data-station="3" data-value="A">A. 規定就是規定，雖然不合理，但我還是遵守，避免惹上麻煩</button>
+      <button class="choice-btn" data-station="3" data-value="B">B. 我開始懷疑：政府憑什麼可以隨意限制人民的自由？</button>
+      <button class="choice-btn" data-station="3" data-value="C">C. 反正沒人看到，我就私下偷聽、偷唱</button>
+      <div class="feedback-box" id="fb-3">
+        <strong>歷史上真正發生的事：</strong>戒嚴時期，政府嚴格控管人民的言論與行動，當時沒有公平、公開的審判制度，許多人民因此受到迫害，民主政治的正常發展也受到嚴重影響。不過，也正是像你選項B這樣「開始懷疑、開始思考」的心情，日後逐漸匯聚成推動臺灣走向解嚴與民主的力量。
+        <div class="think-q">想一想：戒嚴時期對人民生活的各種限制，可能會對社會造成哪些長期影響？</div>
+      </div>
+      <div class="nav-row"><button class="btn-main" id="next-3" onclick="nextStation(3)" disabled>前往下一站 →</button></div>
+    </div>
+  </div>
+
+  <!-- 站4：民國68年 美麗島事件 -->
+  <div class="screen" id="screen-s4">
+    <div class="card">
+      <span class="year-tag">民國68年（西元1979年）</span>
+      <h2>第四站：美麗島雜誌與世界人權日紀念大會</h2>
+      <div class="scene-box">
+        即使處於戒嚴時期，仍有知識分子創辦《美麗島》雜誌，宣揚民主、追求言論自由。雜誌社決定在12月10日「世界人權日」於高雄舉辦紀念大會。<br><br>
+        <span class="role">你是美麗島雜誌社的一員</span>，面對政府可能鎮壓的風險，這場紀念大會你們該怎麼辦？
+      </div>
+      <button class="choice-btn" data-station="4" data-value="A">A. 照常舉辦，用遊行讓更多民眾了解民主、自由的重要性</button>
+      <button class="choice-btn" data-station="4" data-value="B">B. 取消遊行，只用雜誌文章溫和表達訴求，降低風險</button>
+      <button class="choice-btn" data-station="4" data-value="C">C. 縮小規模，只邀請少數熟識的朋友參加</button>
+      <div class="feedback-box" id="fb-4">
+        <strong>歷史上真正發生的事：</strong>美麗島雜誌社照常舉辦了紀念大會，過程中與警察發生衝突，史稱「美麗島事件」，許多參與者遭到逮捕與審判。<u>但他們在法庭上發表關於人權、民主與自由的言論，反而讓更多民眾認識了這些觀念</u>，激勵更多臺灣人民投入政治改革。
+        <div class="think-q">想一想：這起事件在臺灣人追求民主的歷程中，有什麼意義？</div>
+      </div>
+      <div class="nav-row"><button class="btn-main" id="next-4" onclick="nextStation(4)" disabled>前往下一站 →</button></div>
+    </div>
+  </div>
+
+  <!-- 站5：民國76~105年 解嚴到女性總統 -->
+  <div class="screen" id="screen-s5">
+    <div class="card">
+      <span class="year-tag">民國76年～105年（西元1987～2016年）</span>
+      <h2>第五站：解嚴、總統直選、首位女性總統</h2>
+      <div class="scene-box">
+        在來自各界的壓力下，政府終於在民國76年宣布解除戒嚴，更多政黨、報社、電視臺紛紛成立。民國85年，臺灣第一次由人民直接選舉總統、副總統。到了民國105年，臺灣更選出中華民國第一任女性總統。<br><br>
+        <span class="role">你是民國85年第一次能親手投票選總統的臺灣人民</span>，你覺得「人民能直接選總統」這件事，最重要的意義是什麼？
+      </div>
+      <button class="choice-btn" data-station="5" data-value="A">A. 人民可以自己決定國家的領導人，不用再擔心受到政府壓迫</button>
+      <button class="choice-btn" data-station="5" data-value="B">B. 象徵人人平等，選舉不受性別等因素影響，人人都有機會參政</button>
+      <button class="choice-btn" data-station="5" data-value="C">C. 這代表今天的民主自由，是無數前人爭取與犧牲換來的成果</button>
+      <div class="feedback-box" id="fb-5">
+        <strong>課本這麼說：</strong>人民直接選舉總統、副總統，是臺灣民主發展的重要里程碑；民國105年選出首位女性總統，也象徵人民選舉不受性別影響。而這一切得來不易——從二二八事件、戒嚴、美麗島事件，到解嚴與直選，正是因為有許多前人的爭取與犧牲，才有今日民主自由的成果。
+        <div class="think-q">想一想：身為現代的公民，我們可以怎麼珍惜、守護得來不易的民主自由？</div>
+      </div>
+      <div class="nav-row"><button class="btn-main" id="next-5" onclick="goReview()" disabled>完成旅程，查看學習回顧 →</button></div>
+    </div>
+  </div>
+
+  <!-- 學習回顧 -->
+  <div class="screen" id="screen-review">
+    <div class="card">
+      <span class="train-emoji">🏁</span>
+      <h1>學習回顧</h1>
+      <p class="subtitle" id="reviewNameLine"></p>
+      <div id="reviewList"></div>
+      <label for="reflection">最後，寫下你的想法：這趟時光旅程，讓你對臺灣民主自由的得來不易有什麼感受？</label>
+      <textarea id="reflection" placeholder="請寫下至少一句你的想法……"></textarea>
+      <div class="nav-row" style="justify-content:center; flex-direction:column; align-items:center; gap:10px;">
+        <button class="btn-main" onclick="copyReview()">📋 一鍵複製學習回顧</button>
+        <div id="copyStatus"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+var state = {
+  name: '', seat: '',
+  choices: {} // station -> {value, text}
+};
+
+var choiceTexts = {
+  1: { A: '我種的甘蔗以後可以自由買賣了，不用再被日本企業束縛，生活應該會變好！',
+       B: '脫離殖民統治，臺灣人應該有更多機會擔任公職、參與政治了！',
+       C: '我還是有點擔心，不知道新政府會怎麼對待我們……' },
+  2: { A: '向政府提出改革要求，例如要求任用臺灣人擔任公職',
+       B: '和地方軍警溝通調解，要求他們不要任意攻擊人民',
+       C: '我會害怕，選擇先躲起來保護家人安全' },
+  3: { A: '規定就是規定，雖然不合理，但我還是遵守，避免惹上麻煩',
+       B: '我開始懷疑：政府憑什麼可以隨意限制人民的自由？',
+       C: '反正沒人看到，我就私下偷聽、偷唱' },
+  4: { A: '照常舉辦，用遊行讓更多民眾了解民主、自由的重要性',
+       B: '取消遊行，只用雜誌文章溫和表達訴求，降低風險',
+       C: '縮小規模，只邀請少數熟識的朋友參加' },
+  5: { A: '人民可以自己決定國家的領導人，不用再擔心受到政府壓迫',
+       B: '象徵人人平等，選舉不受性別等因素影響，人人都有機會參政',
+       C: '這代表今天的民主自由，是無數前人爭取與犧牲換來的成果' }
+};
+
+var stationTitle = {
+  1: '第一站・民國34年 中華民國接收臺灣',
+  2: '第二站・民國36年 二二八事件爆發',
+  3: '第三站・民國38年 戒嚴令頒布',
+  4: '第四站・民國68年 美麗島雜誌與紀念大會',
+  5: '第五站・民國76～105年 解嚴、總統直選、首位女性總統'
+};
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function updateProgress(current) {
+  var wrap = document.getElementById('progressWrap');
+  wrap.style.display = 'block';
+  document.querySelectorAll('#progressBar .dot').forEach(function(d){
+    var i = parseInt(d.getAttribute('data-i'));
+    d.classList.remove('active','done');
+    if (i < current) d.classList.add('done');
+    if (i === current) d.classList.add('active');
+  });
+}
+
+function startJourney() {
+  var name = document.getElementById('stuName').value.trim();
+  var seat = document.getElementById('stuSeat').value.trim();
+  if (!name) { alert('請先輸入姓名喔！'); return; }
+  state.name = name;
+  state.seat = seat;
+  updateProgress(1);
+  showScreen('screen-s1');
+}
+
+document.querySelectorAll('.choice-btn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var station = this.getAttribute('data-station');
+    var value = this.getAttribute('data-value');
+    var group = document.querySelectorAll('.choice-btn[data-station="' + station + '"]');
+    group.forEach(function(b){ b.classList.remove('selected'); });
+    this.classList.add('selected');
+    state.choices[station] = { value: value, text: choiceTexts[station][value] };
+    document.getElementById('fb-' + station).classList.add('show');
+    var nextBtn = document.getElementById('next-' + station);
+    if (nextBtn) nextBtn.disabled = false;
+  });
+});
+
+function nextStation(current) {
+  var next = current + 1;
+  updateProgress(next);
+  showScreen('screen-s' + next);
+}
+
+function goReview() {
+  document.getElementById('progressWrap').style.display = 'none';
+  var line = state.name + (state.seat ? '（座號 ' + state.seat + '）' : '');
+  document.getElementById('reviewNameLine').textContent = line + ' 的民主自由號旅程紀錄';
+  var listEl = document.getElementById('reviewList');
+  listEl.innerHTML = '';
+  for (var i = 1; i <= 5; i++) {
+    var c = state.choices[i];
+    var div = document.createElement('div');
+    div.className = 'review-item';
+    div.innerHTML = '<span class="tag">' + stationTitle[i] + '</span>你的選擇：' + (c ? c.value + '．' + c.text : '（未作答）');
+    listEl.appendChild(div);
+  }
+  showScreen('screen-review');
+}
+
+function copyReview() {
+  var line = state.name + (state.seat ? '（座號 ' + state.seat + '）' : '');
+  var text = '民主自由號：臺灣民主時光列車 － 學習回顧\n' + line + '\n\n';
+  for (var i = 1; i <= 5; i++) {
+    var c = state.choices[i];
+    text += stationTitle[i] + '\n選擇：' + (c ? c.value + '．' + c.text : '（未作答）') + '\n\n';
+  }
+  var reflection = document.getElementById('reflection').value.trim();
+  text += '我的感想：\n' + (reflection || '（未填寫）') + '\n';
+
+  var statusEl = document.getElementById('copyStatus');
+
+  function showStatus(msg, ok) {
+    statusEl.textContent = msg;
+    statusEl.style.color = ok ? '#3a7a3a' : '#b83a3a';
+  }
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function(){
+      showStatus('✅ 已複製到剪貼簿！可以貼到學習單或訊息中囉～', true);
+    }).catch(function(){
+      fallbackCopy(text, showStatus);
+    });
+  } else {
+    fallbackCopy(text, showStatus);
+  }
+}
+
+function fallbackCopy(text, showStatus) {
+  try {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    var ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    if (ok) {
+      showStatus('✅ 已複製到剪貼簿！可以貼到學習單或訊息中囉～', true);
+    } else {
+      showStatus('⚠️ 複製失敗，請長按上方文字手動複製。', false);
+    }
+  } catch (e) {
+    showStatus('⚠️ 複製失敗，請長按上方文字手動複製。', false);
+  }
+}
+</script>
+</body>
+</html>
