@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>💰 點數大作戰 — 投資小達人</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f0;color:#1a1a1a;min-height:100vh;padding:1rem}
+.game{max-width:540px;margin:0 auto;padding:1rem 0}
+h1{font-size:22px;font-weight:600;color:#1a1a1a;margin-bottom:4px;text-align:center}
+.subtitle{font-size:13px;color:#666;text-align:center;margin-bottom:1.5rem}
+.card{background:#fff;border:1px solid #e5e5e0;border-radius:12px;padding:1.25rem;margin-bottom:1rem;box-shadow:0 1px 3px rgba(0,0,0,0.04)}
+.card-title{font-size:13px;color:#666;margin-bottom:10px;font-weight:500}
+.form-row{display:flex;gap:8px;margin-bottom:10px;align-items:center}
+.form-row label{font-size:13px;color:#666;min-width:52px}
+.form-row input{flex:1;padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-size:15px;background:#fafaf8;color:#1a1a1a;outline:none}
+.form-row input:focus{border-color:#888}
+.btn{padding:8px 18px;border:1px solid #ddd;border-radius:8px;background:transparent;color:#1a1a1a;font-size:14px;cursor:pointer;transition:background 0.15s}
+.btn:hover{background:#f0f0ea}
+.btn:active{transform:scale(0.98)}
+.btn-primary{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.btn-primary:hover{opacity:0.85;background:#1a1a1a}
+.round-bar{display:flex;gap:6px;justify-content:center;margin-bottom:1rem}
+.round-dot{width:36px;height:8px;border-radius:4px;background:#e5e5e0;transition:background 0.3s}
+.round-dot.done{background:#639922}
+.round-dot.active{background:#1a1a1a}
+.points-display{font-size:40px;font-weight:600;color:#1a1a1a;text-align:center;padding:0.5rem 0}
+.points-label{font-size:12px;color:#888;text-align:center;margin-bottom:0.5rem}
+.info-row{display:flex;justify-content:space-between;font-size:12px;color:#888;margin-bottom:6px}
+.alloc-row{margin-bottom:16px}
+.alloc-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.alloc-label{font-size:14px;font-weight:500;color:#1a1a1a}
+.alloc-pts{font-size:13px;color:#888}
+.alloc-pct{font-size:14px;font-weight:600;min-width:38px;text-align:right;color:#1a1a1a}
+.alloc-desc{font-size:11px;color:#888;margin-top:3px;line-height:1.5}
+input[type=range]{-webkit-appearance:none;width:100%;height:4px;border-radius:2px;background:#e5e5e0;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#1a1a1a;cursor:pointer}
+.total-bar{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-radius:8px;background:#f5f5f0;margin-bottom:1rem;border:1px solid #e5e5e0}
+.total-bar.ok{background:#EAF3DE;border-color:#c0dd97}
+.total-bar.over{background:#FCEBEB;border-color:#f7c1c1}
+.total-label{font-size:13px;color:#666}
+.total-num{font-size:15px;font-weight:600}
+.total-num.ok{color:#3B6D11}
+.total-num.over{color:#A32D2D}
+.stock-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;margin-bottom:12px}
+.stock-btn{padding:12px;border:1px solid #e5e5e0;border-radius:8px;background:#fafaf8;color:#1a1a1a;font-size:12px;cursor:pointer;text-align:left;transition:all 0.15s}
+.stock-btn:hover{background:#fff;border-color:#bbb}
+.stock-btn.selected{border:2px solid #1a1a1a;background:#fff}
+.stock-btn.selected .stock-name::before{content:'✓ ';color:#3B6D11}
+.stock-name{font-weight:600;font-size:13px;margin-bottom:3px}
+.stock-desc{font-size:11px;color:#888;line-height:1.4;margin-bottom:5px}
+.stock-tag{display:inline-block;font-size:10px;padding:2px 7px;border-radius:4px}
+.tag-safe{background:#EAF3DE;color:#3B6D11}
+.tag-mid{background:#FAEEDA;color:#854F0B}
+.tag-risk{background:#FCEBEB;color:#A32D2D}
+.result-section{margin-bottom:10px}
+.result-row{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:8px;margin-bottom:6px;font-size:13px}
+.result-row.win{background:#EAF3DE}
+.result-row.lose{background:#FCEBEB}
+.result-row.neutral{background:#f5f5f0}
+.result-row-label{color:#555}
+.result-row-val{font-weight:600}
+.result-win{color:#3B6D11}
+.result-lose{color:#A32D2D}
+.learn{background:#f5f5f0;border-radius:8px;padding:10px 14px;font-size:13px;color:#555;line-height:1.6;margin-bottom:0.75rem;border-left:3px solid #e5e5e0}
+.hist-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f0f0ea;font-size:12px}
+.hist-row:last-child{border-bottom:none}
+.report-box{background:#fafaf8;border:1px solid #e5e5e0;border-radius:8px;padding:14px;font-size:12px;line-height:1.9;color:#1a1a1a;white-space:pre-wrap;word-break:break-all;margin-bottom:10px;font-family:'Courier New',monospace}
+.copy-hint{font-size:12px;color:#888;text-align:center;margin-top:6px}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<div class="game">
+  <h1>💰 點數大作戰</h1>
+  <p class="subtitle">投資小達人 — 五回合挑戰</p>
+
+  <div id="setup">
+    <div class="card">
+      <div class="card-title">學生資料登記</div>
+      <div class="form-row"><label>班級</label><input type="text" id="inputClass" placeholder="例如：501"/></div>
+      <div class="form-row"><label>座號</label><input type="number" id="inputSeat" placeholder="例如：12" min="1"/></div>
+      <div class="form-row"><label>姓名</label><input type="text" id="inputName" placeholder="你的名字"/></div>
+      <div class="form-row"><label>點數</label><input type="number" id="inputPoints" placeholder="老師給的點數" min="1"/></div>
+      <button class="btn btn-primary" style="width:100%;margin-top:4px" onclick="startGame()">開始投資！</button>
+    </div>
+  </div>
+
+  <div id="gameScreen" class="hidden">
+    <div class="round-bar" id="roundBar"></div>
+
+    <div class="card">
+      <div class="info-row">
+        <span id="playerInfo"></span>
+        <span id="roundLabel" style="font-weight:600"></span>
+      </div>
+      <div class="points-display" id="pointsDisplay">0</div>
+      <div class="points-label">目前點數</div>
+    </div>
+
+    <div class="card" id="actionCard">
+      <div class="card-title">這回合如何分配你的點數？</div>
+
+      <div class="alloc-row">
+        <div class="alloc-header">
+          <span class="alloc-label">🪙 放錢包</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="alloc-pts" id="pts-wallet">0 點</span>
+            <span class="alloc-pct" id="pct-wallet">0%</span>
+          </div>
+        </div>
+        <input type="range" id="sl-wallet" min="0" max="100" value="0" step="1" oninput="onSlide('wallet')"/>
+        <div class="alloc-desc">不做任何投資，點數放著，但每回合通膨都會侵蝕你的財富。</div>
+      </div>
+
+      <div class="alloc-row">
+        <div class="alloc-header">
+          <span class="alloc-label">🏦 存定存</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="alloc-pts" id="pts-deposit">0 點</span>
+            <span class="alloc-pct" id="pct-deposit">0%</span>
+          </div>
+        </div>
+        <input type="range" id="sl-deposit" min="0" max="100" value="0" step="1" oninput="onSlide('deposit')"/>
+        <div class="alloc-desc">安全穩定，固定獲得 10% 利息，但仍會被通膨影響剩餘點數。</div>
+      </div>
+
+      <div class="alloc-row">
+        <div class="alloc-header">
+          <span class="alloc-label">📈 買股票</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="alloc-pts" id="pts-stock">0 點</span>
+            <span class="alloc-pct" id="pct-stock">0%</span>
+          </div>
+        </div>
+        <input type="range" id="sl-stock" min="0" max="100" value="0" step="1" oninput="onSlide('stock')"/>
+        <div class="alloc-desc">成為公司股東！選對了大賺，選錯了大賠。</div>
+      </div>
+
+      <div class="total-bar" id="totalBar">
+        <span class="total-label">已分配</span>
+        <span class="total-num" id="totalNum">0 / 100%</span>
+      </div>
+
+      <div id="stockPanel" class="hidden">
+        <div class="card-title">選擇一間公司的股票</div>
+        <div class="stock-grid">
+          <button class="stock-btn" id="stock-stable" onclick="selectStock('stable')">
+            <div class="stock-name">⚡ 陽光電力公司</div>
+            <div class="stock-desc">台灣最大民生電力供應商，已成立 40 年。家家戶戶都需要用電，景氣好壞影響不大。</div>
+            <span class="stock-tag tag-safe">低風險・±5~15%</span>
+          </button>
+          <button class="stock-btn" id="stock-food" onclick="selectStock('food')">
+            <div class="stock-name">🍱 好味道食品</div>
+            <div class="stock-desc">生產泡麵、餅乾、飲料的大廠。大家每天都要吃東西，但口味流行會影響銷售。</div>
+            <span class="stock-tag tag-safe">低中風險・±5~25%</span>
+          </button>
+          <button class="stock-btn" id="stock-tech" onclick="selectStock('tech')">
+            <div class="stock-name">🚀 未來科技</div>
+            <div class="stock-desc">開發 AI 和手機零件的科技公司。技術領先時大漲，但競爭激烈、常有意外消息。</div>
+            <span class="stock-tag tag-mid">中高風險・±10~40%</span>
+          </button>
+          <button class="stock-btn" id="stock-gamble" onclick="selectStock('gamble')">
+            <div class="stock-name">🌱 神秘新創</div>
+            <div class="stock-desc">剛成立 2 年、號稱要改變世界的小公司。沒人知道成不成功，有人大賺也有人賠光。</div>
+            <span class="stock-tag tag-risk">高風險・±20~80%</span>
+          </button>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" style="width:100%" onclick="invest()">確認配置，開始這回合！</button>
+    </div>
+
+    <div class="card hidden" id="resultCard">
+      <div class="card-title" style="margin-bottom:8px">本回合結算</div>
+      <div id="resultRows" class="result-section"></div>
+      <div class="learn" id="learnMsg"></div>
+      <button class="btn btn-primary" style="width:100%" id="nextBtn" onclick="nextRound()"></button>
+    </div>
+
+    <div class="card hidden" id="historyCard">
+      <div class="card-title">投資紀錄</div>
+      <div id="historyList"></div>
+    </div>
+
+    <div class="card hidden" id="endCard">
+      <div style="text-align:center;padding:0.5rem 0 1rem">
+        <div style="font-size:40px;margin-bottom:6px" id="endEmoji"></div>
+        <div style="font-size:18px;font-weight:600;color:#1a1a1a;margin-bottom:4px" id="endTitle"></div>
+        <div style="font-size:13px;color:#666;line-height:1.6;margin-bottom:1.25rem" id="endMsg"></div>
+      </div>
+      <div class="card-title">📋 成績單 — 截圖後交給老師</div>
+      <div class="report-box" id="reportBox"></div>
+      <button class="btn" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:14px;cursor:pointer" onclick="copyReport()">📋 複製成績單文字</button>
+      <div class="copy-hint" id="copyHint"></div>
+      <button class="btn" style="width:100%;margin-top:10px" onclick="restartGame()">換人玩</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let points=0,startPts=0,round=1,stock='',history=[];
+let playerName='',playerClass='',playerSeat='';
+const TOTAL=5;
+const KEYS=['wallet','deposit','stock'];
+let pcts={wallet:0,deposit:0,stock:0};
+
+function startGame(){
+  const cls=document.getElementById('inputClass').value.trim();
+  const seat=document.getElementById('inputSeat').value.trim();
+  const name=document.getElementById('inputName').value.trim();
+  const pts=parseInt(document.getElementById('inputPoints').value);
+  if(!cls||!seat||!name){alert('請填寫班級、座號和姓名！');return;}
+  if(!pts||pts<1){alert('請輸入有效的點數！');return;}
+  playerClass=cls;playerSeat=seat;playerName=name;
+  points=pts;startPts=pts;round=1;history=[];
+  document.getElementById('setup').classList.add('hidden');
+  document.getElementById('gameScreen').classList.remove('hidden');
+  document.getElementById('playerInfo').textContent=cls+' '+seat+'號 '+name;
+  buildRoundBar();resetAlloc();refreshDisplay();
+}
+
+function buildRoundBar(){
+  const bar=document.getElementById('roundBar');bar.innerHTML='';
+  for(let i=1;i<=TOTAL;i++){
+    const d=document.createElement('div');
+    d.className='round-dot'+(i===round?' active':'');
+    d.id='dot-'+i;bar.appendChild(d);
+  }
+}
+
+function updateRoundBar(){
+  for(let i=1;i<=TOTAL;i++){
+    const d=document.getElementById('dot-'+i);
+    d.className='round-dot'+(i<round?' done':i===round?' active':'');
+  }
+}
+
+function refreshDisplay(){
+  document.getElementById('pointsDisplay').textContent=Math.round(points);
+  document.getElementById('roundLabel').textContent='第 '+round+' / '+TOTAL+' 回合';
+  updateRoundBar();
+}
+
+function resetAlloc(){
+  pcts={wallet:0,deposit:0,stock:0};
+  KEYS.forEach(k=>{
+    document.getElementById('sl-'+k).value=0;
+    document.getElementById('pct-'+k).textContent='0%';
+    document.getElementById('pts-'+k).textContent='0 點';
+  });
+  updateTotalBar();
+  document.getElementById('stockPanel').classList.add('hidden');
+  ['stable','tech','food','gamble'].forEach(x=>document.getElementById('stock-'+x).classList.remove('selected'));
+  stock='';
+}
+
+function onSlide(changed){
+  const raw=parseInt(document.getElementById('sl-'+changed).value);
+  const others=KEYS.filter(k=>k!==changed);
+  const otherSum=others.reduce((s,k)=>s+pcts[k],0);
+  pcts[changed]=Math.min(raw,100-otherSum+pcts[changed]);
+  document.getElementById('sl-'+changed).value=pcts[changed];
+  KEYS.forEach(k=>{
+    document.getElementById('pct-'+k).textContent=pcts[k]+'%';
+    document.getElementById('pts-'+k).textContent=Math.round(points*pcts[k]/100)+' 點';
+  });
+  updateTotalBar();
+  const showStock=pcts.stock>0;
+  document.getElementById('stockPanel').classList.toggle('hidden',!showStock);
+  if(!showStock){stock='';['stable','tech','food','gamble'].forEach(x=>document.getElementById('stock-'+x).classList.remove('selected'));}
+}
+
+function updateTotalBar(){
+  const total=KEYS.reduce((s,k)=>s+pcts[k],0);
+  const bar=document.getElementById('totalBar');
+  const num=document.getElementById('totalNum');
+  if(total===100){bar.className='total-bar ok';num.className='total-num ok';num.textContent='✓ 100% 分配完畢';}
+  else if(total>100){bar.className='total-bar over';num.className='total-num over';num.textContent=total+'% 超過了！';}
+  else{bar.className='total-bar';num.className='total-num';num.textContent=total+' / 100%';}
+}
+
+function selectStock(s){
+  stock=s;
+  ['stable','tech','food','gamble'].forEach(x=>document.getElementById('stock-'+x).classList.toggle('selected',x===s));
+}
+
+function invest(){
+  const total=KEYS.reduce((s,k)=>s+pcts[k],0);
+  if(total!==100){alert('請將點數分配到剛好 100%！');return;}
+  if(pcts.stock>0&&!stock){alert('你有分配股票比例，請選擇一間公司！');return;}
+
+  const amtW=Math.round(points*pcts.wallet/100);
+  const amtD=Math.round(points*pcts.deposit/100);
+  const amtS=Math.round(points*pcts.stock/100);
+  let deltaW=0,deltaD=0,deltaS=0,stockResult='';
+
+  if(amtW>0){const loss=Math.floor(Math.random()*26)+5;deltaW=-Math.round(amtW*loss/100);}
+  if(amtD>0){deltaD=Math.round(amtD*0.1);}
+  if(amtS>0){
+    const cfg={stable:{min:5,max:15,wr:0.55},food:{min:5,max:25,wr:0.5},tech:{min:10,max:40,wr:0.45},gamble:{min:20,max:80,wr:0.35}};
+    const c=cfg[stock];const win=Math.random()<c.wr;
+    const pct=c.min+Math.floor(Math.random()*(c.max-c.min+1));
+    deltaS=win?Math.round(amtS*pct/100):-Math.round(amtS*pct/100);
+    const sn={stable:'陽光電力',food:'好味道食品',tech:'未來科技',gamble:'神秘新創'};
+    stockResult=(win?sn[stock]+' ↑ +'+pct+'%':sn[stock]+' ↓ -'+pct+'%');
+  }
+
+  const totalDelta=deltaW+deltaD+deltaS;
+  points=Math.max(0,points+totalDelta);
+  const infRate=2+Math.floor(Math.random()*2);
+  const infLoss=Math.round(points*infRate/100);
+  points=Math.max(0,points-infLoss);
+
+  const snames={stable:'陽光電力',food:'好味道食品',tech:'未來科技',gamble:'神秘新創'};
+  history.push({round,pcts:{...pcts},stock:stock?snames[stock]:'',amtW,amtD,amtS,deltaW,deltaD,deltaS,totalDelta,infLoss,infRate,pointsAfter:Math.round(points)});
+  round++;
+  showResult(deltaW,deltaD,deltaS,stockResult,totalDelta,infLoss,infRate);
+  renderHistory();
+}
+
+function showResult(dW,dD,dS,sRes,total,infLoss,infRate){
+  document.getElementById('actionCard').classList.add('hidden');
+  document.getElementById('resultCard').classList.remove('hidden');
+  let rows='';
+  if(pcts.wallet>0) rows+=`<div class="result-row ${dW<0?'lose':'neutral'}"><span class="result-row-label">🪙 錢包</span><span class="result-row-val ${dW<0?'result-lose':''}">${dW>=0?'+':''}${dW} 點</span></div>`;
+  if(pcts.deposit>0) rows+=`<div class="result-row win"><span class="result-row-label">🏦 定存</span><span class="result-row-val result-win">+${dD} 點</span></div>`;
+  if(pcts.stock>0) rows+=`<div class="result-row ${dS>=0?'win':'lose'}"><span class="result-row-label">📈 ${sRes}</span><span class="result-row-val ${dS>=0?'result-win':'result-lose'}">${dS>=0?'+':''}${dS} 點</span></div>`;
+  rows+=`<div class="result-row neutral" style="margin-top:4px"><span class="result-row-label">投資小計</span><span class="result-row-val ${total>=0?'result-win':'result-lose'}">${total>=0?'+':''}${total} 點</span></div>`;
+  rows+=`<div class="result-row lose"><span class="result-row-label">📉 通膨 (-${infRate}%)</span><span class="result-row-val result-lose">-${infLoss} 點</span></div>`;
+  rows+=`<div class="result-row neutral"><span class="result-row-label" style="font-weight:600">本回合後剩餘</span><span class="result-row-val" style="font-size:16px">${Math.round(points)} 點</span></div>`;
+  document.getElementById('resultRows').innerHTML=rows;
+
+  let learn='';
+  if(pcts.wallet>0&&pcts.deposit>0&&pcts.stock>0) learn='你把點數分散到三種方式，這就是「分散投資」的概念！不把雞蛋放在同一個籃子裡，可以降低風險。';
+  else if(pcts.deposit>0&&pcts.stock>0) learn='定存＋股票的組合，讓你在穩定報酬中保留成長機會，是很常見的理財策略！';
+  else if(pcts.stock===100) learn='全部押在股票，報酬可能很高，但風險也很集中。真實理財中通常不建議把所有錢都放在一種投資！';
+  else if(pcts.deposit===100) learn='全部存定存很安全，但留意通膨長期會侵蝕你的購買力。適度搭配其他投資效果更好！';
+  else if(pcts.wallet>50) learn='錢包比例太高，加上通膨，點數縮水很快喔！試著把更多比例放到定存或股票。';
+  else learn='每回合調整配置比例，觀察哪種策略最能讓點數增長！';
+  document.getElementById('learnMsg').textContent='💡 '+learn;
+
+  const isLast=round>TOTAL||points<1;
+  document.getElementById('nextBtn').textContent=isLast?'查看最終成績 →':'進入第 '+round+' 回合 →';
+  refreshDisplay();
+}
+
+function renderHistory(){
+  document.getElementById('historyCard').classList.remove('hidden');
+  document.getElementById('historyList').innerHTML=history.slice().reverse().map(h=>{
+    const parts=[];
+    if(h.pcts.wallet>0)parts.push('🪙'+h.pcts.wallet+'%');
+    if(h.pcts.deposit>0)parts.push('🏦'+h.pcts.deposit+'%');
+    if(h.pcts.stock>0)parts.push('📈'+h.pcts.stock+'%'+(h.stock?' ('+h.stock+')':''));
+    return `<div class="hist-row"><span style="color:#888">第${h.round}回合・${parts.join('・')}</span><span style="font-weight:600;color:${h.totalDelta>=0?'#3B6D11':'#A32D2D'}">${h.totalDelta>=0?'+':''}${h.totalDelta} 點 → ${h.pointsAfter}</span></div>`;
+  }).join('');
+}
+
+function nextRound(){
+  if(round>TOTAL||points<1){endGame();return;}
+  resetAlloc();
+  document.getElementById('resultCard').classList.add('hidden');
+  document.getElementById('actionCard').classList.remove('hidden');
+  refreshDisplay();
+}
+
+function endGame(){
+  document.getElementById('actionCard').classList.add('hidden');
+  document.getElementById('resultCard').classList.add('hidden');
+  document.getElementById('historyCard').classList.add('hidden');
+  document.getElementById('endCard').classList.remove('hidden');
+  const delta=Math.round(points)-startPts;
+  const pct=Math.round((delta/startPts)*100);
+  let emoji,et,em;
+  if(pct>=30){emoji='🏆';et='投資高手！';em='你的點數大幅成長！懂得分散配置，非常厲害！'}
+  else if(pct>=10){emoji='😄';et='表現不錯！';em='點數有增加，繼續練習調整配置比例，你會越來越強！'}
+  else if(pct>=0){emoji='😊';et='保本成功！';em='點數沒有太多損失，試著提高定存或股票比例，讓點數更有效增長！'}
+  else if(pct>=-20){emoji='😅';et='有點小虧';em='想想看：哪一回合的配置讓你虧最多？下次試著分散風險！'}
+  else{emoji='😢';et='投資要謹慎';em='記得：分散投資可以降低風險，不要把所有點數都放在高風險的地方！'}
+  document.getElementById('endEmoji').textContent=emoji;
+  document.getElementById('endTitle').textContent=et;
+  document.getElementById('endMsg').textContent=em;
+
+  const now=new Date();
+  const dateStr=now.getFullYear()+'/'+(now.getMonth()+1)+'/'+now.getDate()+' '+now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');
+  let r='📊 投資小達人 成績單\n';
+  r+='━━━━━━━━━━━━━━━━━━\n';
+  r+='班級：'+playerClass+'\n座號：'+playerSeat+'號\n姓名：'+playerName+'\n時間：'+dateStr+'\n';
+  r+='━━━━━━━━━━━━━━━━━━\n';
+  r+='起始點數：'+startPts+' 點\n最終點數：'+Math.round(points)+' 點\n';
+  r+='總變化：'+(delta>=0?'+':'')+delta+' 點（'+(delta>=0?'+':'')+pct+'%）\n';
+  r+='━━━━━━━━━━━━━━━━━━\n各回合紀錄：\n';
+  history.forEach(h=>{
+    const parts=[];
+    if(h.pcts.wallet>0)parts.push('錢包'+h.pcts.wallet+'%');
+    if(h.pcts.deposit>0)parts.push('定存'+h.pcts.deposit+'%');
+    if(h.pcts.stock>0)parts.push('股票'+h.pcts.stock+'%'+(h.stock?' ('+h.stock+')':''));
+    r+='第'+h.round+'回合 ['+parts.join('・')+']\n';
+    r+='  投資損益 '+(h.totalDelta>=0?'+':'')+h.totalDelta+' 點，通膨 -'+h.infLoss+' 點，剩 '+h.pointsAfter+' 點\n';
+  });
+  r+='━━━━━━━━━━━━━━━━━━\n評語：'+et+'\n'+em;
+  document.getElementById('reportBox').textContent=r;
+}
+
+function copyReport(){
+  const text=document.getElementById('reportBox').textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    document.getElementById('copyHint').textContent='✅ 已複製！請貼給老師或截圖繳交。';
+  }).catch(()=>{
+    document.getElementById('copyHint').textContent='請長按文字框手動複製。';
+  });
+}
+
+function restartGame(){
+  ['endCard','historyCard','gameScreen'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+  document.getElementById('setup').classList.remove('hidden');
+  ['inputClass','inputSeat','inputName','inputPoints'].forEach(id=>document.getElementById(id).value='');
+  history=[];round=1;
+}
+</script>
+</body>
+</html>
