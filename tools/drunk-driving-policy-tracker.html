@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>酒駕政策大追蹤：中央地方分工站</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 0;
+    font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif;
+    background: linear-gradient(135deg, #fef6e4 0%, #e8f4f8 100%);
+    color: #2b2b2b;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 16px 16px 60px; }
+  .screen { display: none; animation: fadeIn 0.3s ease; }
+  .screen.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px);} to { opacity:1; transform: translateY(0);} }
+
+  .card {
+    background: #fff;
+    border-radius: 18px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  }
+  h1 { font-size: 1.4rem; color: #d9534f; margin: 0 0 8px; text-align:center; }
+  h2 { font-size: 1.15rem; color: #e07a1f; margin: 0 0 10px; }
+  .station-tag {
+    display:inline-block; background:#ffedd5; color:#c2540a;
+    padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight:bold;
+    margin-bottom: 10px;
+  }
+  .lead { line-height: 1.8; font-size: 1.02rem; }
+  .news-box {
+    background: #fff4e6; border-left: 5px solid #e07a1f;
+    padding: 12px 14px; border-radius: 8px; margin: 10px 0; line-height:1.7;
+  }
+  label { display:block; font-weight:bold; margin: 12px 0 6px; }
+  input[type=text] {
+    width: 100%; padding: 14px; font-size: 1.05rem; border-radius: 10px;
+    border: 2px solid #ddd; margin-bottom: 6px;
+  }
+  textarea {
+    width: 100%; padding: 12px; font-size: 1rem; border-radius: 10px;
+    border: 2px solid #ddd; min-height: 70px; font-family: inherit; resize: vertical;
+  }
+  .btn {
+    display:block; width: 100%; padding: 16px; margin: 10px 0;
+    font-size: 1.05rem; border-radius: 14px; border: none;
+    background: #ff9f43; color: #fff; font-weight: bold;
+    cursor: pointer; box-shadow: 0 3px 0 #d97e1f; touch-action: manipulation;
+  }
+  .btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #d97e1f; }
+  .btn.secondary { background: #4a90d9; box-shadow: 0 3px 0 #2f6cad; }
+  .btn.big-start { background: #d9534f; box-shadow: 0 3px 0 #a83a37; font-size: 1.2rem; }
+
+  .option {
+    display:block; width:100%; text-align:left; padding: 16px 14px; margin: 10px 0;
+    border-radius: 14px; border: 2px solid #d8d8d8; background:#fafafa;
+    font-size: 1.02rem; cursor:pointer; line-height:1.5; touch-action: manipulation;
+  }
+  .option:active { background:#f0f0f0; }
+  .option.correct { background:#d9f2e3; border-color:#4caf7d; }
+  .option.wrong { background:#fbdede; border-color:#e06767; }
+  .option[disabled] { opacity: 0.9; pointer-events: none; }
+
+  .feedback {
+    margin-top: 12px; padding: 12px 14px; border-radius: 10px; line-height:1.7; font-size:0.98rem;
+    display:none;
+  }
+  .feedback.show { display:block; }
+  .feedback.ok { background:#e6f7ee; border-left: 5px solid #4caf7d; }
+  .feedback.no { background:#fdeeee; border-left: 5px solid #e06767; }
+
+  .progress { text-align:center; font-size:0.9rem; color:#888; margin-bottom:8px; }
+  .progress-bar-bg { background:#eee; border-radius: 8px; height: 8px; overflow:hidden; margin-bottom: 14px; }
+  .progress-bar { background: linear-gradient(90deg,#ff9f43,#e07a1f); height:100%; width:0%; transition: width 0.3s; }
+
+  .review-item { border-bottom: 1px dashed #ddd; padding: 10px 0; }
+  .review-item:last-child { border-bottom: none; }
+  .review-q { font-weight:bold; color:#c2540a; margin-bottom: 4px; }
+  .review-a { color:#333; }
+  .tag-ok { color:#2e8b57; font-weight:bold; }
+  .tag-no { color:#c0392b; font-weight:bold; }
+
+  #copyStatus { text-align:center; margin-top:8px; font-size:0.95rem; min-height:20px; }
+  .footer-note { text-align:center; color:#999; font-size:0.8rem; margin-top:20px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 開始畫面 -->
+  <div class="screen active" id="screen-start">
+    <div class="card">
+      <h1>🚔 酒駕政策大追蹤</h1>
+      <p class="lead" style="text-align:center; color:#666;">中央與地方政府分工任務</p>
+      <div class="news-box">
+        📰 近年來，酒後駕車案件層出不窮，並造成許多民眾傷亡，嚴重影響人民的生命安全，部分立委要求政府要有所行動。<br><br>
+        身為小記者的你，即將展開一趟任務：追蹤這件事從「中央政府」到「地方政府」，再到「人民行動」的完整過程！
+      </div>
+      <label for="stuName">姓名</label>
+      <input type="text" id="stuName" placeholder="請輸入你的姓名">
+      <label for="stuSeat">座號</label>
+      <input type="text" id="stuSeat" placeholder="請輸入你的座號">
+      <button class="btn big-start" onclick="startGame()">🚀 開始任務</button>
+    </div>
+  </div>
+
+  <!-- 站1：情境開場 -->
+  <div class="screen" id="screen-1">
+    <div class="card">
+      <div class="station-tag">情境開場</div>
+      <h2>酒駕問題誰該管？</h2>
+      <div class="news-box">
+        危害國人的安全——酒後駕車氾濫！<br>
+        政府組成的目的，在維護國家安全、維持社會秩序和保障人民權利。民主國家的主人是人民，人民用選票選出執政者，由他們組織政府、為民服務。<br><br>
+        我國政府分為「中央政府」與「地方政府」，兩者分權負責、彼此合作，共同處理酒駕問題。
+      </div>
+      <button class="btn" onclick="goTo('screen-2a')">前往中央政府站 ➜</button>
+    </div>
+  </div>
+
+  <!-- 站2：中央政府任務（3小題） -->
+  <div class="screen" id="screen-2a">
+    <div class="card">
+      <div class="station-tag">中央政府站 1/3</div>
+      <div class="progress-bar-bg"><div class="progress-bar" id="pbar-2a" style="width:20%"></div></div>
+      <h2>行政院做了什麼？</h2>
+      <p class="lead">中央政府包含總統及五院（行政院、立法院、司法院、考試院、監察院），負責全國性事務。</p>
+      <div id="q2a-options"></div>
+      <div class="feedback" id="fb-2a"></div>
+      <button class="btn" id="next-2a" style="display:none" onclick="goTo('screen-2b')">下一題 ➜</button>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-2b">
+    <div class="card">
+      <div class="station-tag">中央政府站 2/3</div>
+      <div class="progress-bar-bg"><div class="progress-bar" style="width:40%"></div></div>
+      <h2>立法院做了什麼？</h2>
+      <div id="q2b-options"></div>
+      <div class="feedback" id="fb-2b"></div>
+      <button class="btn" id="next-2b" style="display:none" onclick="goTo('screen-2c')">下一題 ➜</button>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-2c">
+    <div class="card">
+      <div class="station-tag">中央政府站 3/3</div>
+      <div class="progress-bar-bg"><div class="progress-bar" style="width:55%"></div></div>
+      <h2>司法院做了什麼？</h2>
+      <div id="q2c-options"></div>
+      <div class="feedback" id="fb-2c"></div>
+      <button class="btn" id="next-2c" style="display:none" onclick="goTo('screen-3a')">前往地方政府站 ➜</button>
+    </div>
+  </div>
+
+  <!-- 站3：地方政府任務（2小題） -->
+  <div class="screen" id="screen-3a">
+    <div class="card">
+      <div class="station-tag">地方政府站 1/2</div>
+      <div class="progress-bar-bg"><div class="progress-bar" style="width:65%"></div></div>
+      <h2>地方行政機關（例如縣市政府）做了什麼？</h2>
+      <p class="lead">地方政府分為行政機關和立法機關，行政機關依地方需求推動政策、辦理地方事務，與民眾生活關係密切。</p>
+      <div id="q3a-options"></div>
+      <div class="feedback" id="fb-3a"></div>
+      <button class="btn" id="next-3a" style="display:none" onclick="goTo('screen-3b')">下一題 ➜</button>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-3b">
+    <div class="card">
+      <div class="station-tag">地方政府站 2/2</div>
+      <div class="progress-bar-bg"><div class="progress-bar" style="width:70%"></div></div>
+      <h2>地方立法機關（例如縣市議會）做了什麼？</h2>
+      <p class="lead">立法機關由民意代表組成，負責制定地方法規、監督地方政府施政。</p>
+      <div id="q3b-options"></div>
+      <div class="feedback" id="fb-3b"></div>
+      <button class="btn" id="next-3b" style="display:none" onclick="goTo('screen-4a')">前往人民行動站 ➜</button>
+    </div>
+  </div>
+
+  <!-- 站4：人民行動站（3小題） -->
+  <div class="screen" id="screen-4a">
+    <div class="card">
+      <div class="station-tag">人民行動站 1/3</div>
+      <div class="progress-bar-bg"><div class="progress-bar" style="width:78%"></div></div>
+      <h2>你想對某項政策提出建議，最方便的方式？</h2>
+      <div id="q4a-options"></div>
+      <div class="feedback" id="fb-4a"></div>
+      <button class="btn" id="next-4a" style="display:none" onclick="goTo('screen-4b')">下一題 ➜</button>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-4b">
+    <div class="card">
+      <div class="station-tag">人民行動站 2/3</div>
+      <div class="progress-bar-bg"><div class="progress-bar" style="width:84%"></div></div>
+      <h2>你有緊急疑問想馬上詢問地方政府，可以怎麼做？</h2>
+      <div id="q4b-options"></div>
+      <div class="feedback" id="fb-4b"></div>
+      <button class="btn" id="next-4b" style="display:none" onclick="goTo('screen-4c')">下一題 ➜</button>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-4c">
+    <div class="card">
+      <div class="station-tag">人民行動站 3/3</div>
+      <div class="progress-bar-bg"><div class="progress-bar" style="width:90%"></div></div>
+      <h2>政府政策嚴重影響行人安全，公聽會、專線都得不到回應，人民還可以怎麼做？</h2>
+      <div class="news-box">
+        🚶 「還路於民大遊行」：臺灣每年約有三千人死於交通事故，行人路權始終未受重視，民間團體舉行大遊行，向政府表達追求行人安全的訴求。
+      </div>
+      <div id="q4c-options"></div>
+      <div class="feedback" id="fb-4c"></div>
+      <button class="btn" id="next-4c" style="display:none" onclick="goTo('screen-5')">前往政府回應站 ➜</button>
+    </div>
+  </div>
+
+  <!-- 站5：政府回應/救濟站 -->
+  <div class="screen" id="screen-5">
+    <div class="card">
+      <div class="station-tag">政府回應站</div>
+      <div class="progress-bar-bg"><div class="progress-bar" style="width:95%"></div></div>
+      <h2>政策影響人民權益，政府怎麼辦？</h2>
+      <div class="news-box">
+        😷 疫情期間，政府禁止餐廳內用與群聚出遊，雖有效抑制疫情擴散，卻讓部分餐廳、旅遊業者所得降低，生活受到影響。
+      </div>
+      <p class="lead"><b>政府為了保障業者的權益，做了什麼？</b></p>
+      <div id="q5-options"></div>
+      <div class="feedback" id="fb-5"></div>
+      <div id="q5-open" style="display:none">
+        <label for="openAnswer">🤔 關鍵思考：為什麼需要中央與地方政府共同合作，才能降低酒駕事件的數量？請寫下你的想法：</label>
+        <textarea id="openAnswer" placeholder="例如：因為……"></textarea>
+        <button class="btn" onclick="finishGame()">✅ 完成任務，查看學習回顧</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 學習回顧畫面 -->
+  <div class="screen" id="screen-review">
+    <div class="card">
+      <h1>📋 學習回顧</h1>
+      <p class="lead" id="reviewName" style="text-align:center; font-weight:bold;"></p>
+      <div id="reviewList"></div>
+      <button class="btn secondary" onclick="copyReview()">📋 一鍵複製學習回顧</button>
+      <div id="copyStatus"></div>
+    </div>
+    <div class="footer-note">六年級上學期 第一單元 第2課｜民主國家政府與人民的關係為何？（課本第24～27頁）</div>
+  </div>
+
+</div>
+
+<script>
+let student = { name: "", seat: "" };
+let answers = []; // {station, question, choice, correct}
+
+const Q = {
+  q2a: {
+    text: "行政院做了什麼？",
+    options: [
+      { t: "召集各部會研究酒駕政策，提出相關政策方案", correct: true },
+      { t: "審判酒後駕車情節嚴重的人民", correct: false },
+      { t: "在路口進行酒測攔檢", correct: false }
+    ],
+    explainCorrect: "答對了！行政院為了規畫國家對酒後駕車的政策，召集各部會進行研究，提出相關政策。這是中央政府「規畫全國性政策」的角色。",
+    explainWrong: "再想想～行政院的工作是「召集各部會研究、提出政策」，審判是司法院的工作，路口攔檢是地方政府的工作喔！"
+  },
+  q2b: {
+    text: "立法院做了什麼？",
+    options: [
+      { t: "因應國家需求，制定或修改酒駕相關法律", correct: true },
+      { t: "監督縣市政府取締成果", correct: false },
+      { t: "加強路口取締", correct: false }
+    ],
+    explainCorrect: "答對了！立法院因應國家需求制定或修改法律，經過立法委員們充分討論，完成相關法律修訂。",
+    explainWrong: "再想想～立法院的工作是「制定或修改法律」，監督縣市政府是地方議會的工作喔！"
+  },
+  q2c: {
+    text: "司法院做了什麼？",
+    options: [
+      { t: "所屬各地法院負責審判違反法律的人", correct: true },
+      { t: "規畫全國酒駕政策", correct: false },
+      { t: "在地方進行酒測攔檢", correct: false }
+    ],
+    explainCorrect: "答對了！司法院所屬的各地法院負責審判違反法律的人，因此酒後駕車且情節嚴重的人，需要接受審判。",
+    explainWrong: "再想想～審判是司法院的工作，規畫政策是行政院，攔檢是地方政府喔！"
+  },
+  q3a: {
+    text: "地方行政機關（例如縣市政府）做了什麼？",
+    options: [
+      { t: "依據法律及相關政策，加強取締酒後駕車", correct: true },
+      { t: "制定全國性法律", correct: false },
+      { t: "審判酒駕案件", correct: false }
+    ],
+    explainCorrect: "答對了！地方行政機關，例如縣市政府，會依據法律及相關政策，加強取締酒後駕車，與民眾生活關係密切。",
+    explainWrong: "再想想～制定全國性法律是立法院的工作，審判是司法院的工作，地方政府主要負責「執行、取締」喔！"
+  },
+  q3b: {
+    text: "地方立法機關（例如縣市議會）做了什麼？",
+    options: [
+      { t: "監督縣市政府取締酒後駕車的狀況", correct: true },
+      { t: "負責審判酒駕案件", correct: false },
+      { t: "召集各部會研究政策", correct: false }
+    ],
+    explainCorrect: "答對了！地方立法機關，例如縣市議會，會監督縣市政府取締酒後駕車的狀況，就像「縣長，請問警察局取締酒駕的成果如何？」這樣的監督對話。",
+    explainWrong: "再想想～地方立法機關（縣市議會）的工作是「監督」地方政府，不是審判也不是召集部會喔！"
+  },
+  q4a: {
+    text: "你想對某項政策提出建議，最方便的方式？",
+    options: [
+      { t: "上公共政策網路參與平臺，對政府施政提出建議", correct: true },
+      { t: "什麼都不用做，政府自己會知道", correct: false },
+      { t: "直接發動遊行", correct: false }
+    ],
+    explainCorrect: "答對了！民眾可以上公共政策網路參與平臺，對政府施政提出建議，這是政府提供人民反映意見的平臺之一。",
+    explainWrong: "再想想～政府有提供「公共政策網路參與平臺」讓人民平時表達意見，這是最方便直接的方式喔！"
+  },
+  q4b: {
+    text: "你有緊急疑問想馬上詢問地方政府，可以怎麼做？",
+    options: [
+      { t: "撥打1999專線，即時反映意見", correct: true },
+      { t: "直接到立法院陳情", correct: false },
+      { t: "寫信給司法院", correct: false }
+    ],
+    explainCorrect: "答對了！部分地方政府設立1999專線即時回應民眾意見，為人民提供更完善的服務。",
+    explainWrong: "再想想～地方政府設有1999專線可以即時回應民眾意見喔！"
+  },
+  q4c: {
+    text: "政策嚴重影響權益、其他方式都得不到回應時，人民還可以怎麼做？",
+    options: [
+      { t: "透過遊行、向民意代表反映等方式，要求政府改善", correct: true },
+      { t: "保持沉默，忍耐就好", correct: false },
+      { t: "自己動手修改法律", correct: false }
+    ],
+    explainCorrect: "答對了！如果政府施政違法不當，引起多數民眾不滿，人民可以透過遊行、向民意代表反映等方式，要求政府改善，就像「還路於民大遊行」一樣。",
+    explainWrong: "再想想～當政府施政引起多數民眾不滿，人民可以用遊行、向民意代表反映等合法方式表達訴求喔！"
+  },
+  q5: {
+    text: "政府為了保障業者的權益，做了什麼？",
+    options: [
+      { t: "提供紓困方案，並輔導業者加強人才培訓，協助度過難關", correct: true },
+      { t: "完全不理會業者的損失", correct: false },
+      { t: "要求業者全部停業且不提供任何補助", correct: false }
+    ],
+    explainCorrect: "答對了！為了保障人民的權益，政府提供紓困方案，也輔導旅遊業者在疫情期間加強人才培訓，協助受影響的業者度過難關。這就是政府提供「救濟」的例子。",
+    explainWrong: "再想想～課文提到政府提供紓困方案並輔導人才培訓，協助業者度過難關，這才是政府照顧人民權益的做法喔！"
+  }
+};
+
+function startGame() {
+  student.name = document.getElementById('stuName').value.trim() || "（未填寫）";
+  student.seat = document.getElementById('stuSeat').value.trim() || "（未填寫）";
+  goTo('screen-1');
+}
+
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+  // render question screens on entry
+  const map = {
+    'screen-2a': ['q2a','q2a-options','fb-2a','next-2a'],
+    'screen-2b': ['q2b','q2b-options','fb-2b','next-2b'],
+    'screen-2c': ['q2c','q2c-options','fb-2c','next-2c'],
+    'screen-3a': ['q3a','q3a-options','fb-3a','next-3a'],
+    'screen-3b': ['q3b','q3b-options','fb-3b','next-3b'],
+    'screen-4a': ['q4a','q4a-options','fb-4a','next-4a'],
+    'screen-4b': ['q4b','q4b-options','fb-4b','next-4b'],
+    'screen-4c': ['q4c','q4c-options','fb-4c','next-4c'],
+    'screen-5': ['q5','q5-options','fb-5', null]
+  };
+  if (map[id]) {
+    renderQuestion(map[id][0], map[id][1], map[id][2], map[id][3]);
+  }
+}
+
+function renderQuestion(key, optId, fbId, nextBtnId) {
+  const q = Q[key];
+  const container = document.getElementById(optId);
+  container.innerHTML = "";
+  document.getElementById(fbId).className = "feedback";
+  document.getElementById(fbId).innerHTML = "";
+  if (nextBtnId) document.getElementById(nextBtnId).style.display = "none";
+  if (key === 'q5') document.getElementById('q5-open').style.display = "none";
+
+  // shuffle options display order but keep correctness reference
+  const opts = q.options.map((o, idx) => ({...o, idx}));
+  opts.forEach(o => {
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.textContent = o.t;
+    btn.onclick = () => selectAnswer(key, o, btn, container, fbId, nextBtnId);
+    container.appendChild(btn);
+  });
+}
+
+function selectAnswer(key, opt, btnEl, container, fbId, nextBtnId) {
+  const already = answers.find(a => a.key === key);
+  if (already) return; // already answered
+  const allBtns = container.querySelectorAll('.option');
+  allBtns.forEach(b => b.disabled = true);
+  btnEl.classList.add(opt.correct ? 'correct' : 'wrong');
+  const q = Q[key];
+
+  const fb = document.getElementById(fbId);
+  fb.classList.add('show', opt.correct ? 'ok' : 'no');
+  fb.textContent = opt.correct ? q.explainCorrect : q.explainWrong;
+
+  answers.push({ key: key, question: q.text, choice: opt.t, correct: opt.correct });
+
+  if (key === 'q5') {
+    document.getElementById('q5-open').style.display = "block";
+  } else if (nextBtnId) {
+    document.getElementById(nextBtnId).style.display = "block";
+  }
+}
+
+function finishGame() {
+  const openAns = document.getElementById('openAnswer').value.trim() || "（未作答）";
+  answers.push({ key: 'open', question: "關鍵思考：為什麼需要中央與地方政府共同合作，才能降低酒駕事件的數量？", choice: openAns, correct: null });
+  renderReview();
+  goTo('screen-review');
+}
+
+function renderReview() {
+  document.getElementById('reviewName').textContent = `姓名：${student.name}　座號：${student.seat}`;
+  const list = document.getElementById('reviewList');
+  list.innerHTML = "";
+  answers.forEach(a => {
+    const div = document.createElement('div');
+    div.className = 'review-item';
+    const tag = a.correct === null ? "" : (a.correct ? '<span class="tag-ok">✅ 答對</span> ' : '<span class="tag-no">❌ 再想想</span> ');
+    div.innerHTML = `<div class="review-q">${a.question}</div><div class="review-a">${tag}${a.choice}</div>`;
+    list.appendChild(div);
+  });
+}
+
+function buildReviewText() {
+  let lines = [];
+  lines.push("【酒駕政策大追蹤 學習回顧】");
+  lines.push(`姓名：${student.name}　座號：${student.seat}`);
+  lines.push("——————————");
+  answers.forEach((a, i) => {
+    const tag = a.correct === null ? "" : (a.correct ? "（答對）" : "（再想想）");
+    lines.push(`${i+1}. ${a.question}`);
+    lines.push(`   我的答案：${a.choice} ${tag}`);
+  });
+  lines.push("——————————");
+  lines.push("六年級上學期 第一單元 第2課 民主國家政府與人民的關係為何？");
+  return lines.join("\n");
+}
+
+function copyReview() {
+  const text = buildReviewText();
+  const statusEl = document.getElementById('copyStatus');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      statusEl.textContent = "✅ 已複製到剪貼簿！可以貼到學習單或訊息中囉。";
+      statusEl.style.color = "#2e8b57";
+    }).catch(() => {
+      fallbackCopy(text, statusEl);
+    });
+  } else {
+    fallbackCopy(text, statusEl);
+  }
+}
+
+function fallbackCopy(text, statusEl) {
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    if (ok) {
+      statusEl.textContent = "✅ 已複製到剪貼簿！可以貼到學習單或訊息中囉。";
+      statusEl.style.color = "#2e8b57";
+    } else {
+      throw new Error('execCommand failed');
+    }
+  } catch (e) {
+    statusEl.textContent = "⚠️ 複製失敗，請長按下方文字手動選取複製。";
+    statusEl.style.color = "#c0392b";
+  }
+}
+</script>
+</body>
+</html>
