@@ -399,7 +399,7 @@ async function makeCard(N, moveLine){
   x.save(); x.translate(W/2,H/2+20); x.rotate(-0.28);
   x.beginPath(); x.moveTo(0,-640); x.bezierCurveTo(520,-380,520,360,0,640); x.bezierCurveTo(-520,360,-520,-380,0,-640);
   const g=x.createRadialGradient(0,-80,60,0,0,700); g.addColorStop(0,"rgba(214,226,184,0.55)"); g.addColorStop(1,"rgba(214,226,184,0.12)");
-  x.fillStyle=g; x.fill(); x.strokeStyle="rgba(185,207,140,0.22)"; x.lineWidth=3; x.beginPath(); x.moveTo(0,-600); x.lineTo(0,660); x.stroke(); x.restore();
+  x.fillStyle=g; x.fill(); x.restore();
   // 角色頭像
   const img=new Image(); img.src=TREE_SRC; await img.decode().catch(()=>{});
   const [px,py]=SPOTS[S.now]; const sw=IMG_W*0.11, sx=px/100*IMG_W-sw/2, sy=py/100*IMG_H-sw/2;
