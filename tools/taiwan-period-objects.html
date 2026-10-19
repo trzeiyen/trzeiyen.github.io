@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>臺灣時光物件猜猜看</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Huninn&family=Noto+Sans+TC:wght@400;700;900&display=swap">
+<style>
+/* 版面：左隊時期按鈕｜中央大物件｜右隊時期按鈕。按鈕色帶沿用課本時間軸配色，由上而下＝由古到今 */
+:root{
+  --bg:#f6f3ee; --surface:#ffffff; --ink:#2b2a33; --muted:#6f6a73; --line:#ddd6cc;
+  --ok:#2f8a4e; --bad:#c23b3b; --teamA:#d0563f; --teamB:#3a6fb8;
+  --p0:#e9dcc4; --p1:#d9ecd3; --p2:#d6e3f2; --p3:#ded8ef; --p4:#f6d9dc;
+  --p0i:#7a5a2c; --p1i:#2f6b3a; --p2i:#2c5584; --p3i:#5a4a8c; --p4i:#a1384a;
+  --display:"Huninn","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  --body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#1c1b21; --surface:#26252c; --ink:#f1eef2; --muted:#a8a2ab; --line:#3a3841;
+  --ok:#6fcf8f; --bad:#ef7b7b; --teamA:#f08a72; --teamB:#7ea8ea;
+  --p0:#4a3e2a; --p1:#2c4430; --p2:#2a3a52; --p3:#3a3452; --p4:#53303a;
+  --p0i:#f0d7a8; --p1i:#b4e3bd; --p2i:#b6cff0; --p3i:#d2c8f4; --p4i:#f6bcc6;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1c1b21; --surface:#26252c; --ink:#f1eef2; --muted:#a8a2ab; --line:#3a3841;
+  --ok:#6fcf8f; --bad:#ef7b7b; --teamA:#f08a72; --teamB:#7ea8ea;
+  --p0:#4a3e2a; --p1:#2c4430; --p2:#2a3a52; --p3:#3a3452; --p4:#53303a;
+  --p0i:#f0d7a8; --p1i:#b4e3bd; --p2i:#b6cff0; --p3i:#d2c8f4; --p4i:#f6bcc6;
+  color-scheme:dark}
+html,body{height:100%;margin:0}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:clamp(15px,1.3vw,22px)}
+.app{min-height:100%;display:flex;flex-direction:column;gap:clamp(10px,1.8vh,20px);box-sizing:border-box;
+  padding-block:clamp(10px,2vh,24px);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(22px,2.6vw,40px);margin:0;text-align:center;text-wrap:balance}
+
+.arena{flex:1;display:grid;grid-template-columns:minmax(150px,1fr) minmax(0,2.4fr) minmax(150px,1fr);gap:clamp(10px,1.5vw,24px);min-height:0}
+.team{display:flex;flex-direction:column;gap:clamp(6px,1vh,12px);min-width:0}
+.thead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:.4em .8em;border-radius:16px;color:#fff;font-variant-numeric:tabular-nums}
+.tA .thead{background:var(--teamA)} .tB .thead{background:var(--teamB)}
+.tname{font-family:var(--display);font-size:clamp(20px,2vw,34px)}
+.tscore{font-family:var(--display);font-size:clamp(28px,3vw,52px);line-height:1}
+.hearts{font-size:clamp(18px,1.8vw,30px);letter-spacing:2px;text-align:center;font-variant-numeric:tabular-nums}
+.tA .hearts{color:var(--teamA)} .tB .hearts{color:var(--teamB)}
+.hearts .lost{opacity:.18}
+.btns{flex:1;display:flex;flex-direction:column;gap:clamp(6px,1vh,12px)}
+
+.pbtn{flex:1;font:inherit;color:inherit;cursor:pointer;border:3px solid transparent;border-radius:18px;
+  padding:clamp(8px,1.4vh,18px) 10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  transition:transform .12s;touch-action:manipulation;min-width:0}
+.pbtn:hover:not(:disabled){transform:scale(1.03)}
+.pbtn:focus-visible{outline:4px solid var(--ink);outline-offset:2px}
+.pbtn:disabled{cursor:default}
+.pbtn .pn{font-family:var(--display);font-size:clamp(18px,2vw,34px);line-height:1.15;text-wrap:balance}
+.pbtn .yr{font-size:clamp(12px,1vw,18px);opacity:.8;font-variant-numeric:tabular-nums}
+.pbtn.right{border-color:var(--ok);box-shadow:0 0 0 4px color-mix(in srgb,var(--ok) 35%,transparent)}
+.pbtn.wrong{border-color:var(--bad)}
+.pbtn.dim{opacity:.35}
+.c0{background:var(--p0);color:var(--p0i)} .c1{background:var(--p1);color:var(--p1i)}
+.c2{background:var(--p2);color:var(--p2i)} .c3{background:var(--p3);color:var(--p3i)} .c4{background:var(--p4);color:var(--p4i)}
+
+.stage{position:relative;display:grid;place-items:center;background:var(--surface);border:2px solid var(--line);border-radius:28px;
+  padding:20px;overflow:hidden;min-width:0;min-height:clamp(300px,60vh,720px)}
+.card{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.qno{color:var(--muted);letter-spacing:.15em;font-size:.85em}
+.emoji{font-size:clamp(110px,17vw,280px);line-height:1.05}
+.name{font-family:var(--display);font-size:clamp(40px,5.5vw,100px);line-height:1.1}
+.prompt{color:var(--muted);font-size:clamp(16px,1.5vw,26px)}
+.timer{position:absolute;top:16px;right:20px;font-family:var(--display);font-size:clamp(34px,4vw,70px);line-height:1;font-variant-numeric:tabular-nums;color:var(--ink)}
+.timer.low{color:var(--bad)}
+.tbar{position:absolute;left:0;right:0;bottom:0;height:12px;background:var(--line)}
+.tbar i{display:block;height:100%;background:var(--ok);transition:width 1s linear}
+.tbar.low i{background:var(--bad)}
+.secs{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;align-items:center}
+.sec{font:inherit;font-family:var(--display);font-size:clamp(18px,1.8vw,30px);cursor:pointer;border:2px solid var(--line);border-radius:999px;padding:.3em 1em;background:transparent;color:var(--ink)}
+.sec[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.sec:focus-visible{outline:4px solid var(--teamA);outline-offset:2px}
+.pop{animation:pop .35s ease-out}
+@keyframes pop{from{transform:scale(.85)}to{transform:scale(1)}}
+
+.feedback{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(8px,1.8vh,18px);
+  padding:24px;text-align:center;background:color-mix(in srgb,var(--surface) 95%,transparent)}
+.who{font-family:var(--display);font-size:clamp(22px,2.4vw,38px)}
+.verdict{font-family:var(--display);font-size:clamp(44px,6vw,110px);line-height:1}
+.verdict.ok{color:var(--ok)} .verdict.bad{color:var(--bad)}
+.fb-item{font-size:clamp(20px,2.2vw,38px)}
+.fb-ans{display:inline-block;padding:.15em .8em;border-radius:999px;font-weight:700}
+.fb-why{max-width:30em;color:var(--muted);font-size:clamp(16px,1.6vw,28px);line-height:1.6}
+
+.btn{font:inherit;font-family:var(--display);font-size:clamp(20px,2vw,34px);cursor:pointer;border:none;border-radius:999px;
+  padding:.45em 1.6em;background:var(--ink);color:var(--bg)}
+.btn:focus-visible{outline:4px solid var(--teamA);outline-offset:3px}
+.btn.ghost{background:transparent;color:var(--ink);border:2px solid var(--line)}
+.hint{color:var(--muted);font-size:.75em;line-height:1.6}
+.screen{display:flex;flex-direction:column;align-items:center;gap:clamp(10px,2.2vh,22px);text-align:center;max-width:900px}
+.screen h2{font-family:var(--display);font-weight:400;font-size:clamp(32px,4.5vw,76px);margin:0;line-height:1.15;text-wrap:balance}
+.screen p{margin:0;color:var(--muted);line-height:1.6}
+.final{display:flex;gap:clamp(20px,5vw,80px);align-items:flex-end;font-variant-numeric:tabular-nums}
+.final div{display:flex;flex-direction:column;align-items:center}
+.final b{font-family:var(--display);font-weight:400;font-size:clamp(64px,10vw,160px);line-height:1}
+.fA{color:var(--teamA)} .fB{color:var(--teamB)}
+.review{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.chip{padding:.3em .9em;border-radius:999px;font-size:clamp(14px,1.3vw,22px)}
+.row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+
+@media (max-width:760px){
+  .arena{grid-template-columns:1fr 1fr}
+  .stage{grid-column:1/-1;grid-row:1;min-height:320px}
+  .pbtn{flex:none}
+}
+@media (prefers-reduced-motion:reduce){.pop{animation:none}.pbtn{transition:none}.tbar i{transition:none}}
+</style>
+
+</head>
+<body>
+<div class="app">
+  <h1>臺灣時光物件猜猜看</h1>
+  <div class="arena">
+    <section class="team tA" aria-label="紅隊">
+      <div class="thead"><span class="tname">紅隊</span><span class="tscore" id="sA">0</span></div>
+      <div class="btns" id="bA"></div>
+    </section>
+    <main class="stage" id="stage"></main>
+    <section class="team tB" aria-label="藍隊">
+      <div class="thead"><span class="tname">藍隊</span><span class="tscore" id="sB">0</span></div>
+      <div class="btns" id="bB"></div>
+    </section>
+  </div>
+</div>
+
+<script>
+const PERIODS = [
+  {name:"史前時代", yr:"1624 年以前"},
+  {name:"大航海時代", yr:"1624～1684"},
+  {name:"清帝國時期", yr:"1684～1895"},
+  {name:"日治時期", yr:"1895～1945"},
+  {name:"中華民國在臺灣", yr:"1945～至今"},
+];
+const ITEMS = [
+  {e:"🌾",n:"小米",p:0,w:"原住民很早就種植小米，是重要的糧食作物。"},
+  {e:"🏺",n:"陶壺",p:0,w:"史前人類用泥土燒製陶器，用來裝水、煮食物。"},
+  {e:"📿",n:"琉璃珠",p:0,w:"琉璃珠是原住民傳統的裝飾品，也代表身分地位。"},
+  {e:"📖",n:"聖經",p:1,w:"荷蘭人、西班牙人來臺傳教，把聖經帶進臺灣。"},
+  {e:"🦌",n:"鹿皮",p:1,w:"荷蘭人大量收購鹿皮，出口到日本賺錢。"},
+  {e:"🫛",n:"豌豆",p:1,w:"豌豆由荷蘭人引進，所以也叫「荷蘭豆」。"},
+  {e:"🏯",n:"臺南孔廟",p:1,w:"鄭氏時期建立臺南孔廟，推廣儒家教育。"},
+  {e:"🍵",n:"茶葉",p:2,w:"清帝國時期開港通商，茶葉成為臺灣重要的出口商品。"},
+  {e:"🙏",n:"媽祖信仰",p:2,w:"漢人渡海來臺，祈求媽祖保佑，媽祖信仰廣為流傳。"},
+  {e:"📜",n:"書院",p:2,w:"清帝國時期各地設立書院，讀書人在這裡準備科舉。"},
+  {e:"🚂",n:"鐵路",p:2,w:"劉銘傳在清帝國時期興建臺灣第一條鐵路。"},
+  {e:"🍣",n:"壽司",p:3,w:"日本人帶來壽司等日式飲食，影響臺灣人的口味。"},
+  {e:"⚾",n:"棒球",p:3,w:"日治時期棒球傳入臺灣，嘉農棒球隊還曾打進甲子園。"},
+  {e:"♨️",n:"溫泉",p:3,w:"日本人喜愛泡湯，開發了北投等溫泉區。"},
+  {e:"🏠",n:"國語家庭",p:3,w:"日治後期推行日語，全家說日語可掛上「國語家庭」牌子。"},
+  {e:"⛩️",n:"神社",p:3,w:"日本人在臺灣各地興建神社，祭拜日本的神。"},
+  {e:"👘",n:"和服",p:3,w:"和服是日本的傳統服裝，日治時期傳入臺灣。"},
+  {e:"🥖",n:"越南麵包",p:4,w:"近年新住民來臺，帶來越南麵包等東南亞美食。"},
+  {e:"🥟",n:"港式飲茶",p:4,w:"港式飲茶來自香港，豐富了臺灣的飲食文化。"},
+  {e:"📕",n:"國語課本",p:4,w:"1945 年後政府推行國語（華語）教育。"},
+  {e:"🍔",n:"西式早餐",p:4,w:"漢堡、三明治等西式早餐店，在戰後越來越普遍。"},
+  {e:"🍜",n:"牛肉麵",p:4,w:"1949 年前後來臺的人帶來家鄉味，發展出臺灣牛肉麵。"},
+  {e:"🏙️",n:"臺北 101",p:4,w:"臺北 101 在 2004 年完工，是臺灣的地標建築。"},
+  {e:"💦",n:"潑水節",p:4,w:"潑水節是東南亞新住民的節慶，現在臺灣也有人一起慶祝。"},
+];
+const LIVES = 3;
+const TEAM = {A:"紅隊", B:"藍隊"};
+const KEYS = {A:["1","2","3","4","5"], B:["6","7","8","9","0"]};
+let deck=[], idx=0, st, wrongs=[], locked=true;
+let secs=10, remain=0, timer=null, total=30;
+try{ total = Number(localStorage.getItem("periodTotal"))||30 }catch(e){}
+try{ secs = Number(localStorage.getItem("periodSecs"))||10 }catch(e){}
+const $=id=>document.getElementById(id), stage=$("stage");
+
+["A","B"].forEach(t=>{
+  PERIODS.forEach((p,i)=>{
+    const b=document.createElement("button");
+    b.type="button"; b.id=`${t}${i}`; b.className=`pbtn c${i}`;
+    b.innerHTML=`<span class="pn">${p.name}</span><span class="yr">${p.yr}</span>`;
+    b.addEventListener("click",()=>answer(t,i));
+    $(`b${t}`).appendChild(b);
+  });
+});
+
+function buildDeck(n){
+  // 先把全部物件各出一次，不足題數再隨機補；避免同一物件連續出現
+  const d=[];
+  while(d.length<n){
+    const round=shuffle([...ITEMS]);
+    if(d.length && round[0]===d[d.length-1]) round.push(round.shift());
+    d.push(...round);
+  }
+  return d.slice(0,n);
+}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function renderStats(){
+  ["A","B"].forEach(t=>{
+    $(`s${t}`).textContent=st[t].score;
+  });
+}
+function resetBtns(dis){["A","B"].forEach(t=>PERIODS.forEach((_,i)=>{const b=$(`${t}${i}`);b.className=`pbtn c${i}`;b.disabled=dis}))}
+
+function showStart(){
+  st={A:{score:0,lives:LIVES},B:{score:0,lives:LIVES}}; renderStats();
+  locked=true; resetBtns(true);
+  stage.innerHTML=`<div class="screen">
+    <h2>這個東西，是哪個時期出現的？</h2>
+    <p>紅隊、藍隊各站螢幕一邊，看到物件就搶按自己這邊的時期。<br>
+    先按的人作答：答對得 1 分，答錯扣 1 分。<br>
+    每題有時間限制，時間到沒人作答就公布答案、兩隊都不得分。<br>
+    ${ITEMS.length} 個物件每個至少考一次，題數超過的部分隨機重複；題目考完才結束，分數高的隊伍獲勝。</p>
+    <div class="secs" role="group" aria-label="題數"><span>題數：</span>${[24,30,36].map(n=>`<button type="button" class="sec cnt" id="cnt${n}" data-n="${n}" aria-pressed="${n===total}">${n} 題</button>`).join("")}</div>
+    <div class="secs" role="group" aria-label="每題秒數"><span>每題：</span>${[5,10,15,20].map(s=>`<button type="button" class="sec" id="sec${s}" data-s="${s}" aria-pressed="${s===secs}">${s} 秒</button>`).join("")}</div>
+    <button class="btn" id="startBtn" type="button">開始搶答</button>
+    <span class="hint">鍵盤也能玩：紅隊 1～5、藍隊 6～0，Enter 下一題</span>
+  </div>`;
+  stage.querySelectorAll(".sec[data-s]").forEach(b=>b.addEventListener("click",()=>{
+    secs=Number(b.dataset.s); try{localStorage.setItem("periodSecs",String(secs))}catch(e){}
+    stage.querySelectorAll(".sec[data-s]").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));
+  }));
+  stage.querySelectorAll(".sec[data-n]").forEach(b=>b.addEventListener("click",()=>{
+    total=Number(b.dataset.n); try{localStorage.setItem("periodTotal",String(total))}catch(e){}
+    stage.querySelectorAll(".sec[data-n]").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));
+  }));
+  $("startBtn").addEventListener("click",start); $("startBtn").focus();
+}
+function tick(){
+  const low = remain<=3;
+  const n=$("tnum"), bar=$("tbar");
+  if(n){n.textContent=remain; n.classList.toggle("low",low)}
+  if(bar){bar.classList.toggle("low",low); bar.firstChild.style.width=(remain/secs*100)+"%"}
+}
+function stopTimer(){ if(timer){clearInterval(timer); timer=null} }
+function start(){
+  deck=buildDeck(total); idx=0; wrongs=[];
+  st={A:{score:0,lives:LIVES},B:{score:0,lives:LIVES}}; renderStats(); showQ();
+}
+function showQ(){
+  if(idx>=deck.length) return end();
+  const it=deck[idx]; locked=false; resetBtns(false);
+  stage.innerHTML=`<div class="card pop">
+    <span class="qno">第 ${idx+1} 題 ／ 共 ${deck.length} 題</span>
+    <div class="emoji" aria-hidden="true">${it.e}</div>
+    <div class="name">${it.n}</div>
+    <div class="prompt">這是哪個時期出現的？</div>
+  </div>
+  <div class="timer" id="tnum"></div>
+  <div class="tbar" id="tbar"><i></i></div>`;
+  stopTimer(); remain=secs; tick();
+  timer=setInterval(()=>{ remain--; tick(); if(remain<=0) reveal(null,null); },1000);
+}
+function answer(t,i){ reveal(t,i) }
+function reveal(t,i){
+  if(locked) return; locked=true; stopTimer();
+  const it=deck[idx], ok=t!==null && i===it.p;
+  ["A","B"].forEach(tt=>PERIODS.forEach((_,k)=>{
+    const b=$(`${tt}${k}`); b.disabled=true;
+    if(t===null){ b.classList.add(k===it.p?"right":"dim"); return }
+    if(tt!==t){b.classList.add("dim");return}
+    if(k===it.p) b.classList.add("right"); else if(k===i) b.classList.add("wrong"); else b.classList.add("dim");
+  }));
+  if(t===null) wrongs.push(it);
+  else if(ok) st[t].score++; else {st[t].score=Math.max(0,st[t].score-1); wrongs.push(it)}
+  renderStats();
+  const over = idx===deck.length-1;
+  const fb=document.createElement("div"); fb.className="feedback";
+  fb.innerHTML=(t===null ? `<div class="verdict bad">時間到！</div>`
+    : `<div class="who ${t==='A'?'fA':'fB'}">${TEAM[t]}搶答</div>
+    <div class="verdict ${ok?'ok':'bad'}">${ok?'答對了！':'答錯了'}</div>`) + `
+    <div class="fb-item">${it.e} ${it.n} ➜ <span class="fb-ans c${it.p}">${PERIODS[it.p].name}</span></div>
+    <div class="fb-why">${it.w}</div>
+    <button class="btn" id="nextBtn" type="button">${over?'看結果':'下一題'}</button>`;
+  stage.appendChild(fb);
+  $("nextBtn").addEventListener("click",()=>{ if(over) end(); else {idx++; showQ()} });
+  $("nextBtn").focus();
+}
+function end(){
+  locked=true; resetBtns(true);
+  const a=st.A.score, b=st.B.score;
+  const title = a>b ? "紅隊獲勝！" : b>a ? "藍隊獲勝！" : "平手！";
+  const uniq=[...new Set(wrongs)];
+  const review = uniq.length ? `<p>一起複習答錯的物件：</p><div class="review">${
+    uniq.map(w=>`<span class="chip c${w.p}">${w.e} ${w.n}｜${PERIODS[w.p].name}</span>`).join("")}</div>` : "";
+  stage.innerHTML=`<div class="screen pop">
+    <h2>${title}</h2>
+    <div class="final"><div class="fA"><b>${a}</b>紅隊</div><div class="fB"><b>${b}</b>藍隊</div></div>
+    ${review}
+    <div class="row"><button class="btn" id="againBtn" type="button">再玩一次</button>
+    <button class="btn ghost" id="homeBtn" type="button">回首頁</button></div>
+  </div>`;
+  $("againBtn").addEventListener("click",start); $("homeBtn").addEventListener("click",showStart);
+  $("againBtn").focus();
+}
+document.addEventListener("keydown",e=>{
+  if(locked) return;
+  ["A","B"].forEach(t=>{const i=KEYS[t].indexOf(e.key); if(i>=0) answer(t,i)});
+});
+showStart();
+</script>
+
+</body>
+</html>
