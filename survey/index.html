@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>開場小調查｜11/4 互動教材研習</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{
+  --navy:#12263A; --navy2:#1B3550; --cream:#F6F2EA; --paper:#FFFDF8;
+  --teal:#1F7A8C; --sky:#8FD3E0; --orange:#E07A3F; --orange-d:#C4612A; --peach:#FDF0E7;
+  --ink:#12263A; --muted:#5A6B78; --line:#E4DCCD;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Noto Sans TC',system-ui,sans-serif;background:var(--cream);color:var(--ink);-webkit-tap-highlight-color:transparent}
+button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
+.hidden{display:none!important}
+
+/* ===== 填答 ===== */
+.wrap{max-width:560px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;padding:20px 16px calc(20px + env(safe-area-inset-bottom))}
+.top{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.top .tag{font-size:14px;font-weight:700;color:var(--orange-d);letter-spacing:1px}
+.progress{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.progress i{display:block;height:100%;width:0;background:var(--teal);border-radius:99px;transition:width .3s}
+.count{font-size:14px;color:var(--muted);min-width:42px;text-align:right}
+
+.intro{flex:1;display:flex;flex-direction:column;justify-content:center;gap:20px;padding:24px 0}
+.intro h1{font-size:32px;line-height:1.3}
+.intro p{font-size:18px;line-height:1.7;color:var(--muted)}
+.intro .meta{display:flex;gap:8px;flex-wrap:wrap}
+.intro .meta span{background:var(--paper);border:1px solid var(--line);border-radius:99px;padding:6px 14px;font-size:15px}
+
+.card{flex:1;display:flex;flex-direction:column;gap:14px;animation:in .25s ease}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.qno{font-size:15px;font-weight:700;color:var(--teal)}
+.qtitle{font-size:26px;font-weight:700;line-height:1.35}
+.qhint{font-size:15px;color:var(--muted);margin-top:-6px}
+.opts{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+.opt{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:var(--paper);border:2px solid var(--line);border-radius:16px;padding:16px 18px;min-height:64px;font-size:19px;transition:border-color .15s,background .15s,transform .1s}
+.opt:active{transform:scale(.99)}
+.opt .ic{font-size:26px;line-height:1}
+.opt .tx{flex:1;display:flex;flex-direction:column;gap:2px}
+.opt .tx small{font-size:14px;color:var(--muted)}
+.opt .ck{width:26px;height:26px;border-radius:50%;border:2px solid var(--line);flex:none;display:grid;place-items:center;font-size:15px;color:#fff}
+.opt.multi .ck{border-radius:7px}
+.opt.on{border-color:var(--teal);background:#E8F4F6}
+.opt.on .ck{background:var(--teal);border-color:var(--teal)}
+.opt.on .ck::after{content:"✓"}
+
+.nav{display:flex;gap:10px;margin-top:auto;padding-top:20px}
+.btn{flex:1;min-height:56px;border-radius:14px;font-size:18px;font-weight:700}
+.btn.pri{background:var(--orange-d);color:#fff}
+.btn.pri:disabled{background:#D9CFC0;color:#fff;cursor:not-allowed}
+.btn.sec{flex:0 0 96px;background:transparent;border:2px solid var(--line);color:var(--muted)}
+
+/* ===== 結果 ===== */
+.done-head{background:var(--navy);color:var(--cream);border-radius:20px;padding:22px 20px;display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.done-head h2{font-size:24px}
+.done-head p{font-size:16px;color:#C9DCE2}
+.tips{display:flex;flex-direction:column;gap:8px;margin-bottom:18px}
+.tip{background:var(--peach);border-left:6px solid var(--orange);border-radius:12px;padding:12px 14px;font-size:16px;line-height:1.6}
+.tip.ok{background:#E8F4F6;border-left-color:var(--teal)}
+.res-title{display:flex;justify-content:space-between;align-items:baseline;margin:6px 2px 10px}
+.res-title b{font-size:20px}
+.res-title span{font-size:14px;color:var(--muted)}
+.chart{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px}
+.chart h3{font-size:17px;margin-bottom:10px}
+.bar{display:grid;grid-template-columns:minmax(84px,34%) 1fr 64px;align-items:center;gap:10px;margin:7px 0;font-size:15px}
+.bar .lb{line-height:1.3}
+.bar .tr{height:22px;background:#EFE9DE;border-radius:6px;overflow:hidden}
+.bar .tr i{display:block;height:100%;background:var(--sky);border-radius:6px;transition:width .6s ease}
+.bar.me .tr i{background:var(--orange)}
+.bar.me .lb{font-weight:700}
+.bar .pc{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
+.legend{font-size:13px;color:var(--muted);margin:-4px 2px 12px}
+.legend i{display:inline-block;width:12px;height:12px;background:var(--orange);border-radius:3px;vertical-align:-1px;margin-right:4px}
+.foot{font-size:13px;color:var(--muted);text-align:center;margin-top:10px;line-height:1.6}
+.err{background:#FDE8E4;border-left:6px solid #C0392B;border-radius:12px;padding:12px 14px;font-size:16px;margin-top:12px}
+.demo-badge{position:fixed;top:10px;right:10px;background:var(--orange-d);color:#fff;font-size:12px;font-weight:700;padding:4px 10px;border-radius:99px;z-index:10}
+
+/* ===== 投影模式 ===== */
+body.screen{background:var(--navy);color:var(--cream);overflow:hidden}
+.scr{height:100vh;display:grid;grid-template-rows:auto auto 1fr auto;gap:1.2vh;padding:2vh 2.6vw}
+.scr-head{display:flex;align-items:center;gap:2vw}
+.scr-head .ttl{flex:1}
+.scr-head .ttl small{display:block;font-size:1.6vw;color:#F0A97A;font-weight:700;letter-spacing:2px}
+.scr-head .ttl h1{font-size:2.8vw;line-height:1.2}
+.scr-total{text-align:right}
+.scr-total b{font-size:5vw;line-height:1;color:#F0A97A;font-variant-numeric:tabular-nums}
+.scr-total span{display:block;font-size:1.4vw;color:#C9DCE2}
+.scr-qr{background:var(--cream);border-radius:1vw;padding:.8vw;display:flex;flex-direction:column;align-items:center;gap:.4vw}
+.scr-qr #qr img,.scr-qr #qr canvas{width:7.5vw!important;height:7.5vw!important}
+.scr-qr span{font-size:.9vw;color:var(--navy);font-weight:700;max-width:10vw;text-align:center;word-break:break-all}
+.hl{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2vw}
+.hl div{background:var(--navy2);border-radius:1vw;padding:.9vh 1.4vw;display:flex;align-items:center;gap:1.2vw}
+.hl b{font-size:2.8vw;color:#F0A97A;font-variant-numeric:tabular-nums;line-height:1}
+.hl span{font-size:1.1vw;line-height:1.4;color:#D7E6EA}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:1fr;gap:1.2vw;min-height:0}
+.sc{background:var(--navy2);border-radius:1vw;padding:1vh 1.2vw;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.sc h3{font-size:1.2vw;color:var(--sky);margin-bottom:.3vh}
+.sc .bar{grid-template-columns:34% 1fr 4.6vw;font-size:1vw;margin:.1vh 0;gap:.6vw;line-height:1.25}
+.sc .bar .tr{height:1.4vh;background:#0E1E2E}
+.sc .bar .pc{color:#C9DCE2}
+.scr-foot{display:flex;justify-content:space-between;font-size:1vw;color:#8FA9B5}
+</style>
+</head>
+<body>
+
+<!-- ============ 填答 ============ -->
+<div id="survey" class="wrap">
+  <div class="top">
+    <span class="tag">開場小調查</span>
+    <div class="progress"><i id="bar"></i></div>
+    <span class="count" id="cnt"></span>
+  </div>
+
+  <div id="intro" class="intro">
+    <h1>不會寫程式，也能做出<br>自己的互動教材</h1>
+    <p>開始前先認識一下彼此：9 題點選題，大約 1 分鐘。<br>完全匿名，送出後馬上看到全場結果。</p>
+    <div class="meta"><span>⏱ 約 1 分鐘</span><span>🙈 匿名</span><span>📊 即時統計</span></div>
+    <div class="nav"><button class="btn pri" id="start">開始填寫</button></div>
+  </div>
+
+  <div id="qbox" class="card hidden"></div>
+
+  <div id="result" class="hidden">
+    <div class="done-head">
+      <h2>謝謝你！</h2>
+      <p>這個調查網頁，也是用今天要教的方法做出來的。</p>
+    </div>
+    <div class="tips" id="tips"></div>
+    <div class="res-title"><b>全場統計</b><span id="resTotal"></span></div>
+    <p class="legend"><i></i>橘色是你的選擇</p>
+    <div id="charts"></div>
+    <p class="foot">每 10 秒自動更新｜11/4 新北市智慧學習增能研習｜Zeiyen 老師</p>
+  </div>
+</div>
+
+<!-- ============ 投影模式 ============ -->
+<div id="screen" class="scr hidden">
+  <div class="scr-head">
+    <div class="ttl"><small>開場小調查｜即時統計</small><h1>今天在場的老師們</h1></div>
+    <div class="scr-total"><b id="sTotal">0</b><span>位老師已填答</span></div>
+    <div class="scr-qr"><div id="qr"></div><span id="qrUrl"></span></div>
+  </div>
+  <div class="hl" id="hl"></div>
+  <div class="grid" id="sgrid"></div>
+  <div class="scr-foot"><span>規格：裝置（手機／電腦都能填）・身分（完全匿名）・統計（即時更新）・驗收（1 分鐘填完）</span><span id="sTime"></span></div>
+</div>
+
+<script>
+/* ===================== 設定 ===================== */
+// 部署 Apps Script 後，把網址貼在這裡（以 https://script.google.com/macros/s/ 開頭、/exec 結尾）
+const GAS_URL = '';
+
+/* ===================== 題目 ===================== */
+const Q = [
+  {id:'role',  t:'你的身份是？', type:'single', opts:['導師','科任','行政','其他']},
+  {id:'stage', t:'你任教的階段？', hint:'可複選', type:'multi', opts:['國小低年級','國小中年級','國小高年級','國中','其他']},
+  {id:'tools', t:'目前較常使用的 AI 工具？', hint:'可複選', type:'multi', opts:['Gemini','ChatGPT','Claude','其他','都沒在用'], exclusive:'都沒在用'},
+  {id:'paid',  t:'有付費訂閱 AI 工具嗎？', type:'single', opts:['有，自己付費','學校有提供','沒有']},
+  {id:'wave',  t:'面對 AI 浪潮，你現在在哪裡？', type:'single', opts:[
+      {v:'衝浪板上', i:'🏄', d:'已經常用 AI 備課、做教材'},
+      {v:'載浮載沉', i:'🌊', d:'試過幾次，有時好用有時翻船'},
+      {v:'岸邊觀浪', i:'🏖️', d:'還在觀望，想知道值不值得下水'}]},
+  {id:'made',  t:'做過互動網頁或小遊戲嗎？', type:'single', opts:['沒有','試過但沒成功','做過']},
+  {id:'device',t:'今天實作會用什麼裝置？', type:'single', opts:['電腦','平板','手機']},
+  {id:'gemini',t:'能用學校帳號登入 Gemini 嗎？', hint:'不確定的話，可以先開新分頁到 gemini.google.com 試試', type:'single', opts:['可以','不確定','不行']},
+  {id:'want',  t:'今天最想帶走什麼？', type:'single', opts:['做出一份自己的教材','看別人怎麼用','知道怎麼看見學習','了解 AI 怎麼用才對']}
+];
+const SHORT = {role:'身份',stage:'任教階段',tools:'常用 AI 工具（複選）',paid:'付費訂閱',wave:'AI 浪潮中的位置',made:'做過互動網頁',device:'今天的裝置',gemini:'學校帳號登入 Gemini',want:'最想帶走'};
+const val = o => typeof o === 'string' ? o : o.v;
+
+/* ===================== 工具 ===================== */
+const $ = s => document.querySelector(s);
+const params = new URLSearchParams(location.search);
+const DEMO = !GAS_URL || params.has('demo');
+const STORE = 'ws1104_survey_answers';
+const store = {
+  get(){ try{ return JSON.parse(localStorage.getItem(STORE)); }catch(e){ return null; } },
+  set(v){ try{ localStorage.setItem(STORE, JSON.stringify(v)); }catch(e){} }
+};
+if (DEMO) { const b=document.createElement('div'); b.className='demo-badge'; b.textContent='示範資料'; document.body.appendChild(b); }
+
+/* ===================== 資料 ===================== */
+let demoStats = null;
+function makeDemo(extra){
+  if (!demoStats){
+    const w = {role:[48,22,18,12],stage:[20,35,55,18,6],tools:[70,45,12,8,15],paid:[14,10,76],wave:[22,48,30],made:[62,23,15],device:[78,16,6],gemini:[66,24,10],want:[46,20,16,18]};
+    const total = 87; demoStats = {total, counts:{}};
+    Q.forEach(q => { demoStats.counts[q.id] = {}; q.opts.forEach((o,i) => demoStats.counts[q.id][val(o)] = Math.round(total*w[q.id][i]/100)); });
+  }
+  if (extra){ demoStats.total++; Q.forEach(q => [].concat(extra[q.id]||[]).forEach(v => demoStats.counts[q.id][v] = (demoStats.counts[q.id][v]||0)+1)); }
+  return JSON.parse(JSON.stringify(demoStats));
+}
+async function getStats(){
+  if (DEMO) return makeDemo();
+  const r = await fetch(GAS_URL + '?action=stats&t=' + Date.now());
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r.json();
+}
+async function send(ans){
+  if (DEMO){ makeDemo(ans); return {ok:true}; }
+  for (let i=0;i<2;i++){
+    try{
+      const r = await fetch(GAS_URL, {method:'POST', body:JSON.stringify(ans)});
+      const j = await r.json();
+      if (j.ok) return j;
+    }catch(e){ if (i===1) throw e; }
+  }
+  throw new Error('送出失敗');
+}
+
+/* ===================== 填答流程 ===================== */
+let idx = 0; const ans = {};
+function setProgress(){
+  $('#bar').style.width = (idx/Q.length*100) + '%';
+  $('#cnt').textContent = idx < Q.length ? (idx+1) + ' / ' + Q.length : '';
+}
+function render(){
+  setProgress();
+  const q = Q[idx], box = $('#qbox');
+  const cur = ans[q.id] || (q.type==='multi' ? [] : null);
+  box.innerHTML = `
+    <div class="qno">第 ${idx+1} 題</div>
+    <div class="qtitle">${q.t}</div>
+    ${q.hint ? `<div class="qhint">${q.hint}</div>` : ''}
+    <div class="opts">${q.opts.map(o => {
+      const v = val(o), on = q.type==='multi' ? cur.includes(v) : cur===v;
+      return `<button class="opt ${q.type==='multi'?'multi':''} ${on?'on':''}" data-v="${v}">
+        ${o.i ? `<span class="ic">${o.i}</span>` : ''}
+        <span class="tx">${v}${o.d ? `<small>${o.d}</small>` : ''}</span>
+        <span class="ck"></span></button>`;
+    }).join('')}</div>
+    <div class="nav">
+      <button class="btn sec" id="prev">上一題</button>
+      <button class="btn pri" id="next">${idx===Q.length-1 ? '送出' : '下一題'}</button>
+    </div>
+    <div id="msg"></div>`;
+  box.classList.remove('card'); void box.offsetWidth; box.classList.add('card');
+  $('#prev').style.visibility = idx===0 ? 'hidden' : 'visible';
+  const nextBtn = $('#next');
+  const ready = () => q.type==='multi' ? (ans[q.id]||[]).length>0 : !!ans[q.id];
+  nextBtn.disabled = !ready();
+
+  box.querySelectorAll('.opt').forEach(b => b.onclick = () => {
+    const v = b.dataset.v;
+    if (q.type==='single'){
+      ans[q.id] = v;
+      box.querySelectorAll('.opt').forEach(x => x.classList.toggle('on', x===b));
+      nextBtn.disabled = false;
+      if (idx < Q.length-1) setTimeout(() => { if (ans[q.id]===v && Q[idx]===q){ idx++; render(); } }, 260);
+    } else {
+      let arr = ans[q.id] || [];
+      if (arr.includes(v)) arr = arr.filter(x => x!==v);
+      else if (q.exclusive && v===q.exclusive) arr = [v];
+      else arr = arr.filter(x => x!==q.exclusive).concat(v);
+      ans[q.id] = arr;
+      box.querySelectorAll('.opt').forEach(x => x.classList.toggle('on', arr.includes(x.dataset.v)));
+      nextBtn.disabled = !ready();
+    }
+  });
+  $('#prev').onclick = () => { if (idx>0){ idx--; render(); } };
+  nextBtn.onclick = async () => {
+    if (!ready()) return;
+    if (idx < Q.length-1){ idx++; render(); return; }
+    nextBtn.disabled = true; nextBtn.textContent = '送出中…';
+    try{
+      await send(ans);
+      store.set(ans);
+      showResult(ans);
+    }catch(e){
+      $('#msg').innerHTML = '<div class="err">網路好像不穩，沒有送出成功。請再按一次「送出」。</div>';
+      nextBtn.disabled = false; nextBtn.textContent = '送出';
+    }
+  };
+}
+
+/* ===================== 結果 ===================== */
+function barsHTML(q, counts, total, mine){
+  const mineArr = [].concat(mine||[]);
+  return q.opts.map(o => {
+    const v = val(o), n = (counts && counts[v]) || 0, p = total ? Math.round(n/total*100) : 0;
+    return `<div class="bar ${mineArr.includes(v)?'me':''}"><span class="lb">${o.i?o.i+' ':''}${v}</span><span class="tr"><i style="width:${p}%"></i></span><span class="pc">${p}%（${n}）</span></div>`;
+  }).join('');
+}
+function tipsHTML(a){
+  const t = [];
+  if (a.device==='手機') t.push('今天有 25 分鐘實作，手機螢幕會比較辛苦，建議改用<b>電腦或平板</b>。');
+  if (a.gemini==='不確定' || a.gemini==='不行') t.push('請在開場前到 <b>gemini.google.com</b> 用學校帳號登入看看；登不進去就改用<b>個人 Google 帳號</b>。');
+  if (!t.length) t.push('裝置和帳號都準備好了，等一下實作可以直接開始！');
+  return t.map((x,i) => `<div class="tip ${t.length===1 && x.startsWith('裝置')?'ok':''}">${x}</div>`).join('');
+}
+let mineAns = null, timer = null;
+async function refreshResult(){
+  try{
+    const s = await getStats();
+    $('#resTotal').textContent = '已有 ' + s.total + ' 位老師填答';
+    $('#charts').innerHTML = Q.map(q => `<div class="chart"><h3>${q.t}</h3>${barsHTML(q, s.counts[q.id], s.total, mineAns && mineAns[q.id])}</div>`).join('');
+  }catch(e){
+    $('#resTotal').textContent = '統計暫時讀不到，稍後自動重試';
+  }
+}
+function showResult(a){
+  mineAns = a;
+  $('#intro').classList.add('hidden'); $('#qbox').classList.add('hidden');
+  $('.top').classList.add('hidden'); $('#result').classList.remove('hidden');
+  $('#tips').innerHTML = tipsHTML(a);
+  refreshResult();
+  clearInterval(timer); timer = setInterval(refreshResult, 10000);
+  window.scrollTo(0,0);
+}
+
+/* ===================== 投影模式 ===================== */
+function pct(n,t){ return t ? Math.round(n/t*100) : 0; }
+async function refreshScreen(){
+  try{
+    const s = await getStats(), c = s.counts, T = s.total;
+    $('#sTotal').textContent = T;
+    const useAI = T - ((c.tools && c.tools['都沒在用']) || 0);
+    $('#hl').innerHTML = `
+      <div><b>${pct(useAI,T)}%</b><span>在場老師有在用 AI 工具<br>（OECD 教師調查：41% 在教學中用過 AI）</span></div>
+      <div><b>${pct((c.wave||{})['岸邊觀浪']||0,T)}%</b><span>還在岸邊觀浪<br>今天的目標：每個人都敢下水</span></div>
+      <div><b>${pct((c.made||{})['沒有']||0,T)}%</b><span>還沒做過互動網頁<br>兩小時後，這個數字會變</span></div>`;
+    $('#sgrid').innerHTML = Q.map(q => `<div class="sc"><h3>${SHORT[q.id]}</h3>${barsHTML(q, c[q.id], T)}</div>`).join('');
+    $('#sTime').textContent = '更新時間 ' + new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  }catch(e){
+    $('#sTime').textContent = '暫時讀不到資料，5 秒後重試';
+  }
+}
+function startScreen(){
+  document.body.classList.add('screen');
+  $('#survey').classList.add('hidden'); $('#screen').classList.remove('hidden');
+  const url = location.origin + location.pathname;
+  $('#qrUrl').textContent = url.replace(/^https?:\/\//,'');
+  try{ new QRCode($('#qr'), {text:url, width:256, height:256, colorDark:'#12263A', colorLight:'#F6F2EA'}); }catch(e){}
+  refreshScreen(); setInterval(refreshScreen, 5000);
+}
+
+/* ===================== 啟動 ===================== */
+if (params.get('mode')==='screen') startScreen();
+else {
+  const prev = store.get();
+  if (prev && !params.has('again')) showResult(prev);
+  else {
+    setProgress(); $('#cnt').textContent = '';
+    $('#start').onclick = () => { $('#intro').classList.add('hidden'); $('#qbox').classList.remove('hidden'); render(); };
+  }
+}
+</script>
+</body>
+</html>
