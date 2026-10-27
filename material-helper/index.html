@@ -117,6 +117,21 @@ ul.warns li{color:var(--warn)}
 .rhead{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--card);border-radius:16px 16px 0 0}
 .rbody{padding:4px 18px 18px}
 .rbody textarea{margin-top:8px;min-height:110px;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace}
+.hoin{flex:1;min-width:200px;min-height:44px;padding:8px 10px;border:2px solid var(--line);border-radius:10px;font:15px/1.4 inherit;font-family:inherit;color:var(--ink)}
+.hrow.bad .hoin{border-color:#f0b4a8;background:#fff5f3}
+#hoPanel .rhead{z-index:3;top:-24px}
+.hostart{display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:space-between;border:2px dashed var(--accent);background:#fbfdfc;border-radius:14px;padding:14px 16px;margin:4px 0 18px}
+.hostart p{margin:4px 0 0;font-size:14px;color:var(--muted,#5b6670);line-height:1.6}
+.hostart.done{border-style:solid;background:var(--accent-soft)}
+.hogrid{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.hogrid select{min-height:44px;font-size:16px;border-radius:10px;border:1px solid var(--line);padding:0 10px;background:#fff}
+.hofile{display:block;margin-top:8px;font-size:15px}
+.hostat{margin-top:8px;padding:10px 12px;border-radius:10px;font-size:14px;line-height:1.6;background:#f3f5f4}
+.hostat.ok{background:var(--accent-soft)}.hostat.warn{background:#fdf0e7}
+.hoform{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff;margin-top:10px}
+.hoalts{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.hokp{display:flex;gap:8px;align-items:flex-start;font-size:14px;line-height:1.5;padding:3px 0}
+.hokp input{margin-top:3px;width:18px;height:18px;flex:none}
 .refok{background:var(--accent-soft);border-radius:12px;padding:12px 16px;margin-top:10px}
 details.hand{border:2px dashed var(--accent);border-radius:14px;padding:12px 16px;background:#fbfdfc}
 details.hand>summary{font-weight:700;color:var(--accent);cursor:pointer;line-height:1.5}
@@ -210,7 +225,7 @@ pre{background:#f3f1ec;padding:12px;border-radius:10px;overflow:auto;font-size:1
 <body>
 <header class="top">
   <div class="brand"><span class="logo">🧩</span><div><h1>互動教材設計幫手</h1><p>點一點，釐清你想做的互動網頁</p><p class="maker">Zeiyen 老師 設計製作</p></div></div>
-  <div class="meta"><span id="timer" class="timer">⏱ 00:00</span><button id="refBtn" class="ghost" title="參考別人做的互動網頁，讓 AI 分析後自動幫你點好選項">🔍 參考網站</button><button id="saveBtn" class="ghost" title="把目前的規格存成檔案，下次或在別台電腦繼續">💾 存檔</button><button id="loadBtn" class="ghost" title="讀取之前存的規格檔，或同事分享的檔案">📂 讀檔</button><button id="resetBtn" class="ghost">重新開始</button>
+  <div class="meta"><span id="timer" class="timer">⏱ 00:00</span><button id="hoBtn" class="ghost" title="上傳講義，讓 AI 讀完後建議互動形式、出好題目">📄 從講義開始</button><button id="refBtn" class="ghost" title="參考別人做的互動網頁，讓 AI 分析後自動幫你點好選項">🔍 參考網站</button><button id="saveBtn" class="ghost" title="把目前的規格存成檔案，下次或在別台電腦繼續">💾 存檔</button><button id="loadBtn" class="ghost" title="讀取之前存的規格檔，或同事分享的檔案">📂 讀檔</button><button id="resetBtn" class="ghost">重新開始</button>
     <input type="file" id="loadFile" accept=".json,application/json" hidden></div>
   <div class="progress"><div id="bar"></div></div>
 </header>
@@ -231,6 +246,12 @@ pre{background:#f3f1ec;padding:12px;border-radius:10px;overflow:auto;font-size:1
   <div class="rbox">
     <div class="rhead"><b id="refTitle">🔍 參考網站：讓 AI 分析，自動幫你點好選項</b><button class="ghost" id="refClose">關閉</button></div>
     <div class="rbody" id="refBody"></div>
+  </div>
+</div>
+<div id="hoPanel" class="rpanel" hidden role="dialog" aria-modal="true" aria-labelledby="hoTitle">
+  <div class="rbox">
+    <div class="rhead"><b id="hoTitle">📄 從講義開始：AI 讀講義、建議玩法、出好題目</b><button class="ghost" id="hoClose">關閉</button></div>
+    <div class="rbody" id="hoBody"></div>
   </div>
 </div>
 <div id="modal" class="modal" hidden>
@@ -1337,6 +1358,8 @@ function renderStage(){
   $('#stage').innerHTML=`
     <div class="stephead"><span class="stepicon">${s.icon}</span><div>
       <div class="stepno">第 ${i+1} 步，共 ${STEPS.length} 步</div><h2>${s.title}</h2><p class="hint">${s.hint}</p></div></div>
+    ${i===0?(state.answers._hoName?`<div class="hostart done"><div><b>✅ 已從講義帶入</b><p>「${esc(state.answers._hoName)}」→ ${esc(state.answers.topic||'')}</p></div><button class="ghost" id="hoStart">重新分析講義</button></div>`
+      :`<div class="hostart"><div><b>📄 手上有講義？</b><p>放入講義，AI 會先讀懂內容、建議適合的玩法並出好題目；你勾選確認後，就幫你填好大部分設定。</p></div><button class="primary" id="hoStart">從講義開始</button></div>`):''}
     ${visibleQs(s).map(renderQ).join('')}
     <div class="nav" id="nav">${navHTML(i)}</div>`;
 }
@@ -1418,7 +1441,7 @@ function specBody(a){
     data=(a.scene&&a.scene.trim()?`事件情境（請直接使用）：${a.scene.trim()}`:'事件情境請依單元主題撰寫，約 80～120 字，適合國小程度。')+'\n'+data;
   return `## 一、教學情境
 - 科目／年級：${a.subject}・國小 ${a.grade} 年級
-- 單元主題：${a.topic}${a.goal&&a.goal.trim()?`\n- 學習目標：${a.goal.trim()}`:''}
+- 單元主題：${a.topic}${a.goal&&a.goal.trim()?`\n- 學習目標：${a.goal.trim()}`:''}${a._hoKP?`\n- 講義重點：${a._hoKP}\n- 內容來源：老師的講義。題目、回饋與說明都要以上面的講義重點為準，不要加入講義沒有提到的知識。`:''}
 - 使用時機：${optOf('timing',a.timing).label}
 - 使用方式：${optOf('mode',a.mode).label}（${optOf('mode',a.mode).desc}）
 
@@ -1823,7 +1846,7 @@ function fitModal(){
 }
 function closeModal(){ $('#modal').hidden=true; $('#mf').srcdoc=''; document.body.style.overflow=''; }
 window.addEventListener('resize',()=>{ fitThumb(); fitModal(); });
-document.addEventListener('keydown',e=>{ if(e.key!=='Escape') return; if(!$('#ask').hidden){ askDone(false); return; } if(!$('#modal').hidden) closeModal(); else if(!$('#refPanel').hidden) closeRef(); });
+document.addEventListener('keydown',e=>{ if(e.key!=='Escape') return; if(!$('#ask').hidden){ askDone(false); return; } if(!$('#modal').hidden) closeModal(); else if(!$('#hoPanel').hidden) closeHo(); else if(!$('#refPanel').hidden) closeRef(); });
 
 /* ========== 9. 存檔／讀檔（規格檔，可跨電腦、可分享） ========== */
 const FILE_APP='tig-wizard';
@@ -2055,6 +2078,182 @@ function applyRef(){
   $('#refResult').innerHTML=refState.result;
 }
 
+/* ========== 11b. 從講義開始：讀講義 → 分析指令 → 貼回 → 勾選 → 帶入十步 ========== */
+const HO_FORMS={
+  quiz:'講義有許多可以出題的事實、名詞或數字',
+  match:'講義有一組一組對應的內容（人物↔事蹟、名詞↔解釋、地點↔物產）',
+  drag:'講義的內容可以清楚分成 2～4 類',
+  flip:'講義有很多成對的名詞與解釋，適合記憶',
+  sort:'講義有清楚的時間先後、步驟或流程',
+  scenario:'講義談到生活中的判斷或做法（安全、公民、環境）',
+  role:'講義裡有立場不同的人物或群體（開放題，沒有標準答案）',
+  multi:'講義對同一件事有不同的看法（開放題，沒有標準答案）'
+};
+const HO_MAXCHARS=15000;
+let ho={name:'',kind:'',text:'',pages:0,raw:'',res:null,items:[],kp:[],busy:false,msg:''};
+const hoOpenForm=f=>f==='role'||f==='multi';
+function hoLoadScript(src){
+  return new Promise((ok,bad)=>{ if(document.querySelector(`script[src="${src}"]`)) return ok();
+    const el=document.createElement('script'); el.src=src; el.onload=ok; el.onerror=()=>bad(new Error('load')); document.head.appendChild(el); });
+}
+async function hoReadPdf(file){
+  await hoLoadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
+  const lib=window.pdfjsLib; lib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  const doc=await lib.getDocument({data:await file.arrayBuffer()}).promise;
+  const n=Math.min(doc.numPages,20), out=[];
+  for(let i=1;i<=n;i++){ const pg=await doc.getPage(i); const tc=await pg.getTextContent();
+    let line='', lastY=null; const lines=[];
+    tc.items.forEach(it=>{ const y=Math.round(it.transform[5]); if(lastY!==null&&Math.abs(y-lastY)>4){ lines.push(line); line=''; } line+=it.str; lastY=y; });
+    lines.push(line); out.push(lines.map(l=>l.trim()).filter(Boolean).join('\n')); }
+  return {text:out.join('\n\n'), pages:doc.numPages};
+}
+async function hoReadDocx(file){
+  await hoLoadScript('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js');
+  const r=await window.mammoth.extractRawText({arrayBuffer:await file.arrayBuffer()});
+  return {text:r.value||'', pages:0};
+}
+async function hoReadFile(file){
+  ho={...ho,name:file.name,kind:'',text:'',pages:0,busy:true,msg:''}; hoRefresh();
+  const ext=(file.name.split('.').pop()||'').toLowerCase();
+  try{
+    if(/^image\//.test(file.type)||['jpg','jpeg','png','heic','webp'].includes(ext)){ ho.kind='image'; }
+    else if(ext==='pdf'||file.type==='application/pdf'){ const r=await hoReadPdf(file); ho.text=r.text; ho.pages=r.pages; ho.kind='pdf'; }
+    else if(ext==='docx'){ const r=await hoReadDocx(file); ho.text=r.text; ho.kind='docx'; }
+    else if(['txt','md'].includes(ext)||/^text\//.test(file.type)){ ho.text=await file.text(); ho.kind='txt'; }
+    else if(ext==='doc'||ext==='ppt'||ext==='pptx'){ ho.kind='other'; ho.msg='這個格式網頁讀不到文字，請另存成 PDF，或直接在 Gemini 附上檔案。'; }
+    else { ho.kind='other'; }
+  }catch(e){ ho.kind='fail'; ho.msg='讀檔失敗（可能是網路擋住了讀檔工具，或檔案有加密）。沒關係，直接在 Gemini 附上講義檔就可以。'; }
+  ho.text=(ho.text||'').replace(/[ \t]+\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim();
+  ho.busy=false; hoRefresh();
+}
+function hoEmbed(){
+  const t=ho.text||''; if(!t) return false;
+  if(ho.kind==='pdf'&&ho.pages&&t.replace(/\s/g,'').length/Math.min(ho.pages,20)<40) return false;
+  return t.replace(/\s/g,'').length>=150;
+}
+function hoStatusHTML(){
+  if(ho.busy) return '<div class="hostat">⏳ 正在讀取講義……</div>';
+  if(ho.msg) return `<div class="hostat warn">${esc(ho.msg)}</div>`;
+  const chars=(ho.text||'').replace(/\s/g,'').length;
+  if(hoEmbed()) return `<div class="hostat ok">✅ 讀到「${esc(ho.name||'貼上的文字')}」${ho.pages?ho.pages+' 頁、':''}${chars.toLocaleString()} 字。分析指令會<b>直接帶入講義文字</b>，貼到 Gemini 就能用，不用另外附檔。${chars>HO_MAXCHARS?`<br>⚠️ 講義很長，指令只帶入前 ${HO_MAXCHARS.toLocaleString()} 字；建議只放這次要教的那幾頁。`:''}</div>`;
+  if(ho.name) return `<div class="hostat warn">📷 「${esc(ho.name)}」${ho.kind==='image'?'是照片':'看起來是掃描檔或圖片'}，網頁讀不到文字。送出指令時，<b>請記得把這個檔案附在 Gemini 對話裡</b>（5 頁以內最穩）。</div>`;
+  return '<div class="hostat">還沒放講義也可以：直接複製下一步的指令，到 Gemini <b>附上講義檔或用平板拍照</b>再送出。</div>';
+}
+function hoPrompt(){
+  const a=state.answers, g=($('#hoGrade')||{}).value||a.grade||'', sub=($('#hoSubject')||{}).value||a.subject||'';
+  const emb=hoEmbed(); let txt=ho.text||''; const cut=txt.length>HO_MAXCHARS; if(cut) txt=txt.slice(0,HO_MAXCHARS);
+  const forms=Object.entries(HO_FORMS).map(([k,w])=>`- ${k}＝${optOf('form',k).label}：適合「${w}」。資料格式：${PASTE_FMT[k].fmt}。${HAND_RULE[k]||''}`).join('\n');
+  return `請閱讀這份國小講義，幫我規劃一個「互動教學網頁」。我教國小 ${g||'＿'} 年級${sub?'「'+sub+'」':''}。
+${emb?`講義內容如下（從檔案轉出的文字，排版可能有點亂）：\n"""\n${txt}${cut?'\n（後面省略）':''}\n"""`:'講義在我附上的檔案或照片裡。'}
+
+只根據講義裡的內容，不要加入講義沒有提到的知識；看不清楚的地方就跳過，不要猜。用字適合國小 ${g||''} 年級。
+
+請完成三件事：
+1. 找出單元名稱、一句學習目標（「能……」開頭），以及 5～8 個重點概念（每個 30 字以內）。
+2. 從下列互動形式中，挑 1 個最適合這份講義的（form），再挑 2 個備選（alternatives），各用一句話說明理由：
+${forms}
+3. 依你挑的 form 產生資料（items），每筆一個字串、欄位用全形「｜」分隔：有標準答案的形式產生 12～15 筆（排序產生 5～8 個項目）；role、multi 產生 3～4 個。
+
+請只輸出一個 JSON 程式碼區塊，不要其他說明，格式如下：
+{"app":"tig-handout","version":1,"topic":"單元名稱","goal":"能……","keypoints":["…","…"],"form":"quiz","why":"為什麼適合","alternatives":[{"form":"match","why":"…"},{"form":"sort","why":"…"}],"items":["…｜…","…｜…"]}`;
+}
+function hoParse(){
+  const d=refExtract(ho.raw);
+  if(!d||typeof d!=='object'){ toast('讀不到 AI 的回覆，請確認貼上的是 JSON（以 { 開頭、} 結尾）'); return; }
+  const form=HO_FORMS[d.form]?d.form:null;
+  if(!form){ toast('AI 沒有選出可用的互動形式，請它重新回覆一次'); return; }
+  const items=Array.isArray(d.items)?d.items.map(String):[];
+  const seen=new Set();
+  ho.res={topic:String(d.topic||'').slice(0,60),goal:String(d.goal||'').slice(0,200),form,why:String(d.why||'').slice(0,300),
+    alts:(Array.isArray(d.alternatives)?d.alternatives:[]).filter(x=>x&&HO_FORMS[x.form]&&x.form!==form).slice(0,3).map(x=>({form:x.form,why:String(x.why||'').slice(0,200)}))};
+  ho.kp=(Array.isArray(d.keypoints)?d.keypoints:[]).map(x=>({t:String(x).slice(0,80),on:true})).slice(0,10);
+  ho.items=items.map(l=>l.replace(/\|/g,'｜').trim()).filter(Boolean).map(t=>{ const c=handCheck(t,form), k=t.split('｜')[0], dup=c.ok&&seen.has(k); if(c.ok) seen.add(k); return {t,on:c.ok&&!dup}; });
+  ho.formOrig=form; hoRefresh();
+  const r=$('#hoResult'); if(r&&r.scrollIntoView) r.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function hoCountText(){
+  const f=ho.res&&ho.res.form; if(!f) return '';
+  const on=ho.items.filter(x=>x.on&&handCheck(x.t,f).ok).length;
+  return `已勾選 <b>${on}</b> 筆${hoOpenForm(f)?'（建議 2～4 個）':f==='sort'?'':'（建議 10 筆左右）'}`;
+}
+function hoResultHTML(){
+  const r=ho.res; if(!r) return '';
+  const f=r.form, items=ho.items;
+  return `<div class="refok">
+    <b>✅ AI 讀完講義了，請確認後帶入</b>
+    <label class="mlabel" for="hoTopic" style="margin-top:10px">單元名稱</label><input class="txt" id="hoTopic" value="${esc(r.topic)}">
+    <label class="mlabel" for="hoGoal" style="margin-top:8px">學習目標</label><input class="txt" id="hoGoal" value="${esc(r.goal)}">
+    ${ho.kp.length?`<div style="margin-top:10px"><b class="small">講義重點</b><span class="small">（勾選的會寫進指令，讓題目回饋與說明以講義為準）</span>
+      ${ho.kp.map((k,i)=>`<label class="hokp"><input type="checkbox" class="hokpc" data-i="${i}" ${k.on?'checked':''}><span>${esc(k.t)}</span></label>`).join('')}</div>`:''}
+    <div class="hoform"><b>建議玩法：${FORM_ICON&&FORM_ICON[f]?FORM_ICON[f]+' ':''}${esc(optOf('form',f).label)}</b>${f!==ho.formOrig?'（你改選的）':''}
+      ${r.why&&f===ho.formOrig?`<p class="small" style="margin:4px 0 0">${esc(r.why)}</p>`:''}
+      ${r.alts.length||f!==ho.formOrig?`<div class="hoalts">${[{form:ho.formOrig,why:r.why}].concat(r.alts).filter(x=>x.form!==f).map(x=>`<button class="ghost sm2" data-hoform="${x.form}" title="${esc(x.why)}">改用${esc(optOf('form',x.form).label)}</button>`).join('')}</div>`:''}
+      ${f!==ho.formOrig?'<p class="small errc" style="margin:6px 0 0">換了玩法，AI 剛才出的題目格式不合。帶入後到「題目內容」用「📄 從講義出題」重新產生題目（同一份講義再附一次就好）。</p>':''}
+    </div>
+    ${items.length&&f===ho.formOrig?`<div class="hlist"><div class="hhead"><span id="hoCount">${hoCountText()}</span>
+        <span class="hbtns"><button class="ghost sm2" data-ho="all">全選</button><button class="ghost sm2" data-ho="none">全不選</button></span></div>
+      ${items.map((it,i)=>{ const c=handCheck(it.t,f); return `<div class="hrow ${c.ok?'':'bad'}"><input type="checkbox" class="hochk" data-i="${i}" ${it.on&&c.ok?'checked':''} ${c.ok?'':'disabled'} aria-label="保留第 ${i+1} 筆"><input class="hoin" data-i="${i}" value="${esc(it.t)}" spellcheck="false" aria-label="第 ${i+1} 筆"><span class="hnote">${c.ok?(c.warn||''):esc(c.msg)}</span></div>`; }).join('')}</div>`:''}
+    <div class="btnrow"><button class="primary" data-ho="apply">✓ 帶入設計幫手，繼續完成設定</button></div>
+    <p class="small">帶入後只剩「怎麼玩、怎麼計分」等幾個點選題，大約 3 分鐘就能拿到做網頁的指令。</p>
+  </div>`;
+}
+function hoBodyHTML(){
+  const a=state.answers;
+  const gOpts=[1,2,3,4,5,6].map(n=>`<option value="${n}" ${String(a.grade)===String(n)?'selected':''}>${n} 年級</option>`).join('');
+  const sOpts=['社會','國語','數學','自然','英語','其他'].map(x=>`<option ${a.subject===x?'selected':''}>${x}</option>`).join('');
+  return `<ol class="hsteps">
+    <li><b>選年級與科目，放入講義</b>（PDF、Word、文字檔；照片或掃描檔也可以，之後附在 Gemini 裡）
+      <div class="hogrid"><select id="hoGrade" aria-label="年級"><option value="">年級</option>${gOpts}</select><select id="hoSubject" aria-label="科目"><option value="">科目</option>${sOpts}</select></div>
+      <input type="file" id="hoFile" class="hofile" accept=".pdf,.docx,.txt,.md,image/*">
+      <details style="margin-top:6px"><summary class="small">或直接貼上講義文字</summary><textarea class="txt" id="hoText" placeholder="把講義的文字貼在這裡">${ho.kind==='paste'?esc(ho.text):''}</textarea></details>
+      <div id="hoStatus">${hoStatusHTML()}</div></li>
+    <li><b>複製分析指令</b>，到 Gemini（或 ChatGPT）開新對話貼上送出。<span id="hoAttachTip">${hoEmbed()?'':'<b>記得附上講義檔或照片。</b>'}</span>
+      <div id="hoPromptBox">${promptBox('ho','講義分析指令','',hoPrompt())}</div></li>
+    <li><b>貼上 AI 的回覆</b>（含 \`\`\` 框也沒關係），按「讀入分析」。
+      <textarea class="txt" id="hoRaw" placeholder="把 AI 的回覆整段貼在這裡">${esc(ho.raw)}</textarea>
+      <div class="btnrow"><button class="primary" data-ho="parse">讀入分析</button></div>
+      <div id="hoResult">${hoResultHTML()}</div></li>
+  </ol>
+  <p class="hint small">🔒 講義只在你的瀏覽器裡轉成文字，不會上傳到這個網站。講義含學生個資（姓名、照片）時，請先刪除再使用。</p>`;
+}
+function hoRefresh(){
+  const st=$('#hoStatus'); if(st) st.innerHTML=hoStatusHTML();
+  const pb=$('#hoPromptBox'); if(pb) pb.innerHTML=promptBox('ho','講義分析指令','',hoPrompt());
+  const at=$('#hoAttachTip'); if(at) at.innerHTML=hoEmbed()?'':'<b>記得附上講義檔或照片。</b>';
+  const rs=$('#hoResult'); if(rs) rs.innerHTML=hoResultHTML();
+}
+function openHo(){ $('#hoBody').innerHTML=hoBodyHTML(); $('#hoPanel').hidden=false; document.body.style.overflow='hidden'; }
+function closeHo(){ $('#hoPanel').hidden=true; document.body.style.overflow=''; }
+function hoApply(){
+  const r=ho.res; if(!r) return;
+  const g=($('#hoGrade')||{}).value, sub=($('#hoSubject')||{}).value;
+  if(!g||!sub){ toast('請先在第 1 步選年級和科目'); const el=$('#hoGrade'); if(el) el.focus(); return; }
+  const topic=(($('#hoTopic')||{}).value||r.topic||'').trim(); if(!topic){ toast('請填單元名稱'); return; }
+  const a=state.answers, f=r.form;
+  const lines=f===ho.formOrig?ho.items.filter(x=>x.on&&handCheck(x.t,f).ok).map(x=>x.t.trim()):[];
+  if(!state.startedAt) state.startedAt=Date.now();
+  a.grade=String(g); a.subject=sub; a.topic=topic.slice(0,60);
+  const goal=(($('#hoGoal')||{}).value||'').trim(); if(goal) a.goal=goal; else delete a.goal;
+  if(a.form!==f){ delete a.count; delete a.qcount; delete a.answerMode; }
+  a.form=f;
+  if(hoOpenForm(f)&&!a.answerMode) a.answerMode='choice';
+  if(lines.length){
+    a.paste=lines.join('\n');
+    if(hoOpenForm(f)){ a.source='teacher'; a.count=String(Math.min(4,Math.max(2,lines.length))); }
+    else if(f==='sort'){ a.source='teacher'; a.count=lines.length>=10?'10':'5'; }
+    else { const opts=[20,15,10,5].filter(n=>n<=lines.length); a.count=String(opts[0]||5); a.source=lines.length>=5?'teacher':'mix'; }
+  } else { delete a.paste; delete a.source; handOpen=true; }
+  const kp=ho.kp.filter(k=>k.on).map(k=>k.t.trim()).filter(Boolean);
+  if(kp.length) a._hoKP=kp.join('；'); else delete a._hoKP;
+  a._hoName=ho.name||'貼上的講義';
+  pruneAnswers();
+  STEPS.forEach((_,i)=>{ if(stepOk(i)) state.visited[i]=true; });
+  const firstMissing=STEPS.findIndex((_,i)=>!stepOk(i));
+  state.current=firstMissing<0?STEPS.length:firstMissing;
+  promptTab=null; save(); closeHo(); renderAll(); window.scrollTo({top:0});
+  toast(lines.length?`已帶入講義的單元、玩法和 ${lines.length} 筆題目，從「${firstMissing<0?'完成':STEPS[firstMissing].title}」繼續`:'已帶入單元與玩法，請到「題目內容」從講義重新出題');
+}
+
 /* ========== 12. 分享給學生：上架方式提示＋QR code ========== */
 const REDIRECT_URL='https://trzeiyen.github.io/redirect.html?to=';
 let shareTab='netlify', shareUrl='', shareWrap=true;
@@ -2157,6 +2356,14 @@ document.addEventListener('click',e=>{
   const gs=e.target.closest('[data-gs]');
   if(gs){ const n=GAS_SETUP.steps.length; gasStep=Math.max(0,Math.min(n-1,+gs.dataset.gs)); renderGas(); return; }
   if(e.target.id==='gasTest'){ testGas(); return; }
+  if(e.target.closest('#hoBtn')||e.target.closest('#hoStart')){ openHo(); return; }
+  if(e.target.id==='hoClose'||e.target===$('#hoPanel')){ closeHo(); return; }
+  const hob=e.target.closest('[data-ho]'); if(hob){ const k=hob.dataset.ho;
+    if(k==='parse'){ ho.raw=$('#hoRaw').value; hoParse(); }
+    else if(k==='apply') hoApply();
+    else if(k==='all'||k==='none'){ const f=ho.res&&ho.res.form; ho.items.forEach(x=>{ x.on=k==='all'&&handCheck(x.t,f).ok; }); hoRefresh(); }
+    return; }
+  const hof=e.target.closest('[data-hoform]'); if(hof&&ho.res){ ho.res.form=hof.dataset.hoform; hoRefresh(); return; }
   if(e.target.closest('#refBtn')){ openRef(); return; }
   if(e.target.id==='refClose'||e.target===$('#refPanel')){ closeRef(); return; }
   if(e.target.id==='refApply'){ refState.raw=$('#refRaw').value; applyRef(); return; }
@@ -2169,6 +2376,7 @@ document.addEventListener('click',e=>{
   const cp=e.target.closest('[data-copy]');
   if(cp&&cp.dataset.copy==='hand'){ copyText(handoutPrompt(state.answers),cp); return; }
   if(cp&&cp.dataset.copy==='ref'){ copyText(refPrompt(),cp); return; }
+  if(cp&&cp.dataset.copy==='ho'){ copyText(hoPrompt(),cp); return; }
   if(cp&&lastPrompts){
     const id=cp.dataset.copy;
     const txt=id==='full'?lastPrompts.full:id==='fix'?lastPrompts.fix:lastPrompts.segs[+id.slice(3)];
@@ -2211,6 +2419,10 @@ function fallbackCopy(t,cb){ const ta=document.createElement('textarea'); ta.val
 
 document.addEventListener('change',e=>{
   if(e.target.id==='shareWrap'){ shareWrap=e.target.checked; qrRefresh(); return; }
+  if(e.target.id==='hoFile'&&e.target.files&&e.target.files[0]){ hoReadFile(e.target.files[0]); return; }
+  if(e.target.id==='hoGrade'||e.target.id==='hoSubject'){ hoRefresh(); return; }
+  if(e.target.matches('.hokpc')){ const k=ho.kp[+e.target.dataset.i]; if(k) k.on=e.target.checked; return; }
+  if(e.target.matches('.hochk')){ const it=ho.items[+e.target.dataset.i]; if(it) it.on=e.target.checked; const c=$('#hoCount'); if(c) c.innerHTML=hoCountText(); return; }
   if(e.target.matches('.hchk')){ const it=state.hand.items[+e.target.dataset.i]; it.on=e.target.checked; it.dup=false; save(); $('#handCount').innerHTML=handCountHTML(); return; }
   if(e.target.id!=='loadFile'||!e.target.files||!e.target.files[0]) return;
   const r=new FileReader(); r.onload=()=>loadText(String(r.result)); r.onerror=()=>toast('檔案讀取失敗，請再試一次'); r.readAsText(e.target.files[0],'utf-8');
@@ -2222,6 +2434,9 @@ document.addEventListener('input',e=>{
   if(el.id==='shareUrl'){ shareUrl=el.value; qrRefresh(); return; }
   if(el.id==='refUrl'){ refState.url=el.value; const b=$('#refPromptBox'); if(b) b.innerHTML=promptBox('ref','網站分析指令','',refPrompt()); return; }
   if(el.id==='refRaw'){ refState.raw=el.value; return; }
+  if(el.id==='hoRaw'){ ho.raw=el.value; return; }
+  if(el.id==='hoText'){ ho={...ho,name:'',kind:'paste',text:el.value.trim(),pages:0,msg:''}; const st=$('#hoStatus'); if(st) st.innerHTML=hoStatusHTML(); clearTimeout(ho._t); ho._t=setTimeout(()=>{ const pb=$('#hoPromptBox'); if(pb) pb.innerHTML=promptBox('ho','講義分析指令','',hoPrompt()); const at=$('#hoAttachTip'); if(at) at.innerHTML=hoEmbed()?'':'<b>記得附上講義檔或照片。</b>'; },400); return; }
+  if(el.matches('.hoin')){ const f=ho.res&&ho.res.form, it=ho.items[+el.dataset.i]; if(!it) return; it.t=el.value.replace(/\|/g,'｜'); const c=handCheck(it.t,f), row=el.closest('.hrow'), chk=row.querySelector('.hochk'); row.classList.toggle('bad',!c.ok); chk.disabled=!c.ok; if(!c.ok){ chk.checked=false; it.on=false; } row.querySelector('.hnote').textContent=c.ok?(c.warn||''):c.msg; const cn=$('#hoCount'); if(cn) cn.innerHTML=hoCountText(); return; }
   if(el.id==='handRaw'){ state.hand=state.hand||{raw:'',items:[]}; state.hand.raw=el.value; save(); return; }
   if(el.matches('.hin')){
     const it=state.hand.items[+el.dataset.i]; it.t=el.value.replace(/\|/g,'｜');
