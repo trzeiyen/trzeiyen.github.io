@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta name="robots" content="noindex,nofollow">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>六年級社會｜作答與學習檢討</title>
+<style>
+:root{
+  --bg:#f5f2ec; --card:#ffffff; --ink:#2b2a28; --sub:#6d6a64; --line:#e3ddd2;
+  --pri:#2f6f73; --pri-soft:#e2efef; --ok:#3d8b4f; --ok-soft:#e4f2e6;
+  --bad:#c0463b; --bad-soft:#fae6e3; --warn:#d18a1c; --warn-soft:#fbf0dc;
+  --sure:#2f6f73; --mid:#d18a1c; --guess:#8a63b8;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;font-size:17px;line-height:1.5}
+button{font-family:inherit;font-size:inherit;color:inherit;cursor:pointer;border:none;background:none;touch-action:manipulation}
+input,textarea{font-family:inherit;font-size:18px}
+.hidden{display:none!important}
+.screen{min-height:100vh}
+
+/* ---------- login ---------- */
+#login{display:flex;align-items:center;justify-content:center;padding:24px}
+.login-card{background:var(--card);border-radius:20px;padding:36px 40px;max-width:520px;width:100%;box-shadow:0 8px 30px rgba(0,0,0,.06)}
+.login-card h1{margin:0 0 4px;font-size:26px}
+.login-card p{margin:0 0 22px;color:var(--sub)}
+.field{margin-bottom:18px}
+.field label{display:block;font-weight:600;margin-bottom:6px}
+.field input{width:100%;padding:14px 16px;border:2px solid var(--line);border-radius:12px;background:#fff;font-size:22px;letter-spacing:2px}
+.field input:focus{outline:none;border-color:var(--pri)}
+.err{color:var(--bad);min-height:24px;font-size:15px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:14px 22px;border-radius:12px;font-weight:700;font-size:18px;min-height:52px}
+.btn-pri{background:var(--pri);color:#fff}
+.btn-pri:disabled{background:#a9b9ba}
+.btn-ghost{background:#efebe3;color:var(--ink)}
+.btn-block{width:100%}
+.howto{margin-top:22px;padding:14px 16px;background:var(--pri-soft);border-radius:12px;font-size:15px}
+.howto b{color:var(--pri)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px}
+
+/* ---------- exam ---------- */
+#exam{display:flex;flex-direction:column;height:100vh}
+.topbar{display:flex;align-items:center;gap:14px;padding:10px 18px;background:var(--card);border-bottom:1px solid var(--line);flex-shrink:0}
+.topbar .who{font-weight:700}
+.topbar .prog{flex:1;display:flex;align-items:center;gap:10px}
+.bar{flex:1;height:10px;background:#ece7de;border-radius:6px;overflow:hidden;max-width:360px}
+.bar i{display:block;height:100%;background:var(--pri);width:0;transition:width .2s}
+.prog span{font-size:15px;color:var(--sub);white-space:nowrap}
+.body{display:flex;flex:1;min-height:0}
+.nav{width:170px;flex-shrink:0;background:#ece7de;overflow-y:auto;padding:10px 8px}
+.nav button{display:block;width:100%;text-align:left;padding:12px 10px;border-radius:10px;margin-bottom:4px;font-weight:600;font-size:16px}
+.nav button small{display:block;font-weight:400;font-size:13px;color:var(--sub)}
+.nav button.on{background:var(--card);box-shadow:0 2px 6px rgba(0,0,0,.06)}
+.nav button.done small{color:var(--ok)}
+.main{flex:1;overflow-y:auto;padding:16px 18px 110px;-webkit-overflow-scrolling:touch}
+.sec-head{display:flex;align-items:baseline;gap:12px;margin:4px 0 12px}
+.sec-head h2{margin:0;font-size:22px}
+.sec-head span{color:var(--sub);font-size:15px}
+.note{background:var(--warn-soft);border-radius:10px;padding:8px 12px;font-size:15px;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(400px,1fr));gap:12px}
+.q{background:var(--card);border-radius:14px;padding:12px 14px;border:2px solid transparent}
+.q.missing{border-color:var(--bad)}
+.q-top{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.qn{font-weight:800;font-size:19px;min-width:40px}
+.qlabel{color:var(--sub);font-size:14px}
+.opts{display:flex;gap:8px;flex-wrap:wrap}
+.opt{min-width:56px;min-height:52px;padding:6px 10px;border-radius:12px;border:2px solid var(--line);background:#fff;font-size:22px;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1}
+.opt small{font-size:12px;font-weight:500;color:var(--sub);margin-top:2px}
+.opt.sel{background:var(--pri);border-color:var(--pri);color:#fff}
+.opt.sel small{color:#dfeeee}
+.opts.many .opt{min-width:62px;font-size:20px}
+.conf{display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
+.conf span.l{font-size:14px;color:var(--sub);align-self:center;margin-right:2px}
+.cbtn{flex:1;min-height:46px;border-radius:10px;border:2px solid var(--line);background:#fff;font-size:16px;font-weight:600}
+.cbtn.sel.sure{background:var(--sure);border-color:var(--sure);color:#fff}
+.cbtn.sel.mid{background:var(--mid);border-color:var(--mid);color:#fff}
+.cbtn.sel.guess{background:var(--guess);border-color:var(--guess);color:#fff}
+.footer{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);padding:10px 18px;display:flex;gap:10px;align-items:center;z-index:5}
+.footer .sp{flex:1;color:var(--sub);font-size:15px}
+
+/* ---------- modal ---------- */
+.mask{position:fixed;inset:0;background:rgba(30,28,25,.45);display:flex;align-items:center;justify-content:center;padding:20px;z-index:20}
+.modal{background:var(--card);border-radius:20px;padding:28px;max-width:560px;width:100%}
+.modal h3{margin:0 0 8px;font-size:22px}
+.est-val{font-size:56px;font-weight:800;text-align:center;color:var(--pri);margin:8px 0}
+input[type=range]{width:100%;height:40px;accent-color:var(--pri)}
+.row{display:flex;gap:10px;margin-top:18px}
+.row .btn{flex:1}
+
+/* ---------- result / review ---------- */
+#result .wrap{max-width:1080px;margin:0 auto;padding:20px 18px 120px}
+.step-tabs{display:flex;gap:8px;margin-bottom:16px}
+.step-tabs div{flex:1;padding:10px;border-radius:12px;background:#ece7de;text-align:center;font-weight:700;font-size:15px;color:var(--sub)}
+.step-tabs div.on{background:var(--pri);color:#fff}
+.step-tabs div.done{background:var(--pri-soft);color:var(--pri)}
+.panel{background:var(--card);border-radius:18px;padding:20px 22px;margin-bottom:16px}
+.panel h3{margin:0 0 4px;font-size:20px}
+.panel .hint{color:var(--sub);font-size:15px;margin:0 0 14px}
+.score-row{display:flex;gap:16px;align-items:stretch;flex-wrap:wrap}
+.score-big{flex:0 0 200px;background:var(--pri-soft);border-radius:16px;padding:16px;text-align:center}
+.score-big b{display:block;font-size:64px;line-height:1;color:var(--pri)}
+.score-big span{color:var(--sub);font-size:15px}
+.calib{flex:1;min-width:260px;display:flex;flex-direction:column;justify-content:center;gap:6px;font-size:17px}
+.calib .tag{display:inline-block;padding:4px 12px;border-radius:999px;font-weight:700;font-size:15px}
+.quad{display:grid;grid-template-columns:110px 1fr 1fr;gap:8px}
+.quad .h{font-weight:700;color:var(--sub);font-size:14px;display:flex;align-items:center;justify-content:center;text-align:center}
+.qc{border-radius:14px;padding:12px 14px;min-height:110px}
+.qc .t{font-weight:800;font-size:17px}
+.qc .n{font-size:34px;font-weight:800;line-height:1.1}
+.qc .d{font-size:13px;color:var(--sub)}
+.qc .ids{font-size:13px;margin-top:4px;word-break:break-all}
+.qc.a{background:var(--ok-soft)} .qc.a .n{color:var(--ok)}
+.qc.b{background:var(--bad-soft);border:2px solid var(--bad)} .qc.b .n{color:var(--bad)}
+.qc.c{background:#efe8f7} .qc.c .n{color:var(--guess)}
+.qc.d{background:var(--warn-soft)} .qc.d .n{color:var(--warn)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.hbar{display:grid;grid-template-columns:150px 1fr 56px;gap:8px;align-items:center;margin:8px 0;font-size:15px}
+.hbar .track{height:20px;background:#efebe3;border-radius:6px;overflow:hidden}
+.hbar .fill{height:100%;border-radius:6px}
+.hbar .pct{text-align:right;font-weight:700}
+.insight{background:var(--warn-soft);border-radius:12px;padding:12px 14px;margin-top:12px;font-size:16px}
+.insight b{color:#9a5f05}
+.rv{border:2px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:10px}
+.rv.doneit{border-color:#bcd9da;background:#fbfdfd}
+.rv-top{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.rv-top .qn{min-width:auto}
+.pill{padding:3px 10px;border-radius:999px;font-size:14px;font-weight:700}
+.pill.wrong{background:var(--bad-soft);color:var(--bad)}
+.pill.lucky{background:#efe8f7;color:var(--guess)}
+.pill.trap{background:var(--bad);color:#fff}
+.ans{font-size:16px}
+.ans .you{color:var(--bad);font-weight:700}
+.ans .key{color:var(--ok);font-weight:800}
+.ex{margin:8px 0 10px;font-size:15px;background:#f7f5f0;border-radius:10px;padding:8px 12px}
+.causes{display:flex;gap:8px;flex-wrap:wrap}
+.cause{padding:10px 12px;border-radius:12px;border:2px solid var(--line);background:#fff;font-size:15px;font-weight:600;min-height:48px}
+.cause.sel{background:var(--pri);color:#fff;border-color:var(--pri)}
+.strat{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:2px solid var(--line);border-radius:12px;margin-bottom:8px;background:#fff;width:100%;text-align:left;font-size:16px}
+.strat .box{width:26px;height:26px;border-radius:7px;border:2px solid var(--line);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:800}
+.strat.sel{border-color:var(--pri);background:var(--pri-soft)}
+.strat.sel .box{background:var(--pri);border-color:var(--pri);color:#fff}
+.strat-group{margin-bottom:12px}
+.strat-group h4{margin:6px 0 8px;font-size:16px}
+textarea{width:100%;min-height:80px;padding:12px 14px;border:2px solid var(--line);border-radius:12px;resize:vertical}
+textarea:focus{outline:none;border-color:var(--pri)}
+.chal{margin-top:12px;background:#f3f8f8;border:2px dashed #bcd9da;border-radius:12px;padding:10px 12px}
+.chal h5{margin:0 0 8px;font-size:15px}
+.st-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid #e3ecec}
+.st-row:first-of-type{border-top:none}
+.st-row .txt{flex:1;font-size:16px}
+.tf{width:56px;height:48px;border-radius:10px;border:2px solid var(--line);background:#fff;font-size:22px;font-weight:800}
+.tf.sel{background:var(--pri);border-color:var(--pri);color:#fff}
+.st-row.bad .txt{color:var(--bad)}
+.st-row.good .txt{color:var(--ok)}
+.chal .act{display:flex;align-items:center;gap:10px;margin-top:8px}
+.chal .act .btn{min-height:44px;padding:8px 16px;font-size:16px}
+.passed{background:var(--ok-soft);border:2px solid #a9d3b2;border-radius:12px;padding:10px 12px;margin-top:12px;font-weight:700;color:var(--ok)}
+.empty{padding:20px;text-align:center;color:var(--sub)}
+
+/* final report */
+.report{background:var(--card);border-radius:18px;padding:18px 22px;border:3px solid var(--pri)}
+.report-head{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:10px}
+.report-head h2{margin:0;font-size:21px}
+.report-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.mini h4{margin:0 0 6px;font-size:15px;color:var(--sub)}
+.mini .hbar{grid-template-columns:132px 1fr 40px;font-size:13px;margin:5px 0}
+.mini .hbar .track{height:14px}
+.mq{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.mq div{border-radius:10px;padding:6px 8px;font-size:13px}
+.mq b{font-size:22px;display:block;line-height:1.1}
+.goalbox{margin-top:10px;background:var(--pri-soft);border-radius:12px;padding:10px 14px;font-size:16px}
+.send{margin-top:12px;font-size:15px;color:var(--sub);text-align:center}
+
+@media (max-width:820px){
+  .nav{width:110px}
+  .grid{grid-template-columns:1fr}
+  .two,.report-grid{grid-template-columns:1fr}
+  .quad{grid-template-columns:70px 1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<section id="login" class="screen">
+  <div class="login-card">
+    <h1 id="lgTitle">六年級社會｜作答與學習檢討</h1>
+    <p id="lgSub">看紙本題目，在這裡點答案。交卷後會幫你分析學習狀況。</p>
+    <div class="field">
+      <label for="cls">班級（三位數，例如 609）</label>
+      <input id="cls" inputmode="numeric" maxlength="3" autocomplete="off">
+    </div>
+    <div class="field">
+      <label for="seat">座號</label>
+      <input id="seat" inputmode="numeric" maxlength="2" autocomplete="off">
+    </div>
+    <div class="field" id="pwField">
+      <label for="pw">通關密語（看黑板）</label>
+      <input id="pw" type="password" autocomplete="off" autocapitalize="off" spellcheck="false">
+    </div>
+    <div class="err" id="loginErr"></div>
+    <button class="btn btn-pri btn-block" id="startBtn">開始</button>
+    <div class="howto" id="lgHow">
+      每一題都要點兩次：<b>先點答案，再點你的把握程度</b>
+      <div class="legend"><span>😎 確定</span><span>🤔 有點把握</span><span>🎲 用猜的</span></div>
+      誠實點選把握程度，交卷後的分析才會準確喔！
+    </div>
+    <div id="resumeBox" class="hidden" style="margin-top:16px;font-size:15px;color:var(--sub)"></div>
+  </div>
+</section>
+
+<!-- ============ EXAM ============ -->
+<section id="exam" class="screen hidden">
+  <div class="topbar">
+    <div class="who" id="who"></div>
+    <div class="prog"><div class="bar"><i id="progBar"></i></div><span id="progTxt"></span></div>
+  </div>
+  <div class="body">
+    <nav class="nav" id="nav"></nav>
+    <div class="main" id="main"></div>
+  </div>
+  <div class="footer">
+    <button class="btn btn-ghost" id="prevSec">‹ 上一大題</button>
+    <div class="sp" id="footMsg"></div>
+    <button class="btn btn-ghost" id="nextSec">下一大題 ›</button>
+    <button class="btn btn-pri" id="submitBtn">交卷</button>
+  </div>
+</section>
+
+<!-- ============ RESULT / REVIEW ============ -->
+<section id="result" class="screen hidden">
+  <div class="wrap">
+    <div class="step-tabs" id="stepTabs"></div>
+    <div id="stepBody"></div>
+  </div>
+  <div class="footer" id="resFoot"></div>
+</section>
+
+<div id="modalRoot"></div>
+
+<script>
+/* ==========================================================
+   設定區（老師可以修改）
+   ========================================================== */
+const CONFIG = {
+  STORAGE_KEY: 'meta6_115_1_mid',     // 換一份考卷時請改名，避免讀到舊資料
+  CLASS_RULE: /^6\d{2}$/,             // 班級格式：6 開頭三位數
+  CLASS_HINT: '請輸入 6 開頭的三位數班級，例如 609',
+  TEACHER_CODE: '0000',               // 清除本機資料用的老師密碼（請自行修改）
+  GAS_URL: '',                        // 貼上 Google Apps Script 網頁應用程式網址（https://script.google.com/macros/s/.../exec）
+  EXAM_ID: '115-1-mid-g6',            // 考卷代號（換考卷時請改）
+  REVIEW_OPEN: false,                 // 沒有 GAS 時才用這個開關；有 GAS 時，改由試算表「設定」工作表控制
+  SHOW_SCORE: true,
+  PAPER_MODE: true,                   // true＝紙本作答、老師匯入資料，學生只做檢討；false＝在 iPad 上作答                   // 交卷後是否立刻顯示分數（不顯示答案）
+  TITLE: '115學年度第1學期第1次定期評量（模擬）六年級社會',
+  DEMO: {cls:'699', seat:'99'},
+  LUCKY_OPTIONAL: true,               // △ 猜對的題目改為選做（不影響進入下一步）
+  NEXT_LINK: {text:'🚢 完成了！去玩「大航海時代」', url:'https://age-of-discovery-voyage.zeiyenst.chatgpt.site'}  // 完成後的延伸活動，不需要就設成 null        // 示範帳號：不連線、不存檔，每次登入都是全新狀態
+};
+let REVIEW_OPEN = CONFIG.REVIEW_OPEN;
+
+/* 主題（單元概念） */
+const TOPICS = {
+  T1:'社會變遷與性別平等',
+  T2:'多元文化與宗教信仰',
+  T3:'日治到戒嚴時期',
+  T4:'解嚴後的民主發展',
+  T5:'人權與法律',
+  T6:'政府組織與分工'
+};
+/* 題型（需要的能力） */
+const SKILLS = {
+  S1:'生活情境應用',
+  S2:'判斷敘述對錯',
+  S3:'年代順序',
+  S4:'閱讀找證據',
+  S5:'概念記憶'
+};
+
+const C4 = ['①','②','③','④'];
+const OPT_EVENT = [['A','二二八事件'],['B','實施戒嚴'],['C','美麗島事件'],['D','解除戒嚴'],['E','政府遷臺'],['F','首次公投']];
+const OPT_GOV = [['A','行政院'],['B','立法院'],['C','司法院'],['D','考試院'],['E','縣市政府'],['F','監察院'],['G','總統'],['H','縣市議會']];
+
+/* 題目資料：a=正確答案, t=主題, s=題型, ex=解析（交卷後才顯示） */
+const SECTIONS = [
+ {id:'一', title:'一、選擇題', sub:'每題 2 分，共 36 分', opts:C4, items:[
+  {n:1,a:'④',t:'T1',s:'S1',ex:'性別友善廁所不分性別都能使用，方便爸爸帶女兒、照顧者陪長輩或身障者如廁。'},
+  {n:2,a:'③',t:'T2',s:'S1',ex:'學習當地語言，是為了和在地居民溝通交流。'},
+  {n:3,a:'①',t:'T1',s:'S1',ex:'現代社會重視個人意願；②④是傳統農業社會的觀念。'},
+  {n:4,a:'④',t:'T1',s:'S1',ex:'「保母」容易讓人以為只有女性能做，改名表示托育工作不分性別。'},
+  {n:5,a:'②',t:'T1',s:'S1',ex:'籃球、圍棋、麥塊等各種社團＝多元的學習活動。'},
+  {n:6,a:'③',t:'T3',s:'S2',ex:'①民國38年遷臺同年戒嚴，76年才解嚴；②陳儀沒有接受，還派兵鎮壓；④臺灣民主居亞洲前段。'},
+  {n:7,a:'①',t:'T3',s:'S2',ex:'②人權博物館是解嚴後才成立；③戰後米價飛漲、物資缺乏；④重要職務多由外省人擔任。'},
+  {n:8,a:'②',t:'T3',s:'S2',ex:'①雷震辦的是《自由中國》；③戒嚴時期禁止組新政黨；④許多人遭逮捕判刑。'},
+  {n:9,a:'④',t:'T4',s:'S2',ex:'①②③都是解嚴後的民主發展，所以選「以上皆是」。'},
+  {n:10,a:'②',t:'T4',s:'S1',ex:'民主得來不易，要珍惜並盡公民責任。'},
+  {n:11,a:'①',t:'T4',s:'S1',ex:'民主指數居亞洲之冠＝民主改革成果獲得國際肯定。'},
+  {n:12,a:'①',t:'T5',s:'S1',ex:'書信、訊息、電話受「秘密通訊自由」保障。'},
+  {n:13,a:'④',t:'T6',s:'S2',ex:'①行政院執行政策、立法院制定法律（相反了）；②縣市議會是地方立法機關；③縣市政府要受議會監督。'},
+  {n:14,a:'②',t:'T5',s:'S2',ex:'言論自由受保障，但有界線，不能侵害他人名譽。'},
+  {n:15,a:'③',t:'T5',s:'S2',ex:'人民有納稅、服兵役、受國民教育的義務，不能依個人意願決定。'},
+  {n:16,a:'③',t:'T5',s:'S2',ex:'法律能維持秩序、規範政府權力，也保障人民權益。'},
+  {n:17,a:'④',t:'T5',s:'S2',ex:'公有設施管理有疏失造成傷害，可以依國家賠償法請求賠償。'},
+  {n:18,a:'②',t:'T3',s:'S5',ex:'二二八事件後，許多人害怕而不敢談政治，影響民主發展。'}
+ ]},
+ {id:'二', title:'二、配合題', sub:'每題 2 分，共 10 分', opts:OPT_EVENT, items:[
+  {n:1,a:'B',t:'T3',s:'S3',ex:'民國38年以維護治安為由限制人民自由＝實施戒嚴。'},
+  {n:2,a:'E',t:'T3',s:'S3',ex:'民國38年底作戰失利，政府從中國遷臺。'},
+  {n:3,a:'C',t:'T3',s:'S3',ex:'民國68年高雄世界人權日活動＝美麗島事件。'},
+  {n:4,a:'D',t:'T4',s:'S3',ex:'民國76年解除戒嚴，之後新政黨、報社、電視臺陸續成立。'},
+  {n:5,a:'F',t:'T4',s:'S3',ex:'民國93年人民首次對國家政策直接投票＝首次公投。'}
+ ]},
+ {id:'三', title:'三、題組', sub:'每題 2 分，共 4 分', opts:C4, items:[
+  {n:1,a:'②',t:'T3',s:'S4',ex:'農民想自由買賣、知識分子想參政＝期待過平等自由的生活。'},
+  {n:2,a:'③',t:'T3',s:'S4',ex:'陳儀政府的重要職務多由外省人擔任，臺灣人難以擔任公職。'}
+ ]},
+ {id:'四', title:'四、女性教育演進（排序）', sub:'每格 2 分，共 8 分', opts:[['A',''],['B',''],['C',''],['D','']], label:n=>'第'+n+'格', note:'依照紙本的時間軸，從「早期」到「現在」，每一格填一個代號。', items:[
+  {n:1,a:'A',t:'T1',s:'S3',ex:'最早：女生在私塾或家中受教育，人數很少（清代）。'},
+  {n:2,a:'B',t:'T1',s:'S3',ex:'開港通商後，馬偕創立淡水女學堂（清末）。'},
+  {n:3,a:'D',t:'T1',s:'S3',ex:'新式教育制度建立，女性可讀高等女學校、專門學校（日治）。'},
+  {n:4,a:'C',t:'T1',s:'S3',ex:'教育普及，女性受大專以上教育的比例提高（現代）。'}
+ ]},
+ {id:'五', title:'五、是非題', sub:'對的點 O，錯的點 X，每題 2 分', opts:[['O',''],['X','']], items:[
+  {n:1,a:'X',t:'T6',s:'S2',ex:'不是「只能」集會遊行，還可透過陳情、投票、網路平臺等方式表達。'},
+  {n:2,a:'O',t:'T6',s:'S2',ex:'公共政策網路平臺讓民眾可以提議、附議，參與公共事務。'},
+  {n:3,a:'X',t:'T6',s:'S2',ex:'政策可能影響部分人的權益，政府需要溝通協調。'}
+ ]},
+ {id:'六', title:'六、配對題', sub:'每題 2 分，共 12 分', opts:OPT_GOV, items:[
+  {n:1,a:'A',t:'T6',s:'S5',ex:'行政院是中央最高行政機關，負責規劃國家政策。'},
+  {n:2,a:'E',t:'T6',s:'S5',ex:'縣市政府（含警察局）是地方行政機關，負責宣傳執行。'},
+  {n:3,a:'B',t:'T6',s:'S5',ex:'立法院負責制定或修改法律。'},
+  {n:4,a:'C',t:'T6',s:'S5',ex:'司法院（各級法院）負責審判。'},
+  {n:5,a:'D',t:'T6',s:'S5',ex:'考試院負責公務人員考試。'},
+  {n:6,a:'G',t:'T6',s:'S5',ex:'法律制定後，要由總統公布才能施行。'}
+ ]},
+ {id:'七', title:'七、閱讀題組（一）', sub:'每題 2 分，共 8 分', opts:C4, items:[
+  {n:1,a:'②',t:'T2',s:'S4',ex:'文章第1段：神明各司其職，和人們的生活密切相關。'},
+  {n:2,a:'③',t:'T2',s:'S4',ex:'文昌帝君掌管讀書考試。'},
+  {n:3,a:'④',t:'T2',s:'S4',ex:'文章第2段：渡海來臺面對疾病、天災，需要心靈依靠。'},
+  {n:4,a:'①',t:'T2',s:'S4',ex:'移民奉祀家鄉守護神，形成地緣信仰，象徵族群的歷史記憶。'}
+ ]},
+ {id:'八', title:'八、閱讀題組（二）', sub:'選擇題、勾選題每答 2 分，共 16 分', opts:C4, note:'第 4 題：每個敘述都要選「打V」或「不打」。', items:[
+  {n:1,a:'②',t:'T3',s:'S4',ex:'文中：女學生頭髮不能太長，是為了避免頭蝨寄生＝衛生健康。'},
+  {n:2,a:'③',t:'T4',s:'S4',ex:'民國76年＝西元1987年解嚴。'},
+  {n:3,a:'③',t:'T3',s:'S4',ex:'西瓜皮頭：短髮剪到齊耳。'},
+  {n:'4A',a:'V',t:'T1',s:'S2',opts:[['V','打V'],['－','不打']],ex:'現代已沒有髮禁，長短髮皆可。'},
+  {n:'4B',a:'－',t:'T1',s:'S2',opts:[['V','打V'],['－','不打']],ex:'嚴格的服儀規定是過去戒嚴時期的情形，不是現代。'},
+  {n:'4C',a:'V',t:'T1',s:'S2',opts:[['V','打V'],['－','不打']],ex:'現代課堂常用分組合作學習。'},
+  {n:'4D',a:'V',t:'T1',s:'S2',opts:[['V','打V'],['－','不打']],ex:'現代教育重視個人興趣與自我發展。'},
+  {n:'4E',a:'V',t:'T1',s:'S2',opts:[['V','打V'],['－','不打']],ex:'家長可以為孩子選擇實驗教育。'}
+ ]}
+];
+const POINTS = 2;
+
+/* 錯誤原因 */
+const CAUSES = {
+  concept:{icon:'📖',name:'概念不會／記錯了'},
+  misread:{icon:'👀',name:'沒看清楚題目'},
+  evidence:{icon:'🔍',name:'沒回文章找證據'},
+  mixup:{icon:'🔄',name:'兩個答案搞混了'},
+  guess:{icon:'🎲',name:'完全不會，用猜的'}
+};
+const LUCKY_CAUSES = ['concept','mixup','evidence'];
+const STRATEGIES = {
+  concept:['回課本把這個概念重讀一次，用自己的話說給同學聽','做一張概念整理卡（例如：五院分工表）','有問題馬上問老師或同學'],
+  misread:['考試時把題目的關鍵字圈起來（不、最、正確、錯誤）','四個選項全部看完再作答','寫完回頭再讀一次題目，確認它在問什麼'],
+  evidence:['閱讀題一定回文章畫出答案句','先看題目再讀文章，邊讀邊找線索'],
+  mixup:['把容易搞混的內容整理成對照表','用時間軸整理年代和事件的順序'],
+  guess:['考前把不熟的單元再複習一次','用刪去法，先刪掉一定錯的選項']
+};
+const CONF = CONFIG.PAPER_MODE
+  ? {sure:{icon:'',name:'沒標（很確定）'},mid:{icon:'？',name:'不太確定'},guess:{icon:'△',name:'猜的'}}
+  : {sure:{icon:'😎',name:'確定'},mid:{icon:'🤔',name:'有點把握'},guess:{icon:'🎲',name:'用猜的'}};
+
+/* 訂正挑戰題庫：每小題 3 句是非題，每次隨機抽 2 句，全對才算訂正完成。 [敘述, 正確(true)/錯誤(false)] */
+const CHALLENGE = {
+ '一-1':[['性別友善廁所讓爸爸可以帶女兒一起進去如廁。',true],['性別友善廁所是為了照顧不同性別、不同需求的使用者。',true],['性別友善廁所的主要目的是減少廁所的數量。',false]],
+ '一-2':[['學習當地語言，可以幫助和在地居民溝通交流。',true],['外國人學臺灣地方語言，主要是為了遵守政府法令規定。',false],['學習地方語言，是為了改變當地的信仰習慣。',false]],
+ '一-3':[['現代工商業社會的家庭，大多尊重子女的意見與選擇。',true],['「子承父業」是現代工商業社會大多數人的想法。',false],['現代社會大多數人都鼓勵夫妻多生育子女。',false]],
+ '一-4':[['「保母」改名為「托育人員」，是為了表示托育工作不分性別都能做。',true],['「保母」這個名稱，容易讓人以為只有女性才能從事托育工作。',true],['「保母」改名，是因為托育技術變得比較容易學習。',false]],
+ '一-5':[['學校開設籃球、圍棋、程式設計等不同社團，是多元學習的表現。',true],['多元的學習活動，能讓學生依照興趣發展不同能力。',true],['學校開設很多社團，主要是為了減少班級學生人數。',false]],
+ '一-6':[['戒嚴時期，政府限制言論與集會，也會查禁歌曲和書籍。',true],['政府遷臺後，同一年就宣布解除戒嚴。',false],['二二八事件時，陳儀接受了處理委員會的所有改革要求。',false]],
+ '一-7':[['二二八事件的起因，是民國36年在臺北查緝私菸時處理不當。',true],['二二八事件發生前，臺灣米價平穩、物資充裕。',false],['二二八事件後，政府立刻成立人權博物館調查真相。',false]],
+ '一-8':[['戒嚴時期，黨外人士透過辦刊物、遊行，爭取開放黨禁、報禁。',true],['戒嚴時期，政府主動開放黨禁，鼓勵人民組織政黨。',false],['戒嚴時期人民爭取民主的行動，都沒有受到鎮壓。',false]],
+ '一-9':[['民國85年，臺灣首次由公民直接選舉總統、副總統。',true],['解嚴後黨禁、報禁解除，新政黨和多元媒體紛紛成立。',true],['臺灣的總統直選，是在戒嚴時期就開始了。',false]],
+ '一-10':[['民主得來不易，我們應該珍惜，並盡公民的責任。',true],['民主是理所當然的，所以不必關心公共事務。',false],['為了維持秩序，政府應該隨時恢復戒嚴。',false]],
+ '一-11':[['臺灣民主指數居亞洲之冠，代表民主改革的成果獲得國際肯定。',true],['民主指數很高，代表臺灣已經不需要再推動人權教育。',false],['臺灣在戒嚴時期，就已經享有完全的言論自由。',false]],
+ '一-12':[['不希望自己的訊息被別人偷看，受到憲法「秘密通訊自由」的保障。',true],['書信、電話、手機訊息，都屬於秘密通訊自由保障的範圍。',true],['私人訊息被偷看，屬於「集會結社自由」的保障範圍。',false]],
+ '一-13':[['行政院提出的預算，要經過立法院審查通過才能執行。',true],['立法院負責執行政策，行政院負責制定法律。',false],['縣市政府的施政，不需要經過縣市議會監督。',false]],
+ '一-14':[['言論自由受到保障，但不能因此侵害他人的名譽。',true],['言論自由沒有任何限制，可以任意攻擊他人。',false],['在網路上發表言論，不受法律規範。',false]],
+ '一-15':[['納稅、服兵役、受國民教育，都是人民的義務。',true],['要不要繳稅，可以依照個人意願決定。',false],['家長不讓適齡兒童入學，不會受到任何處罰。',false]],
+ '一-16':[['法律可以維護社會秩序、規範政府，也保障人民的權益。',true],['法律只是用來限制人民自由，政府不受法律約束。',false],['法律只適用於成年人，對兒童沒有約束力。',false]],
+ '一-17':[['公園設施管理有疏失讓人受傷，受害者可以請求國家賠償。',true],['國家賠償只適用於成年人，兒童受傷不能請求。',false],['人民在任何情況下，都不能向政府請求賠償。',false]],
+ '一-18':[['二二八事件後，許多人因為恐懼而遠離政治。',true],['二二八事件後，政府立即解除戒嚴、開放言論自由。',false],['二二八事件後，臺灣人從此大量擔任政府公職。',false]],
+ '二-1':[['民國38年，政府以維護治安為由實施戒嚴，限制人民自由。',true],['戒嚴從民國38年開始，到民國76年才解除。',true],['民國38年，政府宣布解除戒嚴。',false]],
+ '二-2':[['民國38年底，政府因作戰失利，從中國遷到臺灣。',true],['政府遷臺和實施戒嚴，都發生在民國38年。',true],['政府遷臺是發生在民國76年。',false]],
+ '二-3':[['美麗島事件，發生在民國68年高雄的世界人權日活動。',true],['美麗島事件就是二二八事件。',false],['美麗島事件，發生在臺北查緝私菸的現場。',false]],
+ '二-4':[['民國76年解除戒嚴後，新政黨、報社、電視臺陸續成立。',true],['解嚴後，人民組黨、辦報的自由增加了。',true],['解除戒嚴是在民國93年。',false]],
+ '二-5':[['民國93年，人民首次對國家政策直接投票，也就是公民投票。',true],['公民投票，是人民直接對政策表達意見的方式。',true],['公民投票就是選出總統的投票。',false]],
+ '三-1':[['戰後農民希望甘蔗能自由買賣，表示他們期待過平等自由的生活。',true],['知識分子希望有更多機會擔任公職，表示他們期待能參與政治。',true],['戰後臺灣人期待恢復清帝國的統治。',false]],
+ '三-2':[['戰後陳儀政府的重要職務多由外省人擔任，臺灣人難以擔任公職。',true],['戰後臺灣人大量擔任政府公職，期待完全實現。',false],['政府接收臺灣後，立即舉辦總統直選。',false]],
+ '四-1':[['清代女性受教育的機會很少，多半在私塾或家中學習。',true],['在演進表中，女性在私塾或家中受教育是最早的階段。',true],['清代大多數女生都能進入大學讀書。',false]],
+ '四-2':[['開港通商後，馬偕在淡水創立女學堂。',true],['淡水女學堂出現的時間，比日治時期的新式教育早。',true],['淡水女學堂是在現代才創立的。',false]],
+ '四-3':[['日治時期建立新式教育制度，女性可以就讀高等女學校。',true],['新式教育制度建立的時間，比「女性大專比例逐漸提高」早。',true],['日治時期，女性完全不能接受教育。',false]],
+ '四-4':[['現代教育普及，女性接受大專以上教育的比例逐漸提高。',true],['在演進表中，「女性受高等教育比例提高」是最接近現在的階段。',true],['女性受大專教育的比例提高，是清代的情形。',false]],
+ '五-1':[['人民除了集會遊行，還可以透過陳情、投票等方式表達意見。',true],['網路平臺，也是人民表達意見的管道之一。',true],['政府違法不公時，人民只能用集會遊行來反映民意。',false]],
+ '五-2':[['民眾可以在公共政策網路參與平臺提出議案和附議。',true],['公共政策網路平臺，讓民眾可以參與公共事務的討論。',true],['公共政策網路平臺只有政府官員可以使用。',false]],
+ '五-3':[['政府的政策可能影響部分人民的權益，所以需要溝通協調。',true],['政府實施政策，一定不會影響任何人的生活。',false],['政府推動建設時，不需要聽取人民的意見。',false]],
+ '六-1':[['行政院是中央最高行政機關，負責規劃國家政策。',true],['規劃全國防詐騙政策，是縣市議會的工作。',false],['行政院負責開庭審判詐騙集團。',false]],
+ '六-2':[['縣市政府是地方行政機關，負責在地方執行和宣傳政策。',true],['縣市議會負責到各地宣傳防詐騙。',false],['縣市政府警察局屬於中央的司法院。',false]],
+ '六-3':[['立法院負責制定或修改法律。',true],['制定法律是考試院的工作。',false],['行政院負責制定法律。',false]],
+ '六-4':[['各級法院屬於司法院，負責審判案件。',true],['審判詐騙集團，是立法院的工作。',false],['監察院負責開庭審判。',false]],
+ '六-5':[['考試院負責辦理公務人員考試。',true],['公務人員考試是由監察院辦理。',false],['考試院負責審判違法的人。',false]],
+ '六-6':[['法律制定後，要由總統公布才能施行。',true],['法律制定後，由縣市議會公布施行。',false],['法律只要立法院通過，不需要公布就可以施行。',false]],
+ '七-1':[['民間信仰的神明各司其職，和人們的生活密切相關。',true],['民間信仰只能祭拜一位神明。',false],['所有民間信仰都有完全相同的教義。',false]],
+ '七-2':[['祈求考試順利，可以向文昌帝君祈求。',true],['神農大帝和農業、醫藥有關。',true],['神農大帝主要掌管讀書考試。',false]],
+ '七-3':[['早期漢人渡海來臺，面對疾病、天災，需要民間信仰作為心靈依靠。',true],['民間信仰能幫助移民快速獲得財富。',false],['有了民間信仰，就能解決所有生活中的問題。',false]],
+ '七-4':[['清水祖師、三山國王、保生大帝，是移民從家鄉帶來的守護神。',true],['「地緣信仰」象徵族群的歷史記憶。',true],['清水祖師等神明，主要和現代科技發展有關。',false]],
+ '八-1':[['日治時期規定學生髮型，主要是為了避免頭蝨寄生，維護衛生健康。',true],['日治時期規定髮型，是為了讓學生發展個人特色。',false],['日治時期規定髮型，主要是為了經濟發展。',false]],
+ '八-2':[['臺灣在西元1987年解嚴，也就是民國76年。',true],['臺灣在西元1949年解嚴。',false],['臺灣解嚴後，所有學校立刻完全取消了髮禁。',false]],
+ '八-3':[['「西瓜皮頭」是把頭髮剪短到齊耳的髮型。',true],['「西瓜皮頭」是綁成長辮子的髮型。',false],['「西瓜皮頭」是燙捲的髮型。',false]],
+ '八-4A':[['現在臺灣的學校沒有髮禁，學生長短髮都可以。',true],['2005年教育部發函，學校校規不得管理學生的髮式。',true],['現在學校規定男生一定要留平頭。',false]],
+ '八-4B':[['文章中嚴格的髮式、服儀限制，是過去戒嚴時期的情形。',true],['中學女生頭髮不能過領口，是現代學校的規定。',false],['現代學生只要髮型不符合規定，就會被處罰。',false]],
+ '八-4C':[['現代課堂常用分組方式進行合作學習。',true],['合作學習符合現代教育的狀況。',true],['現代課堂禁止學生分組討論。',false]],
+ '八-4D':[['現代教育重視個人興趣及自我發展。',true],['讓學生依照興趣發展，是現代教育的特色之一。',true],['現代教育只重視考試成績，不重視個人興趣。',false]],
+ '八-4E':[['現代家長可以為孩子選擇實驗學校或實驗教育機構。',true],['實驗教育讓家長有更多教育選擇。',true],['現代學生只能讀政府指定的學校，不能選擇實驗教育。',false]]
+};
+
+/* ==========================================================
+   狀態與儲存
+   ========================================================== */
+const ITEMS = [];
+SECTIONS.forEach(sec=>sec.items.forEach(it=>{
+  it.id = sec.id+'-'+it.n;
+  it.sec = sec;
+  it.optList = it.opts || sec.opts;
+  it.label = sec.id + '-' + (sec.label ? sec.label(it.n) : it.n);
+  ITEMS.push(it);
+}));
+const TOTAL = ITEMS.length*POINTS;
+
+let S = null;
+function blank(){return {cls:'',seat:'',answers:{},conf:{},est:null,submitted:false,step:0,causes:{},strategies:[],goal:'',start:Date.now(),sent:false};}
+function save(){if(S&&S.demo)return;try{localStorage.setItem(CONFIG.STORAGE_KEY,JSON.stringify(S));}catch(e){}}
+function load(){try{const t=localStorage.getItem(CONFIG.STORAGE_KEY);return t?JSON.parse(t):null;}catch(e){return null;}}
+function clearStore(){try{localStorage.removeItem(CONFIG.STORAGE_KEY);}catch(e){}}
+
+const $ = id=>document.getElementById(id);
+const esc = s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function show(id){['login','exam','result'].forEach(x=>$(x).classList.toggle('hidden',x!==id));window.scrollTo(0,0);}
+function optKey(o){return Array.isArray(o)?o[0]:o;}
+
+/* 內建考卷資料（紙本掃描判讀）：班級 → 座號 → [預估分數, 50 小題作答(?不確定 △猜的), 老師批改分數] */
+const EMBED_ENC = {"s":"43rtdUEhVw5rf65Copt1pQ==","i":"q+3QV30fjuko4OlS","c":"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"};
+let EMBED = {};
+async function unlockEmbed(pw){
+  try{
+    const d=x=>Uint8Array.from(atob(x),c=>c.charCodeAt(0));
+    const base=await crypto.subtle.importKey("raw",new TextEncoder().encode(pw),"PBKDF2",false,["deriveKey"]);
+    const key=await crypto.subtle.deriveKey({name:"PBKDF2",salt:d(EMBED_ENC.s),iterations:200000,hash:"SHA-256"},base,{name:"AES-GCM",length:256},false,["decrypt"]);
+    const pt=await crypto.subtle.decrypt({name:"AES-GCM",iv:d(EMBED_ENC.i)},key,d(EMBED_ENC.c));
+    EMBED=JSON.parse(new TextDecoder().decode(pt)); return true;
+  }catch(e){ return false; }
+}
+function embeddedState(cls,seat){
+  const row=(EMBED[cls]||{})[seat]; if(!row) return null;
+  const toks=row[1].split(' '); if(toks.length!==ITEMS.length) return null;
+  const st=blank(); st.cls=cls; st.seat=seat;
+  ITEMS.forEach((it,i)=>{
+    const m=toks[i].match(/^(.+?)([?△]?)$/); let v=m[1];
+    if(v==='-') v='－';
+    if(/^[1-4]$/.test(v) && it.optList===C4) v=C4[+v-1];
+    st.answers[it.id]=v; st.conf[it.id]= m[2]==='?'?'mid': m[2]==='△'?'guess':'sure';
+  });
+  st.est = row[0]===''?null:+row[0];
+  st.scoreOverride = row[2]??null;
+  st.submitted=true; st.sentSubmit=true; st.fromEmbed=true;
+  return st;
+}
+
+/* 示範學生資料（虛構）：答錯題 [學生答案, 標記]、其他有標記的題目 */
+function demoState(){
+  const wrong={'一-13':['①',''],'二-3':['A','?'],'七-3':['③','△']};
+  const marks={'一-6':'△','一-11':'?','六-4':'?'};
+  const st=blank(); st.demo=true; st.cls=CONFIG.DEMO.cls; st.seat=CONFIG.DEMO.seat;
+  ITEMS.forEach(it=>{
+    let a=it.a, m=marks[it.id]||'';
+    if(wrong[it.id]){a=wrong[it.id][0];m=wrong[it.id][1];}
+    st.answers[it.id]=a; st.conf[it.id]= m==='?'?'mid': m==='△'?'guess':'sure';
+  });
+  st.est=90; st.submitted=true; st.sentSubmit=true; st.sent=true; st.submitAt=Date.now();
+  return st;
+}
+
+/* ==========================================================
+   登入
+   ========================================================== */
+function initLogin(){
+  if(CONFIG.PAPER_MODE){
+    $('lgTitle').textContent='六年級社會｜我的錯題筆記本';
+    $('lgSub').textContent='輸入班級和座號，看看你的考卷分析，完成錯題訂正。';
+    $('lgHow').innerHTML='系統已經讀取你的考卷和你標的「？」「△」。<br>今天要做的事：<b>看分析 → 錯題訂正（用自己的話寫觀念）→ 擬定行動計畫</b>';
+  }
+  const saved = load();
+  if(saved && saved.cls){
+    const box=$('resumeBox');
+    box.classList.remove('hidden');
+    box.innerHTML = saved.submitted
+      ? `這台平板已有 ${esc(saved.cls)} 班 ${esc(saved.seat)} 號的作答紀錄（已交卷）。<br>輸入相同班級座號可回到檢討頁。`
+      : `這台平板有 ${esc(saved.cls)} 班 ${esc(saved.seat)} 號尚未交卷的作答，輸入相同班級座號即可繼續。`;
+    box.innerHTML += `<br><button class="btn btn-ghost" style="margin-top:8px;min-height:40px;padding:8px 14px;font-size:15px" id="resetBtn">清除紀錄（需老師密碼）</button>`;
+    $('resetBtn').onclick=()=>{
+      const code=prompt('請輸入老師密碼');
+      if(code===CONFIG.TEACHER_CODE){clearStore();location.reload();}
+      else if(code!==null){alert('密碼錯誤');}
+    };
+  }
+  $('startBtn').onclick=async()=>{
+    const c=$('cls').value.trim(), s=$('seat').value.trim();
+    if(!CONFIG.CLASS_RULE.test(c)){$('loginErr').textContent=CONFIG.CLASS_HINT;return;}
+    const isDemo=CONFIG.DEMO && c===CONFIG.DEMO.cls && String(+s)===CONFIG.DEMO.seat;
+    if(!isDemo && (!/^\d{1,2}$/.test(s)||+s<1||+s>40)){$('loginErr').textContent='請輸入正確的座號（1～40）';return;}
+    const seat=String(+s);
+    if(CONFIG.DEMO && c===CONFIG.DEMO.cls && seat===CONFIG.DEMO.seat){
+      S=demoState(); REVIEW_OPEN=true; openResult(); return;
+    }
+    if(saved && saved.cls && !(saved.cls===c && saved.seat===seat)){
+      $('loginErr').textContent=`這台平板正在使用中（${saved.cls} 班 ${saved.seat} 號）。如需換人，請老師協助清除紀錄。`;return;
+    }
+    if(!(saved && saved.cls) && !Object.keys(EMBED).length){
+      $('startBtn').disabled=true; $('startBtn').textContent='解鎖中…';
+      const ok=await unlockEmbed($('pw').value.trim());
+      $('startBtn').disabled=false; $('startBtn').textContent='開始';
+      if(!ok){$('loginErr').textContent='通關密語不正確，請看黑板再輸入一次。';return;}
+    }
+    $('loginErr').textContent=''; $('startBtn').disabled=true; $('startBtn').textContent='連線中…';
+    const remote = await fetchStatus(c,seat);
+    $('startBtn').disabled=false; $('startBtn').textContent='開始';
+    const emb = embeddedState(c,seat);
+    if(CONFIG.PAPER_MODE && !(saved && saved.cls) && !(remote && remote.record) && !emb){
+      $('loginErr').textContent = CONFIG.GAS_URL
+        ? (remote ? '找不到你的考卷資料，請確認班級座號，或請老師協助。' : '連線失敗，請確認網路後再試一次。')
+        : '找不到你的考卷資料，請確認班級座號，或請老師協助。';
+      return;
+    }
+    if(saved && saved.cls){ S=saved; }
+    else if(emb && !(remote && remote.record)){ S=emb; if(!CONFIG.GAS_URL) REVIEW_OPEN=true; }
+    else { S=blank(); S.cls=c; S.seat=seat; }
+    if(S.fromEmbed && !CONFIG.GAS_URL) REVIEW_OPEN=true;
+    // 換了平板：從雲端還原已交卷的紀錄
+    if(remote && remote.record && (!S.submitted || CONFIG.PAPER_MODE && !S.sent && !Object.keys(S.causes||{}).length)){
+      const r=remote.record;
+      Object.assign(S,{scoreOverride:r.scoreOverride??null,answers:r.answers||{},conf:r.conf||{},est:(r.est===''||r.est==null)?null:r.est,submitted:true,submitAt:r.submitAt,sentSubmit:true,
+        causes:r.causes||S.causes||{},strategies:r.strategies||[],goal:r.goal||'',sent:!!r.reflected,step:r.reflected?4:0});
+    }
+    save();
+    if(S.submitted && !S.sentSubmit) sendSubmit();
+    if(S.fromEmbed && CONFIG.GAS_URL && !(remote&&remote.record)){S.sentSubmit=false;sendSubmit();}
+    S.submitted ? openResult() : openExam();
+  };
+}
+
+/* ==========================================================
+   作答
+   ========================================================== */
+let curSec = 0;
+function isDone(it){return S.answers[it.id]!=null && S.conf[it.id]!=null;}
+function secDone(sec){return sec.items.filter(isDone).length;}
+
+function openExam(){
+  show('exam');
+  $('who').textContent = `${S.cls} 班 ${S.seat} 號`;
+  renderNav(); renderSec(); updateProg();
+  $('prevSec').onclick=()=>{if(curSec>0){curSec--;renderNav();renderSec();}};
+  $('nextSec').onclick=()=>{if(curSec<SECTIONS.length-1){curSec++;renderNav();renderSec();}};
+  $('submitBtn').onclick=trySubmit;
+}
+function renderNav(){
+  $('nav').innerHTML = SECTIONS.map((sec,i)=>{
+    const d=secDone(sec), n=sec.items.length;
+    return `<button class="${i===curSec?'on':''} ${d===n?'done':''}" data-i="${i}">${esc(sec.title.replace('（排序）',''))}<small>${d===n?'✔ 完成':d+' / '+n}</small></button>`;
+  }).join('');
+  $('nav').querySelectorAll('button').forEach(b=>b.onclick=()=>{curSec=+b.dataset.i;renderNav();renderSec();});
+  $('prevSec').disabled = curSec===0; $('prevSec').style.opacity=curSec===0?.4:1;
+  $('nextSec').classList.toggle('hidden',curSec===SECTIONS.length-1);
+}
+function renderSec(highlightMissing){
+  const sec=SECTIONS[curSec];
+  let h=`<div class="sec-head"><h2>${esc(sec.title)}</h2><span>${esc(sec.sub)}</span></div>`;
+  if(sec.note) h+=`<div class="note">${esc(sec.note)}</div>`;
+  h+='<div class="grid">';
+  sec.items.forEach(it=>{
+    const opts=it.optList, many=opts.length>4;
+    const qn = sec.label? sec.label(it.n) : (String(it.n).match(/^\d+[A-E]$/)? it.n.replace(/(\d)([A-E])/,'$1-$2') : it.n+'.');
+    h+=`<div class="q ${highlightMissing&&!isDone(it)?'missing':''}" id="q_${it.id}">
+      <div class="q-top"><span class="qn">${esc(qn)}</span></div>
+      <div class="opts ${many?'many':''}">${opts.map(o=>{
+        const k=optKey(o), lab=Array.isArray(o)?o[1]:'';
+        return `<button class="opt ${S.answers[it.id]===k?'sel':''}" data-q="${it.id}" data-v="${esc(k)}">${esc(k==='－'?'－':k)}${lab?'<small>'+esc(lab)+'</small>':''}</button>`;
+      }).join('')}</div>
+      <div class="conf"><span class="l">把握</span>${Object.entries(CONF).map(([k,c])=>
+        `<button class="cbtn ${k} ${S.conf[it.id]===k?'sel':''}" data-q="${it.id}" data-c="${k}">${c.icon} ${c.name}</button>`).join('')}</div>
+    </div>`;
+  });
+  h+='</div>';
+  if(curSec===SECTIONS.length-1) h+=`<div style="margin-top:20px;text-align:center;color:var(--sub)">這是最後一大題了，檢查完就可以按右下角「交卷」。</div>`;
+  $('main').innerHTML=h;
+  $('main').scrollTop=0;
+  $('main').querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
+    S.answers[b.dataset.q]=b.dataset.v; save();
+    b.parentNode.querySelectorAll('.opt').forEach(x=>x.classList.toggle('sel',x===b));
+    afterTap(b.dataset.q);
+  });
+  $('main').querySelectorAll('.cbtn').forEach(b=>b.onclick=()=>{
+    S.conf[b.dataset.q]=b.dataset.c; save();
+    b.parentNode.querySelectorAll('.cbtn').forEach(x=>x.classList.toggle('sel',x===b));
+    afterTap(b.dataset.q);
+  });
+}
+function afterTap(id){
+  const card=$('q_'+id); const it=ITEMS.find(x=>x.id===id);
+  if(card && isDone(it)) card.classList.remove('missing');
+  updateProg(); renderNavLight();
+}
+function renderNavLight(){
+  $('nav').querySelectorAll('button').forEach((b,i)=>{
+    const sec=SECTIONS[i], d=secDone(sec), n=sec.items.length;
+    b.classList.toggle('done',d===n);
+    b.querySelector('small').textContent = d===n?'✔ 完成':d+' / '+n;
+  });
+}
+function updateProg(){
+  const d=ITEMS.filter(isDone).length;
+  $('progBar').style.width=(d/ITEMS.length*100)+'%';
+  $('progTxt').textContent=`已完成 ${d} / ${ITEMS.length} 小題`;
+  $('footMsg').textContent = d===ITEMS.length ? '全部完成！檢查好就可以交卷。' : '答案和把握程度都點了，才算完成一題。';
+}
+function trySubmit(){
+  const miss=ITEMS.filter(it=>!isDone(it));
+  if(miss.length){
+    const secs=[...new Set(miss.map(m=>m.sec.id))];
+    modal(`<h3>還有 ${miss.length} 小題沒完成</h3>
+      <p style="color:var(--sub)">每一題都要點「答案」和「把握程度」。<br>還沒完成的在：<b>${secs.map(s=>esc(s)+'大題').join('、')}</b></p>
+      <div class="row"><button class="btn btn-pri" id="goMiss">帶我去看</button></div>`);
+    $('goMiss').onclick=()=>{closeModal();curSec=SECTIONS.findIndex(s=>s.id===miss[0].sec.id);renderNav();renderSec(true);
+      setTimeout(()=>{const el=$('q_'+miss[0].id);if(el)el.scrollIntoView({behavior:'smooth',block:'center'});},50);};
+    return;
+  }
+  let est = S.est ?? 80;
+  modal(`<h3>交卷前，先預測一下！</h3>
+    <p style="color:var(--sub);margin:0">你覺得自己會考幾分？（交卷後就不能再改答案了）</p>
+    <div class="est-val" id="estVal">${est} 分</div>
+    <input type="range" min="0" max="100" step="2" value="${est}" id="estIn">
+    <div class="row"><button class="btn btn-ghost" id="cancelSub">再檢查一下</button><button class="btn btn-pri" id="okSub">確定交卷</button></div>`);
+  $('estIn').oninput=e=>{est=+e.target.value;$('estVal').textContent=est+' 分';};
+  $('cancelSub').onclick=closeModal;
+  $('okSub').onclick=()=>{S.est=est;S.submitted=true;S.submitAt=Date.now();S.step=0;save();closeModal();sendSubmit();openResult();};
+}
+function modal(html){$('modalRoot').innerHTML=`<div class="mask"><div class="modal">${html}</div></div>`;}
+function closeModal(){$('modalRoot').innerHTML='';}
+
+/* ==========================================================
+   計分與分析
+   ========================================================== */
+function analyze(){
+  const res=ITEMS.map(it=>{
+    const ok=S.answers[it.id]===it.a && !(S.extra&&S.extra[it.id]), c=S.conf[it.id];
+    let q; // a 真的會 b 陷阱題 c 猜對 d 知道不會
+    if(ok) q = c==='sure' ? 'a' : 'c';
+    else q = c==='sure' ? 'b' : 'd';
+    return {it,ok,c,q};
+  });
+  const score=(S.scoreOverride!=null&&S.scoreOverride!=='')?Number(S.scoreOverride):res.filter(r=>r.ok).length*POINTS;  // 老師批改分數優先
+  const rate=(key,map)=>Object.keys(map).map(k=>{
+    const rs=res.filter(r=>r.it[key]===k);
+    return {k,name:map[k],n:rs.length,ok:rs.filter(r=>r.ok).length,pct:rs.length?Math.round(rs.filter(r=>r.ok).length/rs.length*100):0};
+  }).filter(x=>x.n);
+  return {res,score,topics:rate('t',TOPICS),skills:rate('s',SKILLS)};
+}
+function reviewList(A){
+  // 錯題全部 + 猜對的題目
+  return A.res.filter(r=>!r.ok || r.c==='guess');
+}
+function calibBlock(A,center){
+  if(S.est==null || S.est==='') return `<div class="calib" ${center?'style="max-width:380px"':''}><div style="font-size:18px">這是你的考卷分析 📊</div><div style="color:var(--sub);font-size:16px">往下看看：哪些題目你是「真的會」，哪些是「以為會」？</div></div>`;
+  const cb=calibText(S.est,A.score);
+  return `<div class="calib" ${center?'style="max-width:380px"':''}><div>你預估 <b>${S.est}</b> 分，實際 <b>${A.score}</b> 分</div>
+    <div><span class="tag" style="background:${cb.bg};color:${cb.c}">${cb.t}</span></div>
+    <div style="color:var(--sub);font-size:16px">${cb.m}</div></div>`;
+}
+function calibText(est,score){
+  const d=est-score;
+  if(Math.abs(d)<=6) return {t:'估得很準！',c:'var(--ok)',bg:'var(--ok-soft)',m:'你很清楚自己會什麼、不會什麼。'};
+  if(d>6) return {t:'太樂觀了',c:'var(--bad)',bg:'var(--bad-soft)',m:`你預估比實際多了 ${d} 分，有些題目你「以為會」，看看下面的陷阱題。`};
+  return {t:'太沒自信了',c:'var(--guess)',bg:'#efe8f7',m:`你其實比自己想的多會了 ${-d} 分，給自己多一點信心！`};
+}
+function barColor(p){return p>=80?'var(--ok)':p>=60?'var(--warn)':'var(--bad)';}
+function hbars(list,small){
+  return list.map(x=>`<div class="hbar"><span>${esc(x.name)}</span><div class="track"><div class="fill" style="width:${Math.max(x.pct,2)}%;background:${barColor(x.pct)}"></div></div><span class="pct">${x.pct}%</span></div>`).join('');
+}
+function quadHTML(A){
+  const g=k=>A.res.filter(r=>r.q===k);
+  const box=(k,t,d)=>{const l=g(k);return `<div class="qc ${k}"><div class="t">${t}</div><div class="n">${l.length} <span style="font-size:15px">題</span></div><div class="d">${d}</div>${l.length&&k!=='a'?`<div class="ids">${l.map(r=>esc(r.it.label)).join('、')}</div>`:''}</div>`;};
+  return `<div class="quad">
+    <div></div><div class="h">✔ 答對</div><div class="h">✘ 答錯</div>
+    <div class="h">${CONFIG.PAPER_MODE?'沒標<br>很確定':'😎<br>確定'}</div>${box('a','真的會','繼續保持！')}${box('b','⚠️ 陷阱題','以為很確定，其實還沒弄懂（最該複習）')}
+    <div class="h">${CONFIG.PAPER_MODE?'？△<br>沒把握':'🤔🎲<br>沒把握'}</div>${box('c','答對但沒把握','還不穩，再確認一下')}${box('d','知道自己不熟','很誠實！這些要再學一次')}
+  </div>`;
+}
+
+/* ==========================================================
+   結果與檢討（三步驟）
+   ========================================================== */
+const STEPS=['① 確認錯題','② 錯題訂正','③ 看成績與分析','④ 擬定行動計畫','⑤ 我的學習報告'];
+function openResult(){
+  show('result');
+  if(S.demo && !$('demoBadge')){const d=document.createElement('div');d.id='demoBadge';d.textContent='示範模式（虛構學生，不會存檔）';d.style.cssText='position:fixed;bottom:80px;left:12px;z-index:30;background:#c0463b;color:#fff;font-size:13px;font-weight:700;padding:4px 10px;border-radius:999px';document.body.appendChild(d);}
+  if(!REVIEW_OPEN){ renderLocked(); return; }
+  renderStep();
+}
+function renderLocked(){
+  const A=analyze();
+  $('stepTabs').innerHTML='';
+  $('stepBody').innerHTML=`<div class="panel" style="text-align:center;padding:40px 24px">
+    <div style="font-size:56px">✅</div>
+    <h2 style="margin:6px 0 4px">交卷完成！</h2>
+    <p style="color:var(--sub);margin:0 0 20px">${esc(S.cls)} 班 ${esc(S.seat)} 號</p>
+    ${CONFIG.SHOW_SCORE?`<div class="score-row" style="justify-content:center;text-align:left">
+      <div class="score-big"><span>實際分數</span><b>${A.score}</b><span>滿分 ${TOTAL}</span></div>
+      ${calibBlock(A,true)}</div>`:''}
+    <div class="insight" style="text-align:left;margin-top:22px">📌 下一節課，我們會一起看「把握程度 × 答對答錯」的分析，找出你的錯誤原因。<br>到時候用同一個班級座號登入就可以繼續。</div>
+    <div class="send" id="sendMsg">${sendMsgText()}</div>
+  </div>`;
+  setFoot(`<div class="sp"></div><button class="btn btn-ghost" onclick="location.reload()">回到首頁</button>`);
+}
+function sendMsgText(){
+  if(!CONFIG.GAS_URL) return '📸 請把這個畫面截圖，交給老師。';
+  return S.sentSubmit ? '☁️ 作答已送出給老師' : '☁️ 作答資料傳送中…';
+}
+function renderTabs(){
+  $('stepTabs').innerHTML=STEPS.map((s,i)=>`<div class="${i===S.step?'on':i<S.step?'done':''}">${s}</div>`).join('');
+}
+function setFoot(html){$('resFoot').innerHTML=html;}
+function goStep(n){S.step=n;save();renderStep();window.scrollTo(0,0);}
+
+function renderStep(){
+  renderTabs();
+  const A=analyze();
+  if(S.step===0) stepConfirm(A);
+  else if(S.step===1) step1(A);
+  else if(S.step===2) step0(A);
+  else if(S.step===3) step2(A);
+  else step3(A);
+}
+
+/* ① 確認錯題：系統判讀的錯題已標紅；沒出現的錯題，學生自己勾選 */
+function stepConfirm(A){
+  S.extra=S.extra||{};
+  const sysWrong=id=>S.answers[id]!==ITEMS.find(i=>i.id===id).a;
+  const disp=v=>v==='－'?'空白':v;
+  const markTxt={sure:'',mid:'？',guess:'△'};
+  let h=`<div class="panel"><h3>先確認：你錯了哪些題目？</h3>
+    <p class="hint">拿出你的考卷對照一下。<b style="color:var(--bad)">紅色</b>是老師系統讀到你答錯的題目。<br>
+    如果還有<b>答錯但沒出現</b>的題目，請點一下那一題，把它加進來（會變成橘色）。</p>`;
+  SECTIONS.forEach(sec=>{
+    h+=`<div style="font-weight:700;margin:14px 0 6px">${esc(sec.title)}</div><div style="display:flex;flex-wrap:wrap;gap:8px">`;
+    sec.items.forEach(it=>{
+      const sw=sysWrong(it.id), ex=!!S.extra[it.id];
+      const bg= sw?'var(--bad-soft)':ex?'var(--warn-soft)':'#fff';
+      const bd= sw?'var(--bad)':ex?'var(--warn)':'var(--line)';
+      const lab=sec.label?sec.label(it.n):it.n;
+      h+=`<button class="cf" data-q="${it.id}" ${sw?'disabled':''} style="min-width:76px;min-height:64px;border-radius:12px;border:2px solid ${bd};background:${bg};padding:6px 8px;text-align:center;line-height:1.25">
+        <div style="font-size:14px;color:var(--sub)">${esc(String(lab))}</div>
+        <div style="font-size:20px;font-weight:800">${esc(disp(S.answers[it.id]))}<span style="font-size:14px;color:var(--warn)">${markTxt[S.conf[it.id]]}</span></div>
+        <div style="font-size:12px;font-weight:700;color:${sw?'var(--bad)':'var(--warn)'}">${sw?'✘ 錯':ex?'我也錯了':''}</div></button>`;
+    });
+    h+='</div>';
+  });
+  const nSys=ITEMS.filter(it=>sysWrong(it.id)).length, nEx=Object.keys(S.extra).filter(k=>S.extra[k]).length;
+  h+=`<div class="insight" style="margin-top:16px">系統讀到你錯 <b>${nSys}</b> 題${nEx?`，你自己又加了 <b>${nEx}</b> 題`:''}。方格裡是系統讀到的答案，如果跟考卷上寫的不一樣，請告訴老師。</div></div>`;
+  $('stepBody').innerHTML=h;
+  $('stepBody').querySelectorAll('.cf').forEach(b=>b.onclick=()=>{
+    const id=b.dataset.q; S.extra[id]=!S.extra[id]; if(!S.extra[id]) delete S.extra[id]; save(); stepConfirm(analyze());
+  });
+  setFoot(`<div class="sp">確認好了嗎？</div><button class="btn btn-pri" onclick="goStep(1)">確認無誤，開始錯題訂正 ›</button>`);
+}
+
+function step0(A){
+  const trap=A.res.filter(r=>r.q==='b');
+  const weakT=[...A.topics].sort((a,b)=>a.pct-b.pct)[0];
+  const weakS=[...A.skills].sort((a,b)=>a.pct-b.pct)[0];
+  let ins='';
+  if(trap.length) ins+=`你有 <b>${trap.length} 題陷阱題</b>（點了「確定」卻答錯），這些是「以為會、其實還沒弄懂」的地方，最值得優先複習。<br>`;
+  if(weakT.pct<100) ins+=`最需要加強的單元主題：<b>${esc(weakT.name)}</b>（答對率 ${weakT.pct}%）<br>`;
+  if(weakS.pct<100) ins+=`最需要加強的題型：<b>${esc(weakS.name)}</b>（答對率 ${weakS.pct}%）`;
+  if(!ins) ins='全部答對而且都有把握，太厲害了！';
+  $('stepBody').innerHTML=`
+    <div class="panel"><div class="score-row">
+      <div class="score-big"><span>實際分數</span><b>${A.score}</b><span>滿分 ${TOTAL}</span></div>
+      ${calibBlock(A)}
+    </div></div>
+    <div class="panel"><h3>我的把握程度 × 答對答錯</h3><p class="hint">${CONFIG.PAPER_MODE?'把握程度是你在考卷上標的「？」和「△」':'把握程度是你作答時自己點的'}，對照答對答錯，就知道你是「真的會」還是「以為會」。</p>${quadHTML(A)}</div>
+    <div class="two">
+      <div class="panel"><h3>各單元主題答對率</h3><p class="hint">哪些內容需要再複習？</p>${hbars(A.topics)}</div>
+      <div class="panel"><h3>各題型答對率</h3><p class="hint">哪一種題目比較容易錯？</p>${hbars(A.skills)}</div>
+    </div>
+    <div class="insight">${ins}</div>`;
+  setFoot(`<button class="btn btn-ghost" onclick="goStep(1)">‹ 回錯題訂正</button><div class="sp"></div><button class="btn btn-pri" onclick="goStep(3)">下一步：擬定行動計畫 ›</button>`);
+}
+
+function step1(A){
+  const list=reviewList(A);
+  if(!list.length){
+    $('stepBody').innerHTML=`<div class="panel"><div class="empty">🎉 沒有錯題，也沒有用猜的題目！直接進入下一步。</div></div>`;
+    setFoot(`<button class="btn btn-ghost" onclick="goStep(0)">‹ 上一步</button><div class="sp"></div><button class="btn btn-pri" onclick="goStep(2)">下一步：看我的分析 ›</button>`);
+    return;
+  }
+  const optName=(it,v)=>{const o=it.optList.find(o=>optKey(o)===v);return Array.isArray(o)&&o[1]?v+' '+o[1]:v;};
+  list.sort((a,b)=>(isOptional(a)?1:0)-(isOptional(b)?1:0));
+  let h=`<div class="panel"><h3>錯題訂正</h3><p class="hint">看著考卷和下面的解析，每一題做兩件事：<b>① 選出錯誤原因　② 通過訂正挑戰（是非題全對）</b><br>答錯的話，要再讀一次解析才能重新挑戰喔！${CONFIG.LUCKY_OPTIONAL?'<br>標「選做」的是你猜對的題目，有時間的話也挑戰看看！':''}</p>`;
+  list.forEach(r=>{
+    const it=r.it, lucky=r.ok;
+    const keys=lucky?LUCKY_CAUSES:Object.keys(CAUSES);
+    const sel=S.causes[it.id];
+    const pill = lucky?'<span class="pill lucky">'+(CONFIG.PAPER_MODE?'△':'🎲')+' 猜對的</span>'+(CONFIG.LUCKY_OPTIONAL?'<span class="pill" style="background:#efebe3;color:var(--sub)">選做</span>':''): r.q==='b'?'<span class="pill trap">⚠️ 陷阱題</span>':'<span class="pill wrong">答錯</span>';
+    h+=`<div class="rv ${sel?'doneit':''}" id="rv_${it.id}">
+      <div class="rv-top"><span class="qn">${esc(it.label)}</span>${pill}
+        <span class="ans">${lucky?'':'你的答案 <span class="you">'+esc(optName(it,S.answers[it.id]))+'</span>　'}正確答案 <span class="key">${esc(optName(it,it.a))}</span></span>
+        <span style="color:var(--sub);font-size:14px">${CONF[r.c].icon}${CONF[r.c].name}</span></div>
+      <div class="ex">💡 ${esc(it.ex)}</div>
+      <div style="font-size:15px;font-weight:600;margin-bottom:6px">${lucky?'你為什麼沒有把握？':'你為什麼會錯？'}</div>
+      <div class="causes">${keys.map(k=>`<button class="cause ${sel===k?'sel':''}" data-q="${it.id}" data-k="${k}">${CAUSES[k].icon} ${lucky&&k==='mixup'?'在兩個答案之間猶豫':lucky&&k==='concept'?'概念還不熟':CAUSES[k].name}</button>`).join('')}</div>
+      <div id="ch_${it.id}">${chalHTML(it.id)}</div>
+    </div>`;
+  });
+  h+='</div>';
+  $('stepBody').innerHTML=h;
+  $('stepBody').querySelectorAll('.cause').forEach(b=>b.onclick=()=>{
+    S.causes[b.dataset.q]=b.dataset.k; save();
+    b.parentNode.querySelectorAll('.cause').forEach(x=>x.classList.toggle('sel',x===b));
+    markRv(b.dataset.q); foot1(list);
+  });
+  list.forEach(r=>{bindChal(r.it.id,list);markRv(r.it.id);});
+  foot1(list);
+}
+/* 訂正挑戰：從 3 句是非題隨機抽 2 句，全對才通過；答錯要等 8 秒重讀解析 */
+const TIMERS={};
+function chState(id){
+  S.ch=S.ch||{};
+  if(!S.ch[id]){S.ch[id]={draw:pick2(id,null),ans:{},tries:0,pass:false,lockUntil:0};}
+  return S.ch[id];
+}
+function pick2(id,prev){
+  const n=(CHALLENGE[id]||[]).length; const all=[...Array(n).keys()];
+  let d;
+  for(let k=0;k<10;k++){
+    const a=all.slice().sort(()=>Math.random()-0.5); d=a.slice(0,Math.min(2,n));
+    if(!prev || d.slice().sort().join()!==prev.slice().sort().join()) break;
+  }
+  return d;
+}
+function chalHTML(id){
+  const pool=CHALLENGE[id]; if(!pool) return '';
+  const st=chState(id);
+  if(st.pass) return `<div class="passed">🏆 訂正挑戰通過！${st.tries>1?'（挑戰 '+st.tries+' 次）':'（一次就過關）'}</div>`;
+  const locked=Date.now()<st.lockUntil;
+  return `<div class="chal"><h5>🎯 訂正挑戰：下面的句子是對（O）還是錯（X）？</h5>
+    ${st.draw.map(i=>`<div class="st-row ${st.result?(st.result[i]?'good':'bad'):''}" data-i="${i}"><span class="txt">${esc(pool[i][0])}</span>
+      <button class="tf ${st.ans[i]===true?'sel':''}" data-q="${id}" data-i="${i}" data-v="1">O</button>
+      <button class="tf ${st.ans[i]===false?'sel':''}" data-q="${id}" data-i="${i}" data-v="0">X</button></div>`).join('')}
+    <div class="act"><button class="btn btn-pri chk" data-q="${id}" ${locked?'disabled':''}>${locked?'請先重讀解析…':'送出檢查'}</button><span class="cmsg" style="font-size:15px">${st.msg||''}</span></div>
+  </div>`;
+}
+function bindChal(id,list){
+  const box=$('ch_'+id); if(!box) return;
+  box.querySelectorAll('.tf').forEach(b=>b.onclick=()=>{
+    const st=chState(id); if(Date.now()<st.lockUntil) return;
+    st.ans[b.dataset.i]= b.dataset.v==='1'; st.result=null; st.msg=''; save();
+    box.innerHTML=chalHTML(id); bindChal(id,list);
+  });
+  const c=box.querySelector('.chk'); if(!c) return;
+  c.onclick=()=>{
+    const st=chState(id), pool=CHALLENGE[id];
+    if(st.draw.some(i=>st.ans[i]===undefined)){st.msg='每一句都要選 O 或 X 喔！';box.innerHTML=chalHTML(id);bindChal(id,list);return;}
+    st.tries++;
+    const res={}; st.draw.forEach(i=>res[i]= st.ans[i]===pool[i][1]);
+    if(Object.values(res).every(Boolean)){ st.pass=true; st.msg=''; save(); sendProgress(); }
+    else{
+      st.result=res; st.lockUntil=Date.now()+8000;
+      st.msg='有句子判斷錯了（紅字），請再讀一次上面的解析，8 秒後換新題目重新挑戰。';
+      setTimeout(()=>{ if(!st.pass){ st.draw=pick2(id,st.draw); st.ans={}; st.result=null; st.msg='新題目來了，再挑戰一次！'; save(); if($('ch_'+id)){$('ch_'+id).innerHTML=chalHTML(id);bindChal(id,list);} } },8000);
+    }
+    save(); box.innerHTML=chalHTML(id); bindChal(id,list); markRv(id); foot1(list);
+  };
+  // 重新整理後若仍在鎖定期，補上計時
+  const st=chState(id);
+  if(!st.pass && Date.now()<st.lockUntil && !TIMERS[id]){ TIMERS[id]=1; setTimeout(()=>{TIMERS[id]=0; if(!st.pass){st.draw=pick2(id,st.draw);st.ans={};st.result=null;st.msg='新題目來了，再挑戰一次！';save();if($('ch_'+id)){$('ch_'+id).innerHTML=chalHTML(id);bindChal(id,list);}}}, st.lockUntil-Date.now()); }
+}
+function itemDone(id){return !!S.causes[id] && (!CHALLENGE[id] || chState(id).pass);}
+function markRv(id){const el=$('rv_'+id);if(el)el.classList.toggle('doneit',itemDone(id));}
+function isOptional(r){return CONFIG.LUCKY_OPTIONAL && r.ok;}
+/* 訂正分：答錯的題目通過訂正挑戰，每題加回 2 分；今日成績＝(原始分＋訂正分)÷2 */
+function fixScore(A){
+  A=A||analyze();
+  const passed=A.res.filter(r=>!r.ok && S.ch && S.ch[r.it.id] && S.ch[r.it.id].pass).length;
+  const fix=A.score+POINTS*passed;
+  return {passed, fix, today:(A.score+fix)/2};
+}
+let progTimer=null;
+function sendProgress(){
+  if(!CONFIG.GAS_URL || S.demo) return;
+  clearTimeout(progTimer);
+  progTimer=setTimeout(()=>{const {p}=basePayload(); const f=fixScore(); Object.assign(p,{type:'progress',fixScore:f.fix,todayScore:f.today,passed:f.passed}); post(p).catch(()=>{});},1500);
+}
+function foot1(list){
+  const req=list.filter(r=>!isOptional(r)), opt=list.filter(isOptional);
+  const d=req.filter(r=>itemDone(r.it.id)).length, od=opt.filter(r=>itemDone(r.it.id)).length;
+  setFoot(`<button class="btn btn-ghost" onclick="goStep(0)">‹ 上一步</button><div class="sp">已完成訂正 ${d} / ${req.length} 題${opt.length?`　（選做 ${od} / ${opt.length}）`:''}<br><b style="color:var(--pri)">訂正分 ${fixScore().fix}　今日成績 ${fixScore().today}</b></div><button class="btn btn-pri" id="to2" ${d<req.length?'disabled':''}>下一步：看我的分析 ›</button>`);
+  $('to2').onclick=()=>goStep(2);
+}
+function causeStats(A){
+  const list=reviewList(A);
+  return Object.keys(CAUSES).map(k=>({k,name:CAUSES[k].icon+' '+CAUSES[k].name,n:list.filter(r=>S.causes[r.it.id]===k).length})).filter(x=>x.n).sort((a,b)=>b.n-a.n);
+}
+function causeBars(cs,small){
+  const max=Math.max(1,...cs.map(c=>c.n));
+  return cs.map(c=>`<div class="hbar"><span>${esc(c.name)}</span><div class="track"><div class="fill" style="width:${c.n/max*100}%;background:var(--pri)"></div></div><span class="pct">${c.n} 題</span></div>`).join('');
+}
+function step2(A){
+  const cs=causeStats(A);
+  const top=cs.slice(0,2).map(c=>c.k);
+  if(!top.length) top.push('misread');
+  let h=`<div class="panel"><h3>我的錯誤原因分析</h3><p class="hint">這是你剛剛自己找出來的原因，排第一的就是你最常犯的錯誤。</p>${cs.length?causeBars(cs):'<div class="empty">沒有錯題，太棒了！</div>'}
+    ${cs.length?`<div class="insight">你最常見的錯誤是 <b>${esc(cs[0].name)}</b>，下面有對應的方法可以試試看。</div>`:''}</div>`;
+  h+=`<div class="panel"><h3>我要用的方法（至少選 1 個）</h3><p class="hint">依照你的錯誤原因推薦的讀書方法。</p>`;
+  top.forEach(k=>{
+    h+=`<div class="strat-group"><h4>${CAUSES[k].icon} 針對「${CAUSES[k].name}」</h4>${STRATEGIES[k].map(s=>`<button class="strat ${S.strategies.includes(s)?'sel':''}" data-s="${esc(s)}"><span class="box">${S.strategies.includes(s)?'✓':''}</span><span>${esc(s)}</span></button>`).join('')}</div>`;
+  });
+  h+=`</div><div class="panel"><h3>寫一句給下次的自己</h3><p class="hint">要具體喔！例如：「下次考試我要把題目的『不』和『錯誤』圈起來。」</p>
+    <textarea id="goal" placeholder="下次考試我要……">${esc(S.goal)}</textarea></div>`;
+  $('stepBody').innerHTML=h;
+  $('stepBody').querySelectorAll('.strat').forEach(b=>b.onclick=()=>{
+    const s=b.dataset.s, i=S.strategies.indexOf(s);
+    if(i>=0) S.strategies.splice(i,1); else S.strategies.push(s);
+    save(); b.classList.toggle('sel'); b.querySelector('.box').textContent=b.classList.contains('sel')?'✓':''; foot2();
+  });
+  $('goal').oninput=e=>{S.goal=e.target.value;save();foot2();};
+  foot2();
+}
+function foot2(){
+  const ok=S.strategies.length>0 && S.goal.trim().length>=6;
+  setFoot(`<button class="btn btn-ghost" onclick="goStep(2)">‹ 上一步</button><div class="sp">${ok?'完成！':'請選至少 1 個方法，並寫一句目標（至少 6 個字）'}</div><button class="btn btn-pri" id="to3" ${ok?'':'disabled'}>完成，看我的學習報告 ›</button>`);
+  $('to3').onclick=()=>{goStep(4);sendReflect();};
+}
+
+function step3(A){
+  const cb=calibText(S.est,A.score);
+  const cs=causeStats(A);
+  const g=k=>A.res.filter(r=>r.q===k).length;
+  const trap=A.res.filter(r=>r.q==='b');
+  $('stepBody').innerHTML=`
+  <div class="report">
+    <div class="report-head"><h2>📋 ${S.cls} 班 ${S.seat} 號｜我的學習報告</h2><span style="color:var(--sub);font-size:14px">${esc(CONFIG.TITLE)}</span></div>
+    <div class="report-grid">
+      <div class="mini">
+        <h4>分數</h4>
+        <div style="display:flex;gap:12px;align-items:baseline"><b style="font-size:46px;color:var(--pri);line-height:1">${A.score}</b>${S.est!=null&&S.est!==''?'<span>預估 '+S.est+' 分</span>':''}</div>
+        <div style="font-size:14px;margin-top:6px;background:var(--pri-soft);border-radius:8px;padding:6px 8px">訂正分 <b>${fixScore(A).fix}</b>（通關 ${fixScore(A).passed} 題 ×2）<br>今日成績 <b style="font-size:20px;color:var(--pri)">${fixScore(A).today}</b> ＝（${A.score}＋${fixScore(A).fix}）÷2</div>
+        ${S.est!=null&&S.est!==''?`<div style="margin:6px 0 12px"><span class="calib"><span class="tag" style="background:${cb.bg};color:${cb.c}">${cb.t}</span></span></div>`:'<div style="height:12px"></div>'}
+        <h4>把握 × 對錯</h4>
+        <div class="mq">
+          <div style="background:var(--ok-soft)">真的會<b style="color:var(--ok)">${g('a')}</b></div>
+          <div style="background:var(--bad-soft)">⚠️陷阱題<b style="color:var(--bad)">${g('b')}</b></div>
+          <div style="background:#efe8f7">答對沒把握<b style="color:var(--guess)">${g('c')}</b></div>
+          <div style="background:var(--warn-soft)">知道不熟<b style="color:var(--warn)">${g('d')}</b></div>
+        </div>
+        ${trap.length?`<div style="font-size:13px;margin-top:6px">陷阱題：${trap.map(r=>esc(r.it.label)).join('、')}</div>`:''}
+      </div>
+      <div class="mini"><h4>單元主題答對率</h4>${hbars(A.topics)}<h4 style="margin-top:10px">題型答對率</h4>${hbars(A.skills)}</div>
+      <div class="mini"><h4>我的錯誤原因</h4>${cs.length?causeBars(cs):'<div style="font-size:14px">沒有錯題 🎉</div>'}
+        <h4 style="margin-top:10px">訂正挑戰</h4><div style="font-size:14px">${(()=>{const c=Object.values(S.ch||{}).filter(x=>x.pass);const one=c.filter(x=>x.tries===1).length;return c.length?`🏆 通過 ${c.length} 題（一次過關 ${one} 題，多次挑戰 ${c.length-one} 題）`:'沒有需要訂正的題目';})()}</div>
+        <h4 style="margin-top:10px">我要用的方法</h4><div style="font-size:14px">${S.strategies.map(s=>'✓ '+esc(s)).join('<br>')}</div></div>
+    </div>
+    <div class="goalbox">🎯 <b>給下次的自己：</b>${esc(S.goal)}</div>
+  </div>
+  <div class="send" id="sendMsg">${S.demo?'🧪 示範模式：資料不會送出。重新整理頁面即可再示範一次。':CONFIG.GAS_URL?(S.sent?'✅ 檢討結果已送出給老師':'資料傳送中…'):'📸 請把這個畫面截圖，交給老師。'}</div>`;
+  $('stepBody').insertAdjacentHTML('beforeend',`<div class="panel" style="margin-top:16px">
+    <h3>📧 把這份報告寄給我自己</h3>
+    <p class="hint">填入你的 Email，報告會寄到你的信箱，方便以後回顧。</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <input id="mailTo" type="email" inputmode="email" autocomplete="email" autocapitalize="off" placeholder="例如：student@example.com"
+        style="flex:1;min-width:240px;padding:12px 14px;border:2px solid var(--line);border-radius:12px;font-size:18px">
+      <button class="btn btn-pri" id="mailBtn">寄出報告</button>
+    </div>
+    <div id="mailMsg" style="margin-top:8px;font-size:15px;min-height:22px"></div></div>`);
+  $('mailBtn').onclick=sendMail;
+  if(CONFIG.NEXT_LINK && CONFIG.NEXT_LINK.url){
+    $('stepBody').insertAdjacentHTML('beforeend',`<div class="panel" style="text-align:center;background:var(--pri-soft)">
+      <div style="font-size:16px;margin-bottom:10px">🎉 你完成今天的學習檢討了！</div>
+      <a class="btn btn-pri" style="text-decoration:none;font-size:20px;padding:16px 28px" href="${esc(CONFIG.NEXT_LINK.url)}" target="_blank" rel="noopener">${esc(CONFIG.NEXT_LINK.text)}</a></div>`);
+  }
+  setFoot(`<button class="btn btn-ghost" onclick="goStep(3)">‹ 修改行動計畫</button><div class="sp"></div>`);
+}
+
+/* ==========================================================
+   送出到 Google Sheets（選用）
+   ========================================================== */
+function post(payload){
+  return fetch(CONFIG.GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)});
+}
+function basePayload(){
+  const A=analyze();
+  return {A, p:{exam:CONFIG.EXAM_ID, title:CONFIG.TITLE, cls:S.cls, seat:S.seat, score:A.score, est:S.est,
+    quad:{a:A.res.filter(r=>r.q==='a').length,b:A.res.filter(r=>r.q==='b').length,c:A.res.filter(r=>r.q==='c').length,d:A.res.filter(r=>r.q==='d').length},
+    trap:A.res.filter(r=>r.q==='b').map(r=>r.it.label).join('、')}};
+}
+function sendSubmit(){
+  if(!CONFIG.GAS_URL || S.demo) return;
+  const {A,p}=basePayload();
+  Object.assign(p,{type:'submit', submitAt:S.submitAt,
+    answers:S.answers, conf:S.conf,
+    items:A.res.map(r=>({id:r.it.id,label:r.it.label,key:r.it.a,ans:S.answers[r.it.id],conf:r.c,ok:r.ok,q:r.q,topic:TOPICS[r.it.t],skill:SKILLS[r.it.s]})),
+    topics:Object.fromEntries(A.topics.map(t=>[t.name,t.pct])),
+    skills:Object.fromEntries(A.skills.map(t=>[t.name,t.pct]))});
+  post(p).then(()=>{S.sentSubmit=true;save();const m=$('sendMsg');if(m)m.textContent=sendMsgText();})
+    .catch(()=>{const m=$('sendMsg');if(m)m.textContent='⚠️ 網路傳送失敗，請截圖交給老師（下次登入會自動重送）';});
+}
+function sendReflect(){
+  if(!CONFIG.GAS_URL || S.sent || S.demo) return;
+  const {A,p}=basePayload();
+  Object.assign(p,{type:'reflect', causes:S.causes,
+    causeCount:Object.fromEntries(causeStats(A).map(c=>[CAUSES[c.k].name,c.n])),
+    causeByItem:Object.fromEntries(Object.entries(S.causes).map(([id,k])=>[ITEMS.find(i=>i.id===id).label,CAUSES[k].name])),
+    fixScore:fixScore(A).fix, todayScore:fixScore(A).today,
+    extraWrong:Object.keys(S.extra||{}).map(id=>ITEMS.find(i=>i.id===id).label).join('、'),
+    challenge:Object.fromEntries(Object.entries(S.ch||{}).filter(([id,c])=>c.pass).map(([id,c])=>[ITEMS.find(i=>i.id===id).label,c.tries])),
+    strategies:S.strategies, goal:S.goal});
+  post(p).then(()=>{S.sent=true;save();const m=$('sendMsg');if(m)m.textContent='✅ 檢討結果已送出給老師';})
+    .catch(()=>{const m=$('sendMsg');if(m)m.textContent='⚠️ 網路傳送失敗，請把這個畫面截圖交給老師。';});
+}
+async function sendMail(){
+  const to=$('mailTo').value.trim(), m=$('mailMsg');
+  const say=(t,c)=>{m.textContent=t;m.style.color=c||'var(--sub)';};
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) return say('Email 格式不太對，再檢查一下喔！','var(--bad)');
+  if(S.demo) return say('🧪 示範模式不會真的寄出。','var(--guess)');
+  if(!CONFIG.GAS_URL) return say('目前沒有設定寄信功能，請改用截圖保存。','var(--bad)');
+  if(!S.sent) return say('報告還在送出中，請稍等幾秒再按一次。','var(--warn)');
+  $('mailBtn').disabled=true; say('寄送中…');
+  try{
+    const u=CONFIG.GAS_URL+'?action=email&exam='+encodeURIComponent(CONFIG.EXAM_ID)+'&cls='+S.cls+'&seat='+S.seat+'&to='+encodeURIComponent(to);
+    const j=await (await fetch(u)).json();
+    say((j.ok?'✅ ':'⚠️ ')+j.msg, j.ok?'var(--ok)':'var(--bad)');
+  }catch(e){ say('⚠️ 網路有問題，請稍後再試，或先截圖保存。','var(--bad)'); }
+  $('mailBtn').disabled=false;
+}
+/* 登入時向雲端查詢：是否開放檢討、是否已有交卷紀錄 */
+async function fetchStatus(cls,seat){
+  if(!CONFIG.GAS_URL) return null;
+  try{
+    const ctl=new AbortController(); const t=setTimeout(()=>ctl.abort(),8000);
+    const u=CONFIG.GAS_URL+'?action=status&exam='+encodeURIComponent(CONFIG.EXAM_ID)+'&cls='+cls+'&seat='+seat;
+    const r=await fetch(u,{signal:ctl.signal}); clearTimeout(t);
+    const j=await r.json();
+    if(typeof j.reviewOpen==='boolean') REVIEW_OPEN=j.reviewOpen;
+    return j;
+  }catch(e){ return null; }
+}
+
+initLogin();
+</script>
+</body>
+</html>
