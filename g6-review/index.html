@@ -549,11 +549,11 @@ function initLogin(){
     if(saved && saved.cls){ S=saved; }
     else if(emb && !(remote && remote.record)){ S=emb; if(!CONFIG.GAS_URL) REVIEW_OPEN=true; }
     else { S=blank(); S.cls=c; S.seat=seat; }
-    if(S.fromEmbed && !CONFIG.GAS_URL) REVIEW_OPEN=true;
+    if((S.fromEmbed||emb) && (!CONFIG.GAS_URL || !remote)) REVIEW_OPEN=true;
     // 換了平板：從雲端還原已交卷的紀錄
     if(remote && remote.record && (!S.submitted || CONFIG.PAPER_MODE && !S.sent && !Object.keys(S.causes||{}).length)){
       const r=remote.record;
-      Object.assign(S,{scoreOverride:r.scoreOverride??null,answers:r.answers||{},conf:r.conf||{},est:(r.est===''||r.est==null)?null:r.est,submitted:true,submitAt:r.submitAt,sentSubmit:true,
+      Object.assign(S,{scoreOverride:r.scoreOverride??(emb?emb.scoreOverride:null), extra:r.extra||S.extra||{},answers:r.answers||{},conf:r.conf||{},est:(r.est===''||r.est==null)?null:r.est,submitted:true,submitAt:r.submitAt,sentSubmit:true,
         causes:r.causes||S.causes||{},strategies:r.strategies||[],goal:r.goal||'',sent:!!r.reflected,step:r.reflected?4:0});
     }
     save();
@@ -1030,7 +1030,7 @@ function basePayload(){
 function sendSubmit(){
   if(!CONFIG.GAS_URL || S.demo) return;
   const {A,p}=basePayload();
-  Object.assign(p,{type:'submit', submitAt:S.submitAt,
+  Object.assign(p,{type:'submit', submitAt:S.submitAt, scoreOverride:S.scoreOverride??null,
     answers:S.answers, conf:S.conf,
     items:A.res.map(r=>({id:r.it.id,label:r.it.label,key:r.it.a,ans:S.answers[r.it.id],conf:r.c,ok:r.ok,q:r.q,topic:TOPICS[r.it.t],skill:SKILLS[r.it.s]})),
     topics:Object.fromEntries(A.topics.map(t=>[t.name,t.pct])),
@@ -1045,7 +1045,7 @@ function sendReflect(){
     causeCount:Object.fromEntries(causeStats(A).map(c=>[CAUSES[c.k].name,c.n])),
     causeByItem:Object.fromEntries(Object.entries(S.causes).map(([id,k])=>[ITEMS.find(i=>i.id===id).label,CAUSES[k].name])),
     fixScore:fixScore(A).fix, todayScore:fixScore(A).today,
-    unfinished:S.fixEarly||0,
+    unfinished:S.fixEarly||0, extra:S.extra||{},
     extraWrong:Object.keys(S.extra||{}).map(id=>ITEMS.find(i=>i.id===id).label).join('、'),
     challenge:Object.fromEntries(Object.entries(S.ch||{}).filter(([id,c])=>c.pass).map(([id,c])=>[ITEMS.find(i=>i.id===id).label,c.tries])),
     strategies:S.strategies, goal:S.goal});
