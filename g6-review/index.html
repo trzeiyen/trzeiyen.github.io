@@ -256,7 +256,7 @@ const CONFIG = {
   PAPER_MODE: true,                   // true＝紙本作答、老師匯入資料，學生只做檢討；false＝在 iPad 上作答                   // 交卷後是否立刻顯示分數（不顯示答案）
   TITLE: '115學年度第1學期第1次定期評量（模擬）六年級社會',
   DEMO: {cls:'699', seat:'99'},
-  FIX_UNLOCK_MIN: 10,                 // 錯題訂正開始幾分鐘後，開放「時間到，先送出」
+  FIX_UNLOCK_MIN: 3,                  // 錯題訂正開始幾分鐘後，開放「時間到，先送出」
   LUCKY_OPTIONAL: true,               // △ 猜對的題目改為選做（不影響進入下一步）
   NEXT_LINK: {text:'🚢 完成了！去玩「大航海時代」', url:'https://age-of-discovery-voyage.zeiyenst.chatgpt.site'}  // 完成後的延伸活動，不需要就設成 null        // 示範帳號：不連線、不存檔，每次登入都是全新狀態
 };
@@ -553,7 +553,7 @@ function initLogin(){
     // 換了平板：從雲端還原已交卷的紀錄
     if(remote && remote.record && (!S.submitted || CONFIG.PAPER_MODE && !S.sent && !Object.keys(S.causes||{}).length)){
       const r=remote.record;
-      Object.assign(S,{scoreOverride:r.scoreOverride??(emb?emb.scoreOverride:null), extra:r.extra||S.extra||{},answers:r.answers||{},conf:r.conf||{},est:(r.est===''||r.est==null)?null:r.est,submitted:true,submitAt:r.submitAt,sentSubmit:true,
+      Object.assign(S,{scoreOverride:r.scoreOverride??(emb?emb.scoreOverride:null), extra:(({__not,...e})=>e)(r.extra||S.extra||{}), notWrong:(r.extra&&r.extra.__not)||S.notWrong||{},answers:r.answers||{},conf:r.conf||{},est:(r.est===''||r.est==null)?null:r.est,submitted:true,submitAt:r.submitAt,sentSubmit:true,
         causes:r.causes||S.causes||{},strategies:r.strategies||[],goal:r.goal||'',sent:!!r.reflected,step:r.reflected?4:0});
     }
     save();
@@ -667,7 +667,7 @@ function closeModal(){$('modalRoot').innerHTML='';}
    ========================================================== */
 function analyze(){
   const res=ITEMS.map(it=>{
-    const ok=S.answers[it.id]===it.a && !(S.extra&&S.extra[it.id]), c=S.conf[it.id];
+    const ok=(S.answers[it.id]===it.a && !(S.extra&&S.extra[it.id])) || !!(S.notWrong&&S.notWrong[it.id]), c=S.conf[it.id];
     let q; // a 真的會 b 陷阱題 c 猜對 d 知道不會
     if(ok) q = c==='sure' ? 'a' : 'c';
     else q = c==='sure' ? 'b' : 'd';
@@ -758,32 +758,33 @@ function renderStep(){
 
 /* ① 確認錯題：系統判讀的錯題已標紅；沒出現的錯題，學生自己勾選 */
 function stepConfirm(A){
-  S.extra=S.extra||{};
+  S.extra=S.extra||{}; S.notWrong=S.notWrong||{};
   const sysWrong=id=>S.answers[id]!==ITEMS.find(i=>i.id===id).a;
   const disp=v=>v==='－'?'空白':v;
   const markTxt={sure:'',mid:'？',guess:'△'};
   let h=`<div class="panel"><h3>先確認：你錯了哪些題目？</h3>
-    <p class="hint">拿出你的考卷對照一下。<b style="color:var(--bad)">紅色</b>是老師系統讀到你答錯的題目。<br>
-    如果還有<b>答錯但沒出現</b>的題目，請點一下那一題，把它加進來（會變成橘色）。</p>`;
+    <p class="hint">拿出你的考卷對照一下。<b style="color:var(--bad)">紅色</b>是系統讀到你答錯的題目。<br>
+    ・還有<b>答錯但沒出現</b>的題目 → 點一下加進來（變<b style="color:var(--warn)">橘色</b>）<br>
+    ・紅色的題目其實<b>你答對了</b> → 點一下取消（變灰色）。老師會再核對喔！</p>`;
   SECTIONS.forEach(sec=>{
     h+=`<div style="font-weight:700;margin:14px 0 6px">${esc(sec.title)}</div><div style="display:flex;flex-wrap:wrap;gap:8px">`;
     sec.items.forEach(it=>{
-      const sw=sysWrong(it.id), ex=!!S.extra[it.id];
-      const bg= sw?'var(--bad-soft)':ex?'var(--warn-soft)':'#fff';
-      const bd= sw?'var(--bad)':ex?'var(--warn)':'var(--line)';
+      const nw=sysWrong(it.id)&&!!S.notWrong[it.id], sw=sysWrong(it.id)&&!nw, ex=!!S.extra[it.id];
+      const bg= sw?'var(--bad-soft)':ex?'var(--warn-soft)':nw?'#eceae6':'#fff';
+      const bd= sw?'var(--bad)':ex?'var(--warn)':nw?'#9a9088':'var(--line)';
       const lab=sec.label?sec.label(it.n):it.n;
-      h+=`<button class="cf" data-q="${it.id}" ${sw?'disabled':''} style="min-width:76px;min-height:64px;border-radius:12px;border:2px solid ${bd};background:${bg};padding:6px 8px;text-align:center;line-height:1.25">
+      h+=`<button class="cf" data-q="${it.id}" data-sys="${sysWrong(it.id)?1:0}" style="min-width:76px;min-height:64px;border-radius:12px;border:2px solid ${bd};background:${bg};padding:6px 8px;text-align:center;line-height:1.25">
         <div style="font-size:14px;color:var(--sub)">${esc(String(lab))}</div>
         <div style="font-size:20px;font-weight:800">${esc(disp(S.answers[it.id]))}<span style="font-size:14px;color:var(--warn)">${markTxt[S.conf[it.id]]}</span></div>
-        <div style="font-size:12px;font-weight:700;color:${sw?'var(--bad)':'var(--warn)'}">${sw?'✘ 錯':ex?'我也錯了':''}</div></button>`;
+        <div style="font-size:12px;font-weight:700;color:${sw?'var(--bad)':nw?'#6b6460':'var(--warn)'}">${sw?'✘ 錯':ex?'我也錯了':nw?'我答對了':''}</div></button>`;
     });
     h+='</div>';
   });
-  const nSys=ITEMS.filter(it=>sysWrong(it.id)).length, nEx=Object.keys(S.extra).filter(k=>S.extra[k]).length;
-  h+=`<div class="insight" style="margin-top:16px">系統讀到你錯 <b>${nSys}</b> 題${nEx?`，你自己又加了 <b>${nEx}</b> 題`:''}。方格裡是系統讀到的答案，如果跟考卷上寫的不一樣，請告訴老師。</div></div>`;
+  const nSys=ITEMS.filter(it=>sysWrong(it.id)).length, nEx=Object.keys(S.extra).filter(k=>S.extra[k]).length, nNw=Object.keys(S.notWrong).filter(k=>S.notWrong[k]).length;
+  h+=`<div class="insight" style="margin-top:16px">系統讀到你錯 <b>${nSys}</b> 題${nEx?`，你加了 <b>${nEx}</b> 題`:''}${nNw?`，取消了 <b>${nNw}</b> 題`:''}。方格裡是系統讀到的答案，如果跟考卷上寫的不一樣，請告訴老師。</div></div>`;
   $('stepBody').innerHTML=h;
   $('stepBody').querySelectorAll('.cf').forEach(b=>b.onclick=()=>{
-    const id=b.dataset.q; S.extra[id]=!S.extra[id]; if(!S.extra[id]) delete S.extra[id]; save(); stepConfirm(analyze());
+    const id=b.dataset.q, o=b.dataset.sys==='1'?S.notWrong:S.extra; o[id]=!o[id]; if(!o[id]) delete o[id]; save(); stepConfirm(analyze());
   });
   setFoot(`<div class="sp">確認好了嗎？</div><button class="btn btn-pri" onclick="goStep(1)">確認無誤，開始錯題訂正 ›</button>`);
 }
@@ -1045,8 +1046,9 @@ function sendReflect(){
     causeCount:Object.fromEntries(causeStats(A).map(c=>[CAUSES[c.k].name,c.n])),
     causeByItem:Object.fromEntries(Object.entries(S.causes).map(([id,k])=>[ITEMS.find(i=>i.id===id).label,CAUSES[k].name])),
     fixScore:fixScore(A).fix, todayScore:fixScore(A).today,
-    unfinished:S.fixEarly||0, extra:S.extra||{},
-    extraWrong:Object.keys(S.extra||{}).map(id=>ITEMS.find(i=>i.id===id).label).join('、'),
+    unfinished:S.fixEarly||0, extra:Object.assign({},S.extra||{},{__not:S.notWrong||{}}),
+    extraWrong:[Object.keys(S.extra||{}).length?'補勾：'+Object.keys(S.extra).map(id=>ITEMS.find(i=>i.id===id).label).join('、'):'',
+                Object.keys(S.notWrong||{}).length?'取消（說自己答對）：'+Object.keys(S.notWrong).map(id=>ITEMS.find(i=>i.id===id).label).join('、'):''].filter(Boolean).join('；'),
     challenge:Object.fromEntries(Object.entries(S.ch||{}).filter(([id,c])=>c.pass).map(([id,c])=>[ITEMS.find(i=>i.id===id).label,c.tries])),
     strategies:S.strategies, goal:S.goal});
   post(p).then(()=>{S.sent=true;save();const m=$('sendMsg');if(m)m.textContent='✅ 檢討結果已送出給老師';})
