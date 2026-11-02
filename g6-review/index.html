@@ -256,6 +256,7 @@ const CONFIG = {
   PAPER_MODE: true,                   // true＝紙本作答、老師匯入資料，學生只做檢討；false＝在 iPad 上作答                   // 交卷後是否立刻顯示分數（不顯示答案）
   TITLE: '115學年度第1學期第1次定期評量（模擬）六年級社會',
   DEMO: {cls:'699', seat:'99'},
+  FIX_UNLOCK_MIN: 10,                 // 錯題訂正開始幾分鐘後，開放「時間到，先送出」
   LUCKY_OPTIONAL: true,               // △ 猜對的題目改為選做（不影響進入下一步）
   NEXT_LINK: {text:'🚢 完成了！去玩「大航海時代」', url:'https://age-of-discovery-voyage.zeiyenst.chatgpt.site'}  // 完成後的延伸活動，不需要就設成 null        // 示範帳號：不連線、不存檔，每次登入都是全新狀態
 };
@@ -917,8 +918,18 @@ function sendProgress(){
 function foot1(list){
   const req=list.filter(r=>!isOptional(r)), opt=list.filter(isOptional);
   const d=req.filter(r=>itemDone(r.it.id)).length, od=opt.filter(r=>itemDone(r.it.id)).length;
-  setFoot(`<button class="btn btn-ghost" onclick="goStep(0)">‹ 上一步</button><div class="sp">已完成訂正 ${d} / ${req.length} 題${opt.length?`　（選做 ${od} / ${opt.length}）`:''}<br><b style="color:var(--pri)">訂正分 ${fixScore().fix}　今日成績 ${fixScore().today}</b></div><button class="btn btn-pri" id="to2" ${d<req.length?'disabled':''}>下一步：看我的分析 ›</button>`);
+  if(!S.fixStart){S.fixStart=Date.now();save();}
+  const left=Math.max(0,CONFIG.FIX_UNLOCK_MIN*60000-(Date.now()-S.fixStart));
+  const unfinished=d<req.length;
+  const mm=String(Math.floor(left/60000)), ss=String(Math.floor(left%60000/1000)).padStart(2,'0');
+  const early = !unfinished ? '' : left>0
+    ? `<span style="font-size:14px;color:var(--sub);margin-right:10px">⏳ ${mm}:${ss} 後可先送出</span>`
+    : `<button class="btn btn-ghost" id="toEarly" style="margin-right:10px;border-color:var(--warn);color:var(--warn)">⏰ 時間到，先送出（還有 ${req.length-d} 題沒訂正）</button>`;
+  setFoot(`<button class="btn btn-ghost" onclick="goStep(0)">‹ 上一步</button><div class="sp">已完成訂正 ${d} / ${req.length} 題${opt.length?`　（選做 ${od} / ${opt.length}）`:''}<br><b style="color:var(--pri)">訂正分 ${fixScore().fix}　今日成績 ${fixScore().today}</b></div>${early}<button class="btn btn-pri" id="to2" ${unfinished?'disabled':''}>下一步：看我的分析 ›</button>`);
   $('to2').onclick=()=>goStep(2);
+  if($('toEarly')) $('toEarly').onclick=()=>{S.fixEarly=req.length-d;save();goStep(2);};
+  clearTimeout(window._fixT);
+  if(unfinished && left>0 && S.step===1) window._fixT=setTimeout(()=>{ if(S.step===1) foot1(list); },1000);
 }
 function causeStats(A){
   const list=reviewList(A);
@@ -1034,6 +1045,7 @@ function sendReflect(){
     causeCount:Object.fromEntries(causeStats(A).map(c=>[CAUSES[c.k].name,c.n])),
     causeByItem:Object.fromEntries(Object.entries(S.causes).map(([id,k])=>[ITEMS.find(i=>i.id===id).label,CAUSES[k].name])),
     fixScore:fixScore(A).fix, todayScore:fixScore(A).today,
+    unfinished:S.fixEarly||0,
     extraWrong:Object.keys(S.extra||{}).map(id=>ITEMS.find(i=>i.id===id).label).join('、'),
     challenge:Object.fromEntries(Object.entries(S.ch||{}).filter(([id,c])=>c.pass).map(([id,c])=>[ITEMS.find(i=>i.id===id).label,c.tries])),
     strategies:S.strategies, goal:S.goal});
