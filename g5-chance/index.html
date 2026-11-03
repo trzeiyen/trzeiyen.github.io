@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>501 社會大富翁機會命運</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Huninn&family=Noto+Sans+TC:wght@500;700;900&display=swap">
+<style>
+/* 版面：仿大富翁桌面——粉紅底、中央一張大卡、下方兩個像棋盤格的抽卡鈕 */
+:root{
+  --board:#FCD2D4;      /* 棋盤粉紅底 */
+  --paper:#FFFDF8;      /* 卡面 */
+  --ink:#3A2A2E;        /* 主文字 */
+  --muted:#8A6F75;      /* 次要文字 */
+  --chance:#A9479C;     /* 機會紫 */
+  --chance-deep:#7E2F74;
+  --fate:#1E8FCB;       /* 命運藍 */
+  --fate-deep:#156A98;
+  --title:#E3322A;      /* 大富翁紅 */
+  --gold:#F4BE1C;       /* 起點黃 */
+  --f-display:"Huninn","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  --f-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+}
+html,body{height:100%}
+body{
+  margin:0;background:var(--board);color:var(--ink);font-family:var(--f-body);
+  background-image:radial-gradient(rgba(255,255,255,.55) 2px,transparent 2.5px);
+  background-size:26px 26px;
+  -webkit-tap-highlight-color:transparent;
+}
+.wrap{
+  min-height:100%;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:22px;
+  padding-block:20px 28px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+}
+header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center;text-align:center}
+header h1{font-family:var(--f-display);font-size:clamp(28px,5vw,46px);margin:0;color:var(--title);
+  text-shadow:3px 3px 0 #fff;letter-spacing:2px;text-wrap:balance}
+.tag{font-size:15px;font-weight:700;background:var(--gold);color:#4a3500;padding:5px 12px;border-radius:999px;letter-spacing:1px}
+
+.stage{width:100%;max-width:680px;perspective:1400px}
+#card{
+  position:relative;width:100%;min-height:min(56vh,440px);box-sizing:border-box;
+  background:var(--paper);border-radius:28px;border:10px solid #fff;
+  box-shadow:0 18px 36px rgba(120,40,60,.22),inset 0 0 0 3px rgba(0,0,0,.04);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  padding:34px 28px;text-align:center;cursor:pointer;
+  transition:transform .55s cubic-bezier(.3,.1,.2,1),opacity .3s,border-color .3s;
+}
+#card.flip{transform:rotateY(90deg) scale(.85);opacity:0}
+#card.chance{border-color:var(--chance)}
+#card.fate{border-color:var(--fate)}
+#card:focus-visible{outline:4px solid var(--title);outline-offset:4px}
+.ribbon{position:absolute;top:-10px;left:50%;transform:translateX(-50%);
+  font-family:var(--f-display);font-size:24px;color:#fff;padding:6px 26px 8px;border-radius:0 0 16px 16px;letter-spacing:6px}
+.chance .ribbon{background:var(--chance)} .fate .ribbon{background:var(--fate)}
+.qmark{font-family:var(--f-display);font-size:150px;line-height:1;color:#F2D7DA;margin:0}
+.wait{font-size:20px;color:var(--muted);margin:0}
+.kind{font-size:15px;font-weight:700;letter-spacing:2px;padding:4px 12px;border-radius:999px;background:#F6EEF0;color:var(--muted)}
+.ctitle{font-family:var(--f-display);font-size:clamp(30px,6vw,46px);margin:0;text-wrap:balance}
+.chance .ctitle{color:var(--chance-deep)} .fate .ctitle{color:var(--fate-deep)}
+.cdesc{font-size:clamp(19px,3.4vw,24px);line-height:1.65;margin:0;max-width:30em;text-wrap:pretty}
+.cdesc b{color:var(--title)}
+.action{font-family:var(--f-display);font-size:clamp(24px,4.6vw,32px);color:var(--title);
+  border:3px dashed var(--title);border-radius:14px;padding:8px 22px;background:#FFF4F2}
+.ask{font-size:clamp(22px,4vw,28px);font-weight:900;margin:0;line-height:1.5}
+.rule{font-size:18px;color:var(--muted);margin:0}
+.rule b{color:var(--title)}
+.reveal{font-family:var(--f-body);font-size:18px;font-weight:700;border:0;border-radius:12px;padding:10px 22px;
+  background:var(--gold);color:#4a3500;cursor:pointer;box-shadow:0 4px 0 #C99600}
+.reveal:active{transform:translateY(3px);box-shadow:0 1px 0 #C99600}
+.answer{font-size:clamp(20px,3.6vw,24px);font-weight:700;background:#FFF6D6;border-radius:12px;padding:10px 18px;margin:0;line-height:1.6}
+.src{position:absolute;bottom:12px;right:18px;font-size:13px;color:#B9A2A7}
+
+.btns{display:flex;gap:22px;width:100%;max-width:680px}
+.draw{flex:1;min-width:0;font-family:var(--f-display);font-size:clamp(26px,5vw,36px);color:#fff;border:0;border-radius:20px;
+  padding:18px 10px 14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;letter-spacing:4px}
+.draw small{font-family:var(--f-body);font-size:14px;letter-spacing:1px;opacity:.9;font-weight:500}
+.draw.chance{background:var(--chance);box-shadow:0 7px 0 var(--chance-deep)}
+.draw.fate{background:var(--fate);box-shadow:0 7px 0 var(--fate-deep)}
+.draw:active{transform:translateY(5px)}
+.draw.chance:active{box-shadow:0 2px 0 var(--chance-deep)} .draw.fate:active{box-shadow:0 2px 0 var(--fate-deep)}
+.draw:focus-visible,.reveal:focus-visible{outline:4px solid var(--ink);outline-offset:3px}
+.foot{font-size:14px;color:var(--muted);text-align:center;margin:0}
+@media (max-width:460px){ .btns{gap:12px} #card{padding:30px 16px} }
+@media (prefers-reduced-motion:reduce){ #card{transition:none} }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>社會大富翁・機會命運</h1>
+    <span class="tag">五上 第一、二單元・含原住民族傳說</span>
+  </header>
+
+  <div class="stage">
+    <div id="card" tabindex="0" role="button" aria-live="polite" aria-label="卡片，點一下翻回背面">
+      <p class="qmark">?</p>
+      <p class="wait">停在機會或命運格，按下面的按鈕抽一張</p>
+    </div>
+  </div>
+
+  <div class="btns">
+    <button class="draw chance" id="bChance">機會<small id="nChance">剩 0 張</small></button>
+    <button class="draw fate" id="bFate">命運<small id="nFate">剩 0 張</small></button>
+  </div>
+  <p class="foot">抽過的卡不會重複，整疊抽完會自動洗牌。點卡片可以翻回背面。挑戰卡請同組同學一起判斷答案。</p>
+</div>
+
+<script>
+const DECK = {
+  "機會": [
+    {t:"九降風好幫手", d:"新竹居民利用秋冬強勁的<b>九降風</b>和日晒，把柿子做成柿餅，保存得更久。", a:"前進 3 格"},
+    {t:"黑面琵鷺來過冬", d:"每年 <b>9～10 月</b>，黑面琵鷺從北方飛到溫暖的臺南七股過冬，吸引大家來賞鳥。", a:"前進 2 格"},
+    {t:"烏金大豐收", d:"冬天烏魚隨著<b>南下的寒流</b>游到臺灣西南沿海產卵，漁民做出好多烏魚子。", a:"再擲一次骰子"},
+    {t:"十三行學會煉鐵", d:"十三行遺址的人學會海外傳入的<b>煉鐵</b>技術，用鐵鋤頭種田，作物產量提高。", a:"前進 3 格"},
+    {t:"卑南聚落成形", d:"卑南遺址的人用<b>石刀</b>收割、用陶器儲放食物，食物穩定，人口成長形成聚落。", a:"前進 2 格"},
+    {t:"熱蘭遮城完工", d:"荷蘭人在臺南建立<b>熱蘭遮城</b>、普羅民遮城，作為行政管理與商業的中心。", a:"前進 3 格"},
+    {t:"荷蘭豆上桌", d:"荷蘭人引進<b>黃牛、豌豆、土芒果</b>，豌豆從此又叫「荷蘭豆」。", a:"再擲一次骰子"},
+    {t:"全臺首學", d:"鄭氏政權在臺南興建<b>全臺第一座孔廟</b>，設立學校、選拔人才。", a:"前進 4 格"},
+    {t:"蔗糖鹿皮熱銷", d:"鄭氏政權出口<b>蔗糖、鹿皮</b>，換回絲綢、瓷器、銀和香料。", a:"前進 3 格"},
+    {t:"航運好位置", d:"臺灣在<b>亞洲大陸東側、太平洋西側</b>，四面環海，透過航運可以航向東亞各國。", a:"前進 2 格"},
+    {t:"白鹿帶路", d:"<b>邵族</b>祖先打獵時追逐一頭白鹿，發現魚蝦豐富的<b>日月潭</b>，全族搬到這裡定居。", a:"前進 3 格"},
+    {t:"飛魚之神託夢", d:"<b>達悟族</b>人吃了飛魚全身發癢，飛魚之神託夢教長老正確的吃法與禮儀，族人從此更珍惜海洋資源。", a:"再擲一次骰子"},
+    {t:"泰雅獵人守規矩", d:"<b>泰雅族</b>只在 11 月到隔年 4 月狩獵，不獵殺幼小的動物，讓動物有時間繁殖生長。", a:"前進 2 格"},
+    {t:"臺灣玉傳到海外", d:"卑南遺址的人用<b>臺灣玉</b>做出人獸形耳飾等玉器，流傳到全臺，還傳到菲律賓、越南、泰國。", a:"前進 3 格"},
+    {t:"紅嘴黑鵯取火", d:"大洪水後<b>布農族</b>失去火種，紅嘴黑鵯冒險把火取回來，羽毛都被燻黑了。族人立下約定，永遠不傷害牢。", a:"前進 3 格"},
+    {t:"大鬼湖好生態", d:"<b>魯凱族</b>把大鬼湖視為祖靈聖地，禁止族人在周圍狩獵，這裡的生態和景觀保持得很好。", a:"前進 2 格"},
+    {q:true, t:"挑戰：紅嘴黑鵯", ask:"布農族為了感謝紅嘴黑鵯取回火種，立下了什麼約定？", ans:"禁止殺害紅嘴黑鵯；稻田收穫時歡迎牢來撿食穀粒", ok:"前進 3 格", ng:"留在原地"},
+    {q:true, t:"挑戰：白鹿傳說", ask:"邵族祖先追逐白鹿，發現了哪個地方？為什麼決定搬過去？", ans:"日月潭；那裡魚蝦豐富，可以當作食物", ok:"前進 3 格", ng:"留在原地"},
+    {q:true, t:"挑戰：三大洋", ask:"說出三大洋中的任兩個", ans:"太平洋、大西洋、印度洋", ok:"前進 3 格", ng:"留在原地"},
+    {q:true, t:"挑戰：干欄式房屋", ask:"把房子架高、防潮溼又防野獸的「干欄式房屋」，是哪個史前遺址的人住的？", ans:"十三行遺址（金屬器時代）", ok:"前進 3 格", ng:"留在原地"},
+    {q:true, t:"挑戰：屯墾地名", ask:"鄭氏政權派軍隊到各地屯墾，留下了哪些地名？說出一個", ans:"新營、林鳳營、左營、前鎮", ok:"前進 3 格", ng:"留在原地"}
+  ],
+  "命運": [
+    {t:"東北季風來襲", d:"冬天的<b>東北季風</b>讓北部又溼又冷，衣服晾好久都不乾。", a:"暫停一回合"},
+    {t:"南部冬天缺水", d:"南部冬天<b>降雨量少</b>，水庫缺水，有些稻田只能休耕。", a:"後退 2 格"},
+    {t:"颱風警報", d:"蘭嶼的傳統<b>地下屋</b>可以躲颱風和東北季風，你也趕快找地方躲好。", a:"暫停一回合"},
+    {t:"跑錯島了", d:"想看<b>達悟族</b>的拼板舟，卻跑去綠島。達悟族在<b>蘭嶼</b>才對！", a:"後退 2 格"},
+    {t:"釣魚臺沒民宿", d:"你想去<b>釣魚臺列嶼</b>住一晚，可是那裡沒有人居住。", a:"後退 2 格"},
+    {t:"風浪太大", d:"橫渡<b>臺灣海峽</b>時遇到大風浪，船隻受損，只好回港修理。", a:"後退 3 格"},
+    {t:"只能走私", d:"鄭氏政權和清帝國處於戰爭狀態，只能用<b>走私貿易</b>交易物品。", a:"暫停一回合"},
+    {t:"施琅攻臺", d:"清帝國派<b>施琅</b>攻打臺灣，西元 1684 年臺灣正式納入清帝國版圖。", a:"後退 3 格"},
+    {t:"西班牙被趕走", d:"荷蘭人派兵攻打臺灣北部，<b>西班牙人</b>被迫離開臺灣。", a:"後退 2 格"},
+    {t:"回到舊石器", d:"長濱遺址的人住在海邊洞穴，<b>敲擊石頭</b>做工具，還不會種田，只能捕魚、採集、狩獵。", a:"後退 1 格"},
+    {t:"想把飛魚撈光", d:"達悟族規定可以捕魚的季節，捕魚時<b>不一網打盡</b>，讓飛魚繼續繁衍。你想全部撈光，被長老勸下來了。", a:"後退 2 格"},
+    {t:"違反狩獵禁忌", d:"你在山林裡獵了一隻小山羌，違反泰雅族<b>不可獵殺幼小動物</b>的禁忌，只好放牠回山林。", a:"暫停一回合"},
+    {t:"部落會議決定", d:"祥典、狩獵、禁忌等大事由<b>頭目、祭司或部落會議</b>決定，全部落都要遵守。你先等會議結果。", a:"暫停一回合"},
+    {t:"天神降大雨", d:"有些<b>布農族</b>人不遵守祖靈規律、任意獵捕動物，惹怒天神，大雨淹沒稻田和部落，只好逃到高山。", a:"後退 3 格"},
+    {t:"沒辦入山證", d:"你想去魯凱族的聖地<b>大鬼湖</b>，却沒申請入山證和入園證，被擋在入口。", a:"暫停一回合"},
+    {q:true, t:"挑戰：大鬼湖", ask:"大鬼湖是哪一族的祖靈聖地？為什麼去之前要先申請？", ans:"魯凱族；為了減少對生態環境的干擾（當地也容易崩塌）", ok:"沒事，留在原地", ng:"後退 2 格"},
+    {q:true, t:"挑戰：飛魚季節", ask:"達悟族為什麼要規定可以捕飛魚的季節？", ans:"讓飛魚不被吃光、繼續繁衍，維持海洋生態平衡", ok:"沒事，留在原地", ng:"後退 2 格"},
+    {q:true, t:"挑戰：卑南文化", ask:"卑南遺址出土石刀、石板棺、兩個把手的陶罐，它屬於哪個時代？", ans:"新石器時代", ok:"沒事，留在原地", ng:"後退 2 格"},
+    {q:true, t:"挑戰：夏天的風", ask:"夏天吹什麼季風？會讓臺灣變得怎樣？", ans:"西南季風，全臺溼熱多雨", ok:"沒事，留在原地", ng:"後退 2 格"},
+    {q:true, t:"挑戰：傳教的文字", ask:"荷蘭傳教士用什麼文字拼寫原住民的語言？", ans:"羅馬字母", ok:"沒事，留在原地", ng:"後退 2 格"}
+  ]
+};
+
+const pile = {"機會":[], "命運":[]};
+function shuffle(arr){ for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];} return arr; }
+function refill(type){ pile[type] = shuffle(DECK[type].map((_,i)=>i)); }
+function counts(){
+  document.getElementById('nChance').textContent = `剩 ${pile["機會"].length} 張`;
+  document.getElementById('nFate').textContent = `剩 ${pile["命運"].length} 張`;
+}
+refill("機會"); refill("命運"); counts();
+
+const card = document.getElementById('card');
+let busy = false;
+
+function render(type, c){
+  const cls = type === "機會" ? "chance" : "fate";
+  card.className = cls;
+  if(c.q){
+    card.innerHTML = `
+      <div class="ribbon">${type}</div>
+      <span class="kind">挑戰卡・同組同學當裁判</span>
+      <h2 class="ctitle">${c.t}</h2>
+      <p class="ask">${c.ask}</p>
+      <p class="rule">答對：<b>${c.ok}</b>　答錯：<b>${c.ng}</b></p>
+      <button class="reveal" type="button">看答案</button>
+      <p class="answer" hidden>答案：${c.ans}</p>`;
+    const btn = card.querySelector('.reveal');
+    btn.addEventListener('click', e=>{ e.stopPropagation(); btn.hidden = true; card.querySelector('.answer').hidden = false; });
+  } else {
+    card.innerHTML = `
+      <div class="ribbon">${type}</div>
+      <h2 class="ctitle">${c.t}</h2>
+      <p class="cdesc">${c.d}</p>
+      <div class="action">${c.a}</div>`;
+  }
+}
+
+function draw(type){
+  if(busy) return; busy = true;
+  if(!pile[type].length) refill(type);
+  const c = DECK[type][pile[type].pop()];
+  counts();
+  card.classList.add('flip');
+  setTimeout(()=>{ render(type, c); requestAnimationFrame(()=>{ card.classList.remove('flip'); busy=false; }); }, 320);
+}
+
+function back(){
+  if(busy) return;
+  card.className = '';
+  card.innerHTML = `<p class="qmark">?</p><p class="wait">停在機會或命運格，按下面的按鈕抽一張</p>`;
+}
+
+document.getElementById('bChance').addEventListener('click', ()=>draw("機會"));
+document.getElementById('bFate').addEventListener('click', ()=>draw("命運"));
+card.addEventListener('click', back);
+card.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); back(); } });
+</script>
+
+</body>
+</html>
