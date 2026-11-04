@@ -1546,9 +1546,17 @@ ${a.source==='teacher'&&paste?'':`數量：${n} ${unit}\n`}${data}
 ${(choosing(a)&&CHOICE_SHAPE[a.form])||DATA_SHAPE[a.form]}${typing(a)&&has(a,'keywords')?'\nconst KEYWORDS = ["關鍵詞1","關鍵詞2"];（8～12 個和主題相關、學生作答用得到的詞）':''}`;
 }
 
-function outputRules(a,extra){
+/* 完整版：請 AI 用 Canvas 輸出，讓 Gemini／ChatGPT 直接開啟右側預覽，而不是黑底程式碼或下載檔 */
+const canvasTitle=a=>((a.topic||'').trim()||'互動教材').replace(/[:：`\n]/g,' ').slice(0,30);
+const CANVAS_RULES=a=>[
+  '請用 Canvas（畫布）建立這個網頁，讓我可以在右側直接預覽、試玩；不要只用一般的程式碼區塊回覆，也不要做成要下載的檔案。',
+  `如果沒有 Canvas 可以用，程式碼區塊的第一行請寫成 \`\`\`html:${canvasTitle(a)}:index.html（中間用冒號隔開，檔名一定是 index.html），最後一行用 \`\`\` 結束區塊。`,
+  'HTML、CSS、JavaScript 全部寫在同一個 index.html 檔案裡，不要拆成多個檔案。',
+  '程式碼前後不要其他說明文字。'
+];
+function outputRules(a,extra,canvas){
   const lines=[
-    '只輸出一個程式碼區塊，程式碼前後不要任何說明文字。',
+    ...(canvas?CANVAS_RULES(a):['只輸出一個程式碼區塊，程式碼前後不要任何說明文字。']),
     '不使用任何外部套件、外部圖片與外部字型；圖示用 emoji。',
     '只做以上列出的功能，不要自行加入音效、背景動畫或其他功能。',
     '程式碼保持精簡，只在「設定區」與「資料區」加註解。',
@@ -1562,7 +1570,7 @@ function outputRules(a,extra){
 
 function buildPrompts(a){
   const head=`請幫我製作一個${stageOf(a.grade)}課堂用的互動教學網頁，規格如下。`;
-  const full=`${head}\n\n${specBody(a)}\n\n## 五、輸出規則\n${outputRules(a,['輸出一個完整、可直接用瀏覽器開啟的 HTML 檔（CSS 與 JavaScript 都寫在同一個檔案裡）。'])}`;
+  const full=`${head}\n\n${specBody(a)}\n\n## 五、輸出規則\n${outputRules(a,['輸出一個完整、可直接用瀏覽器開啟的 HTML 檔。'],true)}`;
 
   const cx=complexity(a);
   const k=cx.score<=4?2:3;
@@ -1601,7 +1609,10 @@ ${outputRules(a)}`;
   const fix=`這個網頁有以下問題，請修正：
 （在這裡描述問題，例如：平板上按鈕太小、第 3 題答案錯誤）
 
-修正規則：只輸出需要替換的程式碼片段，並說明要取代原本的哪一段；不要重新輸出整份檔案。`;
+修正規則：
+1. 直接在 Canvas 裡修改，一次只改這個地方，其他功能與畫面都不要動。
+2. 改完仍然是同一個 index.html（HTML、CSS、JavaScript 在同一個檔案），可以直接在右側預覽。
+3. 如果沒有使用 Canvas：只輸出需要替換的程式碼片段，並說明要取代原本的哪一段，不要重新輸出整份檔案。`;
   return {full, segs, fix, recommend:'full'};
 }
 window.getPrompts=()=>buildPrompts(state.answers);
@@ -1609,13 +1620,13 @@ window.getPrompts=()=>buildPrompts(state.answers);
 /* 貼回組裝：去掉 ``` 程式碼框，合併分段結果 */
 function stripFence(t){
   t=(t||'').trim();
-  const m=t.match(/```[a-zA-Z]*\s*\n([\s\S]*?)```/);
+  const m=t.match(/```[^\n]*\n([\s\S]*?)```/);
   if(m) t=m[1].trim();
   return t.replace(/^<script[^>]*>/i,'').replace(/<\/script>\s*$/i,'').trim();
 }
 function stripHtmlFence(t){
   t=(t||'').trim();
-  const m=t.match(/```[a-zA-Z]*\s*\n([\s\S]*?)```/);
+  const m=t.match(/```[^\n]*\n([\s\S]*?)```/);
   return (m?m[1]:t).trim();
 }
 function assemble(mode,vals){
@@ -1745,9 +1756,10 @@ function renderFinal(){
   let boxes, howto, mergeN;
   if(tab==='full'){
     boxes=promptBox('full','完整版指令',`${P.full.length} 字`,P.full);
-    howto=`<ol><li>按「複製」，貼到 ChatGPT、Gemini 或 Claude 的<b>新對話</b>送出。</li>
+    howto=`<ol><li>開一個<b>新對話</b>，<b>先點開「Canvas」</b>再貼上指令送出：Gemini 在輸入框下方（有些版本在「工具」裡）、ChatGPT 在「＋」或「工具」裡；Claude 會自動開啟預覽。</li>
+      <li>右側出現網頁畫面，就能直接試玩。如果只看到黑底的程式碼，輸入「請用 Canvas 開啟預覽」。</li>
       <li>如果 AI 的程式碼中途斷掉，輸入「繼續」；還是接不上，就切到上方「分段版」重來。</li>
-      <li>把 AI 給的程式碼整段複製，貼到下方「組裝區」，按「下載網頁」。</li></ol>`;
+      <li>要分享給學生：用 Canvas 右上角的「分享」取得連結；或把程式碼整段複製，貼到下方「組裝區」，按「下載網頁」。</li></ol>`;
     mergeN=1;
   } else {
     boxes=P.segs.map((t,i)=>promptBox('seg'+i,`第 ${i+1} 段`,`${t.length} 字`,t)).join('');
@@ -1786,7 +1798,7 @@ function renderFinal(){
     <div class="block"><div class="trybar"><p><b>存下這份規格</b>：下次在別台電腦繼續修改，或分享給同事，對方讀檔後換成自己的題目就能用。</p>
       <button class="ghost" data-act="save">💾 存成檔案</button></div></div>
     <div class="block"><h3>${num()} 需要修改時</h3>
-      <p class="hint">不要整份重做。用這段修改指令，AI 只會給你要換掉的部分，最省 token。</p>
+      <p class="hint">不要整份重做。一次只改一個地方，AI 會直接在 Canvas 裡改好，其他部分不會被動到。</p>
       ${promptBox('fix','修改用指令','',P.fix)}</div>
 
     <details><summary>開發用：規格資料（工具出問題、需要回報時才會用到：複製這段傳給協助你的人，對方就能看到你點了哪些選項）</summary><pre>${esc(JSON.stringify(spec,null,2))}</pre>
