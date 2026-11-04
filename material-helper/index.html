@@ -133,6 +133,11 @@ ul.warns li{color:var(--warn)}
 .hokp{display:flex;gap:8px;align-items:flex-start;font-size:14px;line-height:1.5;padding:3px 0}
 .hokp input{margin-top:3px;width:18px;height:18px;flex:none}
 .refok{background:var(--accent-soft);border-radius:12px;padding:12px 16px;margin-top:10px}
+
+.demobox{border:2px dashed var(--accent);border-radius:14px;padding:12px 16px;background:#fbfdfc;display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.demobox p{margin:2px 0 0;font-size:14px;color:var(--muted,#5b6670);line-height:1.6}
+.demobox a{color:var(--accent);font-weight:600}
+.demobtns{display:flex;gap:8px;flex-wrap:wrap}
 details.hand{border:2px dashed var(--accent);border-radius:14px;padding:12px 16px;background:#fbfdfc}
 details.hand>summary{font-weight:700;color:var(--accent);cursor:pointer;line-height:1.5}
 .hsteps{margin:12px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:14px;font-size:15px}
@@ -1103,6 +1108,7 @@ const STEPS = [
     { key:'qcount', type:'single', label:'每個角色（立場）的處境選擇題數', required:true, compact:true,
       showIf:a=>choosing(a)&&a.form!=='dilemma', options:['2','3','4','5'].map(n=>({v:n,label:n+' 題'})),
       note:'處境選擇題由 AI 依角色和情境設計，選項沒有對錯，各代表不同的想法。' },
+    { key:'_demo', type:'demo', label:'🧪 示範講義（選填）', showIf:a=>a.source && a.source!=='ai' },
     { key:'paste', type:'textarea', label:'貼上題目（選填，之後也能補）', showIf:a=>a.source && a.source!=='ai',
       placeholder:a=>'一行一筆，例如：\n'+(PASTE_FMT[a.form]||PASTE_FMT.quiz).ex,
       note:a=>'格式：'+(PASTE_FMT[a.form]||PASTE_FMT.quiz).fmt }
@@ -1347,6 +1353,8 @@ function renderQ(q){
     body=`<textarea class="txt" data-key="${q.key}" placeholder="${esc(ph)}">${esc(v)}</textarea>`;
   } else if(q.type==='handout'){
     body=handoutHTML();
+  } else if(q.type==='demo'){
+    body=demoHTML();
   }
   return `<div class="q"><div class="qlabel">${esc(q.label)}${tags}</div>${body}${note?`<div class="qnote">${esc(note)}</div>`:''}</div>`;
 }
@@ -2003,6 +2011,36 @@ async function handAction(act){
   }
 }
 
+/* ========== 9b. 示範講義：三大政權比較表（Zeiyen 老師的講義，第 3 頁是答案） ========== */
+const DEMO_PDF={url:'demo/three-regimes-handout.pdf',name:'示範講義_三大政權比較表.pdf'};
+const DEMO_ITEMS={
+  quiz:['荷蘭人在臺灣的據點在今天的哪裡？｜臺南安平｜基隆、淡水｜臺南、高雄一帶｜臺北','西班牙人建造的聖多明哥城，今天叫什麼？｜紅毛城｜安平古堡｜赤崁樓｜億載金城','荷蘭人建造的普羅民遮城，今天叫什麼？｜赤崁樓｜紅毛城｜安平古堡｜承天府','鄭氏政權來臺灣的主要目的是什麼？｜反清復明｜貿易、傳教｜尋找黃金｜躲避颱風','西班牙人是被誰趕出臺灣的？｜荷蘭人｜鄭成功｜清朝｜葡萄牙人','鄭氏政權最後被誰打敗？｜清朝（施琅）｜荷蘭人｜西班牙人｜日本人','荷蘭人傳入臺灣的宗教是？｜基督教｜天主教｜佛教｜媽祖信仰','西班牙人傳入臺灣的宗教是？｜天主教｜基督教｜道教｜媽祖信仰','荷蘭人用什麼拼寫原住民族語言？｜羅馬拼音｜注音符號｜漢字｜日文','東北角「三貂角」的地名由來和誰有關？｜西班牙人｜荷蘭人｜鄭氏政權｜清朝','鄭氏政權在臺南設立的行政中心叫什麼？｜承天府｜熱蘭遮城｜紅毛城｜聖薩爾瓦多城','哪一個政權在臺灣「沒有」賣出蔗糖、鹿皮？｜西班牙人｜荷蘭人｜鄭氏政權｜三個都有賣'],
+  match:['熱蘭遮城｜今安平古堡','普羅民遮城｜今赤崁樓','聖多明哥城｜今紅毛城','聖薩爾瓦多城｜在基隆，已經不存在','承天府｜鄭氏政權的行政中心','三貂角｜西班牙語 Santiago（聖地牙哥）','林鳳營、左營｜鄭氏政權軍隊駐守留下的地名','羅馬拼音｜荷蘭人用來拼寫原住民族語言'],
+  drag:['荷蘭人｜建造熱蘭遮城（今安平古堡）','荷蘭人｜傳入基督教','荷蘭人｜引進黃牛','荷蘭人｜用羅馬拼音拼寫原住民族語言','西班牙人｜據點在今基隆、淡水','西班牙人｜傳入天主教','西班牙人｜建造聖多明哥城（今紅毛城）','西班牙人｜東北角「三貂角」的地名由來','鄭氏政權｜來臺目的是反清復明','鄭氏政權｜在臺南設立承天府','鄭氏政權｜建立孔廟、設立學校','鄭氏政權｜帶來媽祖、玄天上帝信仰'],
+  flip:['荷蘭人｜傳入基督教','西班牙人｜傳入天主教','熱蘭遮城｜今安平古堡','普羅民遮城｜今赤崁樓','聖多明哥城｜今紅毛城','承天府｜鄭氏政權的行政中心'],
+  sort:['荷蘭人來到臺灣','西班牙人佔領北臺灣','荷蘭人趕走西班牙人','鄭成功趕走荷蘭人','清朝打敗鄭氏政權'],
+  scenario:['你是荷蘭商人，想把臺灣的商品運到國外賣，你會帶什麼？｜蔗糖、鹿皮→對！荷蘭人從臺灣賣出蔗糖和鹿皮｜白銀→白銀是鄭氏政權「買進」的商品，不是從臺灣賣出的','你是西班牙傳教士，來到北臺灣，你會傳什麼宗教？｜天主教→對！西班牙人傳入天主教｜基督教→基督教是荷蘭人傳入的','你是鄭氏政權的官員，想培養治理人才，你會怎麼做？｜建立孔廟、設立學校→對！鄭氏政權推動儒家思想文化，也制定考試制度選拔人才｜用羅馬拼音拼寫原住民族語言→這是荷蘭人的做法'],
+  duel:['西元 1624 年～1662 年在臺灣｜荷蘭人｜荷蘭人在臺約 38 年，被鄭成功趕走','西元 1626 年～1642 年在臺灣｜西班牙人｜西班牙人佔領北臺灣，被荷蘭人趕走','來臺灣的目的是「貿易、傳教」｜荷蘭人、西班牙人｜荷蘭人和西班牙人都是為了貿易與傳教','來臺灣的目的是「反清復明」｜鄭氏政權｜鄭氏政權以臺灣為基地反清復明','據點在今天的基隆、淡水｜西班牙人｜西班牙人的據點在北臺灣','建造熱蘭遮城（今安平古堡）｜荷蘭人｜熱蘭遮城由荷蘭人建造','從臺灣賣出蔗糖、鹿皮｜荷蘭人、鄭氏政權｜西班牙人沒有賣出蔗糖、鹿皮','買進白銀、軍需品、藥材｜鄭氏政權｜鄭氏政權要反清復明，需要軍需品','傳入天主教｜西班牙人｜荷蘭人傳入的是基督教','建立孔廟、設立學校｜鄭氏政權｜鄭氏政權推動儒家思想文化','引進黃牛和豌豆、蓮霧、芒果｜荷蘭人｜這些都是荷蘭人引進的','東北角「三貂角」的地名由來｜西班牙人｜來自西班牙語 Santiago（聖地牙哥）'],
+  role:['荷蘭商人｜在今臺南安平做生意的荷蘭東印度公司商人｜','西班牙傳教士｜在今基隆、淡水傳天主教的神父｜','鄭氏政權的士兵｜跟著鄭成功來臺、駐守臺南高雄一帶的軍人｜','原住民族｜世世代代住在臺灣的族人｜'],
+  multi:['荷蘭商人｜','西班牙傳教士｜','鄭氏政權的官員｜','原住民族｜'],
+  dilemma:['1662 年鄭成功攻打荷蘭人，如果你是住在臺南的居民，你會希望誰留下來？｜荷蘭人｜鄭氏政權','鄭氏政權經費有限，應該先建孔廟、設學校，還是先買軍需品？｜先辦教育｜先顧軍隊']
+};
+DEMO_ITEMS.battle=DEMO_ITEMS.quiz;
+function demoHTML(){
+  const a=state.answers, L=DEMO_ITEMS[a.form];
+  return `<div class="demobox"><div><b>三大政權比較表</b>（荷蘭人・西班牙人・鄭氏政權，第 3 頁是答案）
+    <p>沒有現成題目也能先試：<a href="${DEMO_PDF.url}" download="${DEMO_PDF.name}" target="_blank" rel="noopener">⬇ 下載示範講義 PDF</a>${L?`，或按「填入示範題目」，把講義內容整理成「${esc(optOf('form',a.form).label)}」的題目，填進下方框框。`:'。'}</p></div>
+    ${L?`<div class="demobtns"><button class="ghost" data-demofill="1">🧪 填入示範題目（${L.length} 筆）</button></div>`:''}</div>`;
+}
+async function demoFill(){
+  const a=state.answers, L=DEMO_ITEMS[a.form]; if(!L) return;
+  if((a.paste||'').trim()&&!(await askConfirm('要用示範題目取代目前已貼上的題目嗎？','取代'))) return;
+  setAnswer('paste',L.join('\n'));
+  if(!a.topic||!a.topic.trim()) setAnswer('topic','三大政權在臺灣');
+  renderAll(); toast(`已填入 ${L.length} 筆示範題目`);
+  const pa=document.querySelector('.txt[data-key="paste"]'); if(pa&&pa.scrollIntoView) pa.scrollIntoView({block:'center'});
+}
+
 /* ========== 11. 參考網站：分析指令 → 貼回規格 → 自動點好選項 ========== */
 /* AI 只能改這些「設計類」欄位；單元、題目、方案等老師自己的資料一律保留 */
 const REF_KEYS=['mode','form','answerMode','mech','feedback','scoring','minlen','identity','submit','device','style','qcount'];
@@ -2347,6 +2385,7 @@ document.addEventListener('click',e=>{
   if(e.target.id==='askYes'){ askDone(true); return; }
   if(e.target.id==='askNo'||e.target.id==='ask'){ askDone(false); return; }
   const go=e.target.closest('[data-go]'); if(go){ goTo(+go.dataset.go); return; }
+  if(e.target.closest('[data-demofill]')){ demoFill(); return; }
   const opt=e.target.closest('.opt');
   if(opt){
     const k=opt.dataset.key, v=opt.dataset.v;
