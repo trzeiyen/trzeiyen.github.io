@@ -54,6 +54,11 @@ h2{margin:2px 0 4px;font-size:24px}
 .ot b{display:block}
 .ot small{display:block;color:var(--muted);font-size:13px;line-height:1.45;margin-top:2px}
 .badge{display:inline-block;font-size:11px;font-weight:700;color:var(--accent);border:1px solid var(--accent);border-radius:999px;padding:0 6px;margin-left:6px;vertical-align:middle}
+.opt.adv{background:#fffaf0;border-color:#f3d9a8}
+.opt.adv.on{border-color:var(--accent);background:var(--accent-soft)}
+.badge.adv{color:var(--warn);border-color:var(--warn);background:var(--warn-soft)}
+.ot small.advwhy{color:var(--warn)}
+.advnote{font-size:13px;color:var(--warn);margin-top:8px}
 .txt{width:100%;min-height:48px;padding:10px 14px;border:2px solid var(--line);border-radius:12px;font:inherit;background:#fff;color:var(--ink)}
 .txt:focus{outline:none;border-color:var(--accent)}
 textarea.txt{min-height:140px;resize:vertical}
@@ -1097,7 +1102,7 @@ const STEPS = [
       {v:'sort',icon:'🔢',label:'排序',desc:'依時間或步驟排出正確順序',group:'有標準答案（自動判斷對錯）'},
       {v:'scenario',icon:'🧭',label:'情境抉擇',desc:'依情境做選擇，看見不同結果',group:'有標準答案（自動判斷對錯）'},
       {v:'duel',icon:'🆚',label:'雙邊搶答',desc:'一台平板分左右兩隊，同時作答比快又比準',group:'有標準答案（自動判斷對錯）'},
-      {v:'battle',icon:'⚔️',label:'角色對戰',desc:'答對攻擊、答錯受傷的對戰遊戲',group:'有標準答案（自動判斷對錯）'},
+      {v:'battle',icon:'⚔️',label:'角色對戰',desc:'答對攻擊、答錯受傷的對戰遊戲',adv:'程式較長，免費版常需要分段生成',group:'有標準答案（自動判斷對錯）'},
       {v:'role',icon:'🎭',label:'化身角色思考',desc:'選一個角色，用他的身分說出想法，再看其他角色怎麼想',group:'開放思考（沒有標準答案）'},
       {v:'multi',icon:'🔄',label:'多角度觀點輪轉',desc:'同一事件輪流站在不同立場發言，最後比較各方觀點',group:'開放思考（沒有標準答案）'},
       {v:'dilemma',icon:'⚖️',label:'兩難抉擇與理由',desc:'先表態並寫理由，看完反方論點再決定維持或改變',group:'開放思考（沒有標準答案）'} ]},
@@ -1114,7 +1119,7 @@ const STEPS = [
       {v:'random',icon:'🔀',label:'隨機出題',desc:'每次題目順序不同',showIf:closedOnly},
       {v:'hint',icon:'💡',label:'提示按鈕',desc:'卡關時可看提示'},
       {v:'keywords',icon:'🏷️',label:'可點選關鍵詞',desc:'點一下就把詞放進作答框，減少打字',showIf:typing},
-      {v:'leaderboard',icon:'🏆',label:'排行榜',desc:'顯示全班或本機高分',showIf:soloGame} ]}
+      {v:'leaderboard',icon:'🏆',label:'排行榜',desc:'顯示全班或本機高分',adv:'全班排行要搭配 Google 試算表',showIf:soloGame} ]}
   ]},
   { id:'feedback', icon:'🎯', title:'回饋與計分', hint:'學生作答後看到什麼？分數怎麼算？', questions:[
     { key:'feedback', type:'single', label:'回饋方式', required:true, options:[
@@ -1145,7 +1150,7 @@ const STEPS = [
     { key:'submit', type:'single', label:'繳交方式', required:true, options:[
       {v:'none',icon:'➖',label:'不需繳交',desc:'練習用'},
       {v:'screenshot',icon:'📸',label:'截圖繳交',desc:'結果頁（開放題為思考彙整頁）截圖上傳'},
-      {v:'sheet',icon:'📊',label:'送到 Google 試算表',desc:'成績或作答自動回傳（需設定後端）',showIf:a=>!isDuel(a)} ]}
+      {v:'sheet',icon:'📊',label:'送到 Google 試算表',desc:'成績或作答自動回傳',adv:'要另外建試算表、部署 Apps Script（約 5 分鐘）',showIf:a=>!isDuel(a)} ]}
   ]},
   { id:'device', icon:'📱', title:'學生裝置', hint:'學生主要用什麼裝置操作？', questions:[
     { key:'device', type:'single', label:'裝置', required:true, options:[
@@ -1412,13 +1417,14 @@ function renderQ(q){
   if(q.type==='single'||q.type==='multi'){
     const btn=o=>{
       const on=q.type==='multi'?(v||[]).includes(o.v):v===o.v;
-      return `<button class="opt ${on?'on':''}" data-key="${q.key}" data-v="${esc(o.v)}" data-multi="${q.type==='multi'?1:0}" aria-pressed="${on}">
+      return `<button class="opt ${on?'on':''}${o.adv?' adv':''}" data-key="${q.key}" data-v="${esc(o.v)}" data-multi="${q.type==='multi'?1:0}" aria-pressed="${on}">
         ${o.icon?`<span class="oi">${o.icon}</span>`:''}
-        <span class="ot"><b>${esc(o.label)}${o.badge?`<span class="badge">${o.badge}</span>`:''}</b>${o.desc?`<small>${esc(o.desc)}</small>`:''}</span></button>`;
+        <span class="ot"><b>${esc(o.label)}${o.badge?`<span class="badge">${o.badge}</span>`:''}${o.adv?'<span class="badge adv">進階</span>':''}</b>${o.desc?`<small>${esc(o.desc)}</small>`:''}${o.adv?`<small class="advwhy">${esc(o.adv)}</small>`:''}</span></button>`;
     };
     const opts=visibleOpts(q);
     const groups=[...new Set(opts.map(o=>o.group||''))];
-    body=groups.map(g=>(g?`<div class="ogroup">${esc(g)}</div>`:'')+`<div class="opts ${q.compact?'compact':''}">`+opts.filter(o=>(o.group||'')===g).map(btn).join('')+`</div>`).join('');
+    const advNote=opts.some(o=>o.adv)?'<div class="advnote">🔶 標「進階」的選項需要多一些設定，第一次做可以先選其他選項，熟悉後再挑戰。</div>':'';
+    body=groups.map(g=>(g?`<div class="ogroup">${esc(g)}</div>`:'')+`<div class="opts ${q.compact?'compact':''}">`+opts.filter(o=>(o.group||'')===g).map(btn).join('')+`</div>`).join('')+advNote;
   } else if(q.type==='text'){
     body=`<input class="txt" data-key="${q.key}" value="${esc(v)}" placeholder="${esc(ph)}">`;
   } else if(q.type==='textarea'){
