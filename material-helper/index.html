@@ -123,6 +123,9 @@ ul.warns li{color:var(--warn)}
 .hostart{display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:space-between;border:2px dashed var(--accent);background:#fbfdfc;border-radius:14px;padding:14px 16px;margin:4px 0 18px}
 .hostart p{margin:4px 0 0;font-size:14px;color:var(--muted,#5b6670);line-height:1.6}
 .hostart.done{border-style:solid;background:var(--accent-soft)}
+.hostartbtns{display:flex;gap:8px;flex-wrap:wrap}
+.hodemo a{color:var(--accent);font-weight:600}
+.hodemoline{margin:6px 0 0}
 .hogrid{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
 .hogrid select{min-height:44px;font-size:16px;border-radius:10px;border:1px solid var(--line);padding:0 10px;background:#fff}
 .hofile{display:block;margin-top:8px;font-size:15px}
@@ -1366,7 +1369,7 @@ function renderStage(){
     <div class="stephead"><span class="stepicon">${s.icon}</span><div>
       <div class="stepno">第 ${i+1} 步，共 ${STEPS.length} 步</div><h2>${s.title}</h2><p class="hint">${s.hint}</p></div></div>
     ${i===0?(state.answers._hoName?`<div class="hostart done"><div><b>✅ 已從講義帶入</b><p>「${esc(state.answers._hoName)}」→ ${esc(state.answers.topic||'')}</p></div><button class="ghost" id="hoStart">重新分析講義</button></div>`
-      :`<div class="hostart"><div><b>📄 手上有講義？</b><p>放入講義，AI 會先讀懂內容、建議適合的玩法並出好題目；你勾選確認後，就幫你填好大部分設定。</p></div><button class="primary" id="hoStart">從講義開始</button></div>`):''}
+      :`<div class="hostart"><div><b>📄 手上有講義？</b><p>放入講義，AI 會先讀懂內容、建議適合的玩法並出好題目；你勾選確認後，就幫你填好大部分設定。</p><p class="hodemo">沒有講義也能先試：${HO_DEMO_LINK}</p></div><div class="hostartbtns"><button class="primary" id="hoStart">從講義開始</button><button class="ghost" data-hodemo="1">🧪 使用示範檔案</button></div></div>`):''}
     ${visibleQs(s).map(renderQ).join('')}
     <div class="nav" id="nav">${navHTML(i)}</div>`;
 }
@@ -2097,6 +2100,8 @@ const HO_FORMS={
   multi:'講義對同一件事有不同的看法（開放題，沒有標準答案）'
 };
 const HO_MAXCHARS=15000;
+const HO_DEMO={url:'demo/zheng-handout-demo.pptx',name:'示範講義_5上社會_鄭氏政權在臺灣.pptx',grade:'5',subject:'社會'};
+const HO_DEMO_LINK=`5 上社會習作〈鄭氏政權在臺灣〉（<a href="${HO_DEMO.url}" download="${HO_DEMO.name}">⬇ 下載示範檔 pptx</a>）`;
 let ho={name:'',kind:'',text:'',pages:0,raw:'',res:null,items:[],kp:[],busy:false,msg:''};
 const hoOpenForm=f=>f==='role'||f==='multi';
 function hoLoadScript(src){
@@ -2119,6 +2124,30 @@ async function hoReadDocx(file){
   const r=await window.mammoth.extractRawText({arrayBuffer:await file.arrayBuffer()});
   return {text:r.value||'', pages:0};
 }
+async function hoReadPptx(file){
+  await hoLoadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
+  const zip=await window.JSZip.loadAsync(await file.arrayBuffer());
+  const names=Object.keys(zip.files).filter(n=>/^ppt\/slides\/slide\d+\.xml$/.test(n)).sort((x,y)=>parseInt(x.match(/(\d+)\.xml$/)[1])-parseInt(y.match(/(\d+)\.xml$/)[1]));
+  const A='http://schemas.openxmlformats.org/drawingml/2006/main', out=[];
+  for(const n of names.slice(0,40)){
+    const doc=new DOMParser().parseFromString(await zip.file(n).async('string'),'application/xml');
+    const paras=[...doc.getElementsByTagNameNS(A,'p')].map(p=>{ let t=''; p.querySelectorAll('*').forEach(el=>{ if(el.namespaceURI!==A) return; if(el.localName==='t') t+=el.textContent; else if(el.localName==='br') t+='\n'; }); return t.trim(); }).filter(Boolean);
+    out.push(paras.join('\n'));
+  }
+  return {text:out.filter(Boolean).join('\n\n'), pages:names.length};
+}
+async function hoUseDemo(){
+  if($('#hoPanel').hidden) openHo();
+  const g=$('#hoGrade'), sb=$('#hoSubject');
+  if(g&&!g.value) g.value=HO_DEMO.grade;
+  if(sb&&!sb.value) sb.value=HO_DEMO.subject;
+  ho={...ho,name:HO_DEMO.name,kind:'',text:'',pages:0,busy:true,msg:''}; hoRefresh();
+  try{
+    const r=await fetch(HO_DEMO.url); if(!r.ok) throw new Error(r.status);
+    const blob=await r.blob();
+    await hoReadFile(new File([blob],HO_DEMO.name,{type:blob.type}));
+  }catch(e){ ho={...ho,busy:false,kind:'fail',msg:'示範檔讀取失敗，請按「下載示範檔」存到裝置，再用上面的「選擇檔案」放進來。'}; hoRefresh(); }
+}
 async function hoReadFile(file){
   ho={...ho,name:file.name,kind:'',text:'',pages:0,busy:true,msg:''}; hoRefresh();
   const ext=(file.name.split('.').pop()||'').toLowerCase();
@@ -2126,8 +2155,9 @@ async function hoReadFile(file){
     if(/^image\//.test(file.type)||['jpg','jpeg','png','heic','webp'].includes(ext)){ ho.kind='image'; }
     else if(ext==='pdf'||file.type==='application/pdf'){ const r=await hoReadPdf(file); ho.text=r.text; ho.pages=r.pages; ho.kind='pdf'; }
     else if(ext==='docx'){ const r=await hoReadDocx(file); ho.text=r.text; ho.kind='docx'; }
+    else if(ext==='pptx'){ const r=await hoReadPptx(file); ho.text=r.text; ho.pages=r.pages; ho.kind='pptx'; }
     else if(['txt','md'].includes(ext)||/^text\//.test(file.type)){ ho.text=await file.text(); ho.kind='txt'; }
-    else if(ext==='doc'||ext==='ppt'||ext==='pptx'){ ho.kind='other'; ho.msg='這個格式網頁讀不到文字，請另存成 PDF，或直接在 Gemini 附上檔案。'; }
+    else if(ext==='doc'||ext==='ppt'){ ho.kind='other'; ho.msg='這個格式網頁讀不到文字，請另存成 PDF，或直接在 Gemini 附上檔案。'; }
     else { ho.kind='other'; }
   }catch(e){ ho.kind='fail'; ho.msg='讀檔失敗（可能是網路擋住了讀檔工具，或檔案有加密）。沒關係，直接在 Gemini 附上講義檔就可以。'; }
   ho.text=(ho.text||'').replace(/[ \t]+\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim();
@@ -2142,7 +2172,7 @@ function hoStatusHTML(){
   if(ho.busy) return '<div class="hostat">⏳ 正在讀取講義……</div>';
   if(ho.msg) return `<div class="hostat warn">${esc(ho.msg)}</div>`;
   const chars=(ho.text||'').replace(/\s/g,'').length;
-  if(hoEmbed()) return `<div class="hostat ok">✅ 讀到「${esc(ho.name||'貼上的文字')}」${ho.pages?ho.pages+' 頁、':''}${chars.toLocaleString()} 字。分析指令會<b>直接帶入講義文字</b>，貼到 Gemini 就能用，不用另外附檔。${chars>HO_MAXCHARS?`<br>⚠️ 講義很長，指令只帶入前 ${HO_MAXCHARS.toLocaleString()} 字；建議只放這次要教的那幾頁。`:''}</div>`;
+  if(hoEmbed()) return `<div class="hostat ok">✅ 讀到「${esc(ho.name||'貼上的文字')}」${ho.pages?ho.pages+(ho.kind==='pptx'?' 張投影片、':' 頁、'):''}${chars.toLocaleString()} 字。分析指令會<b>直接帶入講義文字</b>，貼到 Gemini 就能用，不用另外附檔。${chars>HO_MAXCHARS?`<br>⚠️ 講義很長，指令只帶入前 ${HO_MAXCHARS.toLocaleString()} 字；建議只放這次要教的那幾頁。`:''}</div>`;
   if(ho.name) return `<div class="hostat warn">📷 「${esc(ho.name)}」${ho.kind==='image'?'是照片':'看起來是掃描檔或圖片'}，網頁讀不到文字。送出指令時，<b>請記得把這個檔案附在 Gemini 對話裡</b>（5 頁以內最穩）。</div>`;
   return '<div class="hostat">還沒放講義也可以：直接複製下一步的指令，到 Gemini <b>附上講義檔或用平板拍照</b>再送出。</div>';
 }
@@ -2210,9 +2240,10 @@ function hoBodyHTML(){
   const gOpts=`<optgroup label="國小">${[1,2,3,4,5,6].map(gOpt).join('')}</optgroup><optgroup label="國中">${[7,8,9].map(gOpt).join('')}</optgroup>`;
   const sOpts=SUBJECTS.map(([v,l])=>`<option value="${v}" ${a.subject===v?'selected':''}>${l}</option>`).join('');
   return `<ol class="hsteps">
-    <li><b>選年級與科目，放入講義</b>（PDF、Word、文字檔；照片或掃描檔也可以，之後附在 Gemini 裡）
+    <li><b>選年級與科目，放入講義</b>（PDF、Word、PowerPoint、文字檔；照片或掃描檔也可以，之後附在 Gemini 裡）
       <div class="hogrid"><select id="hoGrade" aria-label="年級"><option value="">年級</option>${gOpts}</select><select id="hoSubject" aria-label="科目"><option value="">科目</option>${sOpts}</select></div>
-      <input type="file" id="hoFile" class="hofile" accept=".pdf,.docx,.txt,.md,image/*">
+      <input type="file" id="hoFile" class="hofile" accept=".pdf,.docx,.pptx,.txt,.md,image/*">
+      <p class="small hodemo hodemoline">想先試試看？<button class="ghost sm2" data-hodemo="1">🧪 使用示範檔案</button> ${HO_DEMO_LINK}</p>
       <details style="margin-top:6px"><summary class="small">或直接貼上講義文字</summary><textarea class="txt" id="hoText" placeholder="把講義的文字貼在這裡">${ho.kind==='paste'?esc(ho.text):''}</textarea></details>
       <div id="hoStatus">${hoStatusHTML()}</div></li>
     <li><b>複製分析指令</b>，到 Gemini（或 ChatGPT）開新對話貼上送出。<span id="hoAttachTip">${hoEmbed()?'':'<b>記得附上講義檔或照片。</b>'}</span>
@@ -2364,6 +2395,7 @@ document.addEventListener('click',e=>{
   const gs=e.target.closest('[data-gs]');
   if(gs){ const n=GAS_SETUP.steps.length; gasStep=Math.max(0,Math.min(n-1,+gs.dataset.gs)); renderGas(); return; }
   if(e.target.id==='gasTest'){ testGas(); return; }
+  if(e.target.closest('[data-hodemo]')){ hoUseDemo(); return; }
   if(e.target.closest('#hoBtn')||e.target.closest('#hoStart')){ openHo(); return; }
   if(e.target.id==='hoClose'||e.target===$('#hoPanel')){ closeHo(); return; }
   const hob=e.target.closest('[data-ho]'); if(hob){ const k=hob.dataset.ho;
