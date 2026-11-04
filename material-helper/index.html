@@ -2420,9 +2420,14 @@ function hoApply(){
 
 /* ========== 12. 分享給學生：上架方式提示＋QR code ========== */
 const REDIRECT_URL='https://trzeiyen.github.io/redirect.html?to=';
-let shareTab='netlify', shareUrl='', shareWrap=true;
+let shareTab='chat', shareUrl='', shareWrap=true;
 const SHARE_WAYS={
-  netlify:{name:'Netlify Drop',tag:'最快・推薦',html:`<ol class="sh">
+  chat:{name:'AI 平台直接分享',tag:'最直覺・推薦',html:`<ol class="sh">
+    <li>在 Gemini 或 ChatGPT 的 <b>Canvas</b> 畫面，點右上角的<b>「分享」</b>，建立公開連結後按「複製連結」。（Claude 則是點右上角的「發布」。）</li>
+    <li>先用自己的平板打開這個連結，實際點過一輪。</li>
+    <li>把連結貼到下面，產生 QR code 給學生掃描。</li>
+  </ol><p class="shtip">💡 不用下載、不用另外註冊，做完馬上就能用，適合這節課先用一下。<br>⚠️ 連結要依賴該平台：刪掉那則對話或平台改版時，連結可能就打不開了。要長期使用、累積成自己的教材庫，可以改用旁邊的 Netlify Drop 或 GitHub Pages。<br>📱 Claude 的連結在 iPhone／iPad 上常會被 Claude App 攔截；貼到下面時，工具會自動幫你加上轉址，學生掃描就能直接開啟。</p>`},
+  netlify:{name:'Netlify Drop',tag:'長期使用',html:`<ol class="sh">
     <li>打開 <a href="https://app.netlify.com/drop" target="_blank" rel="noopener">app.netlify.com/drop</a>，用 <b>Google 帳號免費註冊／登入</b>。<span class="shw">⚠️ 一定要登入：沒登入上傳的網站會被鎖住，過一陣子就被刪除。</span></li>
     <li>把剛剛下載的 <b>HTML 檔</b>直接拖進頁面中間的框框。</li>
     <li>幾秒後會出現網址（<code>xxx.netlify.app</code>）。可以到「Site configuration → Change site name」改成好記的名字，例如 <code>ms-wang-taiwan-map</code>。</li>
@@ -2441,15 +2446,10 @@ const SHARE_WAYS={
     <li>到「Settings」→「Pages」，Branch 選 <b>main</b>，按「Save」。</li>
     <li>等 1～2 分鐘，網址就是 <code>https://你的帳號.github.io/taiwan-map.html</code>。之後的教材都上傳到同一個儲存庫，就是你自己的教材工具箱。</li>
   </ol><p class="shtip">🔁 要修改教材：上傳同檔名的新檔案覆蓋即可，網址不變。</p>`},
-  chat:{name:'AI 平台直接分享',tag:'臨時用一下',html:`<ul class="sh">
-    <li>ChatGPT（Canvas）、Gemini（Canvas）、Claude（Artifact）都能把生成的網頁直接「分享／發佈」成連結，最快。</li>
-    <li>缺點：網址很長、要依賴該平台；平台改版或刪除對話時連結可能失效，不適合長期使用。</li>
-    <li>Claude 的連結在 iPhone／iPad 上常會被 Claude App 攔截打不開；把連結貼到下面時，工具會自動幫你加上轉址，學生掃描就能直接開啟。</li>
-  </ul>`}
 };
 function shareHTML(){
-  return `<p class="hint">下載好網頁、在平板上實際點過一輪後，選一種方式放上網路，再把網址做成 QR code 給學生掃描。</p>
-    <div class="tabs">${Object.entries(SHARE_WAYS).map(([k,v])=>`<button class="tab ${shareTab===k?'on':''}" data-share="${k}">${v.name}<span class="rec ${k==='netlify'?'':'alt'}">${v.tag}</span></button>`).join('')}</div>
+  return `<p class="hint">在平板上實際點過一輪後，選一種方式取得網址，再做成 QR code 給學生掃描。</p>
+    <div class="tabs">${Object.entries(SHARE_WAYS).map(([k,v])=>`<button class="tab ${shareTab===k?'on':''}" data-share="${k}">${v.name}<span class="rec ${k==='chat'?'':'alt'}">${v.tag}</span></button>`).join('')}</div>
     <div class="shbox">${SHARE_WAYS[shareTab].html}</div>
     <div class="qrarea">
       <label class="mlabel" for="shareUrl">貼上教材網址，產生 QR code</label>
