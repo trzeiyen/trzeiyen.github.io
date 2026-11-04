@@ -2213,8 +2213,8 @@ const HO_FORMS={
   multi:'講義對同一件事有不同的看法（開放題，沒有標準答案）'
 };
 const HO_MAXCHARS=15000;
-const HO_DEMO={url:'demo/zheng-handout-demo.pptx',name:'示範講義_5上社會_鄭氏政權在臺灣.pptx',grade:'5',subject:'社會'};
-const HO_DEMO_LINK=`5 上社會習作〈鄭氏政權在臺灣〉（<a href="${HO_DEMO.url}" download="${HO_DEMO.name}">⬇ 下載示範檔 pptx</a>）`;
+const HO_DEMO={url:'demo/age-of-discovery-2-2.pptx',name:'示範講義_5上社會2-2_大航海時代在臺灣留下哪些影響.pptx',grade:'5',subject:'社會'};
+const HO_DEMO_LINK=`5 上社會 2-2 教學簡報〈大航海時代在臺灣留下哪些影響？〉（<a href="${HO_DEMO.url}" download="${HO_DEMO.name}">⬇ 下載示範檔 pptx</a>）`;
 let ho={name:'',kind:'',text:'',pages:0,raw:'',res:null,items:[],kp:[],busy:false,msg:''};
 const hoOpenForm=f=>f==='role'||f==='multi';
 function hoLoadScript(src){
@@ -2242,7 +2242,7 @@ async function hoReadPptx(file){
   const zip=await window.JSZip.loadAsync(await file.arrayBuffer());
   const names=Object.keys(zip.files).filter(n=>/^ppt\/slides\/slide\d+\.xml$/.test(n)).sort((x,y)=>parseInt(x.match(/(\d+)\.xml$/)[1])-parseInt(y.match(/(\d+)\.xml$/)[1]));
   const A='http://schemas.openxmlformats.org/drawingml/2006/main', out=[];
-  for(const n of names.slice(0,40)){
+  for(const n of names.slice(0,100)){
     const doc=new DOMParser().parseFromString(await zip.file(n).async('string'),'application/xml');
     const paras=[...doc.getElementsByTagNameNS(A,'p')].map(p=>{ let t=''; p.querySelectorAll('*').forEach(el=>{ if(el.namespaceURI!==A) return; if(el.localName==='t') t+=el.textContent; else if(el.localName==='br') t+='\n'; }); return t.trim(); }).filter(Boolean);
     out.push(paras.join('\n'));
