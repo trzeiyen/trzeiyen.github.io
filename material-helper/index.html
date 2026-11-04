@@ -377,11 +377,6 @@ textarea:disabled{background:#f3f1ec}
 .scene{background:#fff;border-left:6px solid #2f6f5e;border-radius:10px;padding:14px 16px;font-size:1.15em}
 .opts.one{grid-template-columns:1fr}
 .fb.story{background:#fef3c7;font-weight:600}
-.map{position:relative;width:100%;aspect-ratio:16/9;max-height:52vh;border-radius:12px;cursor:crosshair;overflow:hidden;
-  background:repeating-linear-gradient(0deg,transparent 0 39px,rgba(0,0,0,.06) 39px 40px),repeating-linear-gradient(90deg,transparent 0 39px,rgba(0,0,0,.06) 39px 40px),#dfe7d6}
-.mapnote{position:absolute;left:10px;bottom:8px;font-size:12px;color:#5f6b55}
-.pin{position:absolute;transform:translate(-50%,-90%);font-size:28px;pointer-events:none}
-.ring{position:absolute;aspect-ratio:1;transform:translate(-50%,-50%);border:3px solid #16a34a;border-radius:50%;background:rgba(22,163,74,.15);pointer-events:none}
 .arena{display:flex;align-items:center;justify-content:space-around;background:#fff;border-radius:14px;padding:12px;border:1px solid #e7e1d3}
 .fighter{text-align:center;width:38%}
 .av{font-size:3.2em;line-height:1.2}
@@ -391,6 +386,27 @@ textarea:disabled{background:#f3f1ec}
 .hp.en i{background:#dc2626}
 .fighter small{color:#6b6b6b}
 .vs{font-weight:800;color:#b45309;font-size:1.3em}
+.dq{text-align:center;background:#fff;border:1px solid #e7e1d3;border-radius:14px;padding:12px}
+.dq .q{font-size:1.3em}
+.duel{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.side{position:relative;border:3px solid;border-radius:16px;padding:10px;display:flex;flex-direction:column;gap:8px;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.side.A{border-color:#dc2626;background:#fef2f2}.side.B{border-color:#2563eb;background:#eff6ff}
+.shead{display:flex;justify-content:space-between;align-items:center;font-weight:800}
+.shead b{font-size:1.4em}
+.side.A .shead{color:#b91c1c}.side.B .shead{color:#1d4ed8}
+.dopt{font:inherit;min-height:52px;border:2px solid #d9d2c3;background:#fff;border-radius:12px;text-align:left;padding:8px 12px;cursor:pointer}
+.dopt.on{border-color:#2f6f5e;background:#e3f0eb;font-weight:700}
+.dopt.on::before{content:"✓ "}
+.side .btn{margin-top:auto}
+.lock{position:absolute;inset:0;border-radius:13px;background:rgba(255,255,255,.88);display:none;flex-direction:column;align-items:center;justify-content:center;font-weight:700}
+.side.done .lock{display:flex}
+.reveal{background:#fff;border:2px solid #2f6f5e;border-radius:14px;padding:12px;text-align:center}
+.reveal .res{display:flex;justify-content:space-around;gap:8px;margin:8px 0}
+.dfinal{display:flex;gap:14px;justify-content:center}
+.dfinal div{border-radius:14px;padding:10px 22px;font-weight:700}
+.dfinal .A{background:#fee2e2}.dfinal .B{background:#dbeafe}
+.dfinal b{display:block;font-size:2em}
+.phone .duel{grid-template-columns:1fr}
 </script>
 <script type="text/plain" id="mockJs">
 (function(){
@@ -437,6 +453,7 @@ function interlude(t,s,next){
 
 function start(){
   reset(); stopTimer();
+  if(C.form==='duel') return duelStart();
   let f='';
   if(C.identity!=='none'){
     f='<label>班級<input id="cls" inputmode="numeric" maxlength="3" placeholder="例：401"></label><label>座號<input id="seat" inputmode="numeric" maxlength="2" placeholder="1～40"></label>';
@@ -455,7 +472,7 @@ function start(){
       S.who={c:c,s:s,n:n};
     }
     S.t0=Date.now(); S.qStart=Date.now(); startTimer();
-    ({quiz:quiz,match:match,drag:drag,flip:flip,sort:sort,scenario:scenario,map:map,battle:battle,role:roleHome,multi:multiIntro,dilemma:C.mode==='write'?dilemma:dilemmaChoice})[C.form]();
+    ({quiz:quiz,match:match,drag:drag,flip:flip,sort:sort,scenario:scenario,battle:battle,role:roleHome,multi:multiIntro,dilemma:C.mode==='write'?dilemma:dilemmaChoice})[C.form]();
   };
 }
 
@@ -591,25 +608,6 @@ function scenario(){
   });
 }
 
-function map(){
-  if(dead()) return result('dead');
-  if(S.i>=N) return result('done');
-  const d=C.data[S.i]; S.qStart=Date.now(); let done=false;
-  app.innerHTML='<div id="hudwrap">'+hud()+'</div><div class="screen"><p class="prog">第 '+(S.i+1)+' / '+N+' 題・在地圖上點一下</p><h2 class="q">'+esc(d.q)+'</h2>'
-    +'<div class="map" id="map"><span class="mapnote">示意底圖（實際使用時換成你的地圖）</span></div>'+hintHTML()+'<div id="fb"></div></div>';
-  bindHint(d);
-  $id('map').onclick=e=>{
-    if(done) return; done=true;
-    const r=$id('map').getBoundingClientRect();
-    const x=(e.clientX-r.left)/r.width*100, y=(e.clientY-r.top)/r.height*100;
-    const ok=Math.hypot(x-d.x,y-d.y)<=d.r; hit(ok,d.q); S.i++; refreshHud();
-    $id('map').insertAdjacentHTML('beforeend','<span class="pin" style="left:'+x+'%;top:'+y+'%">📍</span>');
-    if(C.feedback==='end'){ setTimeout(map,500); return; }
-    $id('map').insertAdjacentHTML('beforeend','<span class="ring" style="left:'+d.x+'%;top:'+d.y+'%;width:'+(d.r*2)+'%"></span>');
-    $id('fb').innerHTML='<div class="fb '+(ok?'good':'bad')+'">'+(ok?'✅ 找到了！':'❌ 不是這裡，綠色圈是正確位置')+'<small>'+esc(d.explain)+'</small></div><button class="btn" id="nx">'+(C.mode==='group'?'換下一位同學 👉':'下一題 →')+'</button>';
-    $id('nx').onclick=map;
-  };
-}
 
 function battle(){
   if(S.php<=0) return result('lose');
@@ -636,6 +634,63 @@ function battle(){
     $id('fb').innerHTML='<div class="fb '+(o.ok?'good':'bad')+'">'+(o.ok?'⚔️ 攻擊成功！':'💥 受到攻擊！')+'<small>'+esc(d.explain)+'</small></div><button class="btn" id="nx">'+(C.mode==='group'?'換下一位同學 👉':'繼續戰鬥 →')+'</button>';
     $id('nx').onclick=battle;
   });
+}
+
+/* ===== 雙邊搶答 ===== */
+let T;
+function duelStart(){
+  const nm=C.identity==='teams';
+  app.innerHTML='<div class="screen center"><div class="big">'+C.icon+'</div><h1>'+esc(C.title)+'</h1><p class="sub">'+esc(C.subtitle)+'</p>'
+    +(nm?'<div class="form"><label>左邊隊伍<input id="na" maxlength="8" value="紅隊"></label><label>右邊隊伍<input id="nb" maxlength="8" value="藍隊"></label></div>':'')
+    +'<p class="sub" style="text-align:left">① 兩隊<b>同時作答</b>，各點自己這一邊。<br>② 答案可能<b>不只一個</b>，選好按「送出」。<br>'
+    +(C.scoring==='none'?'③ 兩隊都送出才揭曉答案。':'③ 答對 +1 分；<b>最快答對</b>的隊伍再 +1 分，答錯不扣分。')+'</p><button class="btn" id="go">開始比賽</button></div>';
+  $id('go').onclick=()=>{
+    T={A:{n:nm?($id('na').value.trim()||'紅隊'):'紅隊',s:0,c:0},B:{n:nm?($id('nb').value.trim()||'藍隊'):'藍隊',s:0,c:0}};
+    S.order=has('random')?shuffle(C.data):C.data.slice(); duelQ();
+  };
+}
+const fmtA=a=>a.length?C.opts.filter(o=>a.indexOf(o)>=0).join('、'):'未作答';
+function duelQ(){
+  if(S.i>=N) return duelEnd();
+  const d=S.order[S.i], t0=Date.now(); let shown=false;
+  const st={A:{sel:[],done:false,t:1e9},B:{sel:[],done:false,t:1e9}};
+  const side=k=>'<div class="side '+k+'" id="sd'+k+'"><div class="shead"><span>'+esc(T[k].n)+'</span>'+(C.scoring==='none'?'':'<b>'+T[k].s+'</b>')+'</div>'
+    +C.opts.map(o=>'<button class="dopt" data-o="'+esc(o)+'">'+esc(o)+'</button>').join('')
+    +'<button class="btn" data-sub="1" disabled>送出</button><div class="lock">🔒 已送出<small>等待對手作答…</small></div></div>';
+  app.innerHTML='<div class="screen"><p class="prog" style="text-align:center">第 '+(S.i+1)+' / '+N+' 題・可能不只一個答案</p><div class="dq"><h2 class="q">'+esc(d.q)+'</h2></div>'
+    +'<div class="duel">'+side('A')+side('B')+'</div><div id="fb"></div></div>';
+  ['A','B'].forEach(k=>{
+    const el=$id('sd'+k), sub=el.querySelector('[data-sub]');
+    el.querySelectorAll('.dopt').forEach(b=>b.addEventListener('pointerdown',e=>{ e.preventDefault(); if(st[k].done||shown) return;
+      const o=b.dataset.o, i=st[k].sel.indexOf(o); i>=0?st[k].sel.splice(i,1):st[k].sel.push(o);
+      b.classList.toggle('on',i<0); sub.disabled=!st[k].sel.length; }));
+    sub.addEventListener('pointerdown',e=>{ e.preventDefault(); if(st[k].done||shown||!st[k].sel.length) return;
+      st[k].done=true; st[k].t=Date.now()-t0; el.classList.add('done'); el.querySelectorAll('.dopt').forEach(x=>x.classList.remove('on'));
+      if(st.A.done&&st.B.done) setTimeout(reveal,300); });
+  });
+  function reveal(){
+    shown=true;
+    const same=x=>x.length===d.a.length&&x.every(v=>d.a.indexOf(v)>=0);
+    const ok={A:st.A.done&&same(st.A.sel),B:st.B.done&&same(st.B.sel)}, pts={A:0,B:0};
+    ['A','B'].forEach(k=>{ if(ok[k]){ pts[k]=1; T[k].c++; } });
+    const fast=ok.A&&ok.B?(st.A.t<=st.B.t?'A':'B'):ok.A?'A':ok.B?'B':'';
+    if(fast) pts[fast]++;
+    if(C.scoring!=='none'){ T.A.s+=pts.A; T.B.s+=pts.B; }
+    if(!ok.A||!ok.B) S.wrong.push(d.q+' → '+fmtA(d.a));
+    const line=k=>'<div>'+esc(T[k].n)+'：'+esc(fmtA(st[k].sel))+' '+(ok[k]?'✅':'❌')+(C.scoring!=='none'&&pts[k]?' +'+pts[k]+(fast===k?' ⚡最快':''):'')+'</div>';
+    $id('fb').innerHTML='<div class="reveal"><b>正確答案：'+esc(fmtA(d.a))+'</b><div class="res">'+line('A')+line('B')+'</div><small>'+esc(d.explain||'')+'</small><br><button class="btn" id="nx" style="margin-top:8px">'+(S.i+1>=N?'看結果':'下一題 →')+'</button></div>';
+    $id('nx').onclick=()=>{ S.i++; duelQ(); };
+    $id('nx').scrollIntoView({block:'nearest'});
+  }
+}
+function duelEnd(){
+  const w=C.scoring==='none'?'':T.A.s===T.B.s?'🤝 平手！':'🏆 '+(T.A.s>T.B.s?T.A.n:T.B.n)+' 獲勝！';
+  let h='<div class="screen center"><h1>'+(w||'🎉 比賽結束')+'</h1><div class="dfinal">'
+    +['A','B'].map(k=>'<div class="'+k+'">'+esc(T[k].n)+(C.scoring==='none'?'':'<b>'+T[k].s+' 分</b>')+'<small>答對 '+T[k].c+' / '+N+' 題</small></div>').join('')+'</div>';
+  if(C.feedback==='instant_review'&&S.wrong.length) h+='<div class="review"><b>📖 錯題複習</b><ul>'+S.wrong.slice(0,5).map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul></div>';
+  if(C.submit==='screenshot') h+='<p class="note">📸 請截圖這個畫面繳交</p>';
+  h+='<div class="row"><button class="btn ghost" id="again">再玩一次</button></div></div>';
+  app.innerHTML=h; $id('again').onclick=start;
 }
 
 /* ===== 開放思考題 ===== */
@@ -994,6 +1049,8 @@ const OPEN_FORMS=['role','multi','dilemma'];
 const isOpen=a=>OPEN_FORMS.includes(a.form);
 const closedOnly=a=>!a.form||!isOpen(a);
 const openOnly=a=>isOpen(a);
+const isDuel=a=>a.form==='duel';                 /* 雙邊搶答：兩隊共用一台裝置 */
+const soloGame=a=>closedOnly(a)&&!isDuel(a);
 const typing=a=>isOpen(a)&&a.answerMode&&a.answerMode!=='choice';   /* 學生需要打字 */
 const choosing=a=>isOpen(a)&&a.answerMode&&a.answerMode!=='write'; /* 處境選擇題 */
 /* 年級：1～6 國小、7～9 國中 */
@@ -1034,7 +1091,7 @@ const STEPS = [
       {v:'flip',icon:'🃏',label:'翻牌記憶',desc:'翻出成對的卡片',group:'有標準答案（自動判斷對錯）'},
       {v:'sort',icon:'🔢',label:'排序',desc:'依時間或步驟排出正確順序',group:'有標準答案（自動判斷對錯）'},
       {v:'scenario',icon:'🧭',label:'情境抉擇',desc:'依情境做選擇，看見不同結果',group:'有標準答案（自動判斷對錯）'},
-      {v:'map',icon:'🗺️',label:'地圖點選',desc:'在地圖或圖片上點出正確位置',group:'有標準答案（自動判斷對錯）'},
+      {v:'duel',icon:'🆚',label:'雙邊搶答',desc:'一台平板分左右兩隊，同時作答比快又比準',group:'有標準答案（自動判斷對錯）'},
       {v:'battle',icon:'⚔️',label:'角色對戰',desc:'答對攻擊、答錯受傷的對戰遊戲',group:'有標準答案（自動判斷對錯）'},
       {v:'role',icon:'🎭',label:'化身角色思考',desc:'選一個角色，用他的身分說出想法，再看其他角色怎麼想',group:'開放思考（沒有標準答案）'},
       {v:'multi',icon:'🔄',label:'多角度觀點輪轉',desc:'同一事件輪流站在不同立場發言，最後比較各方觀點',group:'開放思考（沒有標準答案）'},
@@ -1046,26 +1103,27 @@ const STEPS = [
   ]},
   { id:'mech', icon:'⚙️', title:'遊戲機制', hint:'想加哪些遊戲元素？可以複選，也可以都不選。', questions:[
     { key:'mech', type:'multi', label:'遊戲機制', options:[
-      {v:'timer',icon:'⏱️',label:'計時',desc:'倒數計時，時間到結算'},
-      {v:'lives',icon:'❤️',label:'生命值',desc:'答錯扣血，歸零結束',showIf:closedOnly},
-      {v:'levels',icon:'🪜',label:'多關卡',desc:'分關進行，逐關變難',showIf:closedOnly},
+      {v:'timer',icon:'⏱️',label:'計時',desc:'倒數計時，時間到結算',showIf:a=>!isDuel(a)},
+      {v:'lives',icon:'❤️',label:'生命值',desc:'答錯扣血，歸零結束',showIf:soloGame},
+      {v:'levels',icon:'🪜',label:'多關卡',desc:'分關進行，逐關變難',showIf:soloGame},
       {v:'random',icon:'🔀',label:'隨機出題',desc:'每次題目順序不同',showIf:closedOnly},
       {v:'hint',icon:'💡',label:'提示按鈕',desc:'卡關時可看提示'},
       {v:'keywords',icon:'🏷️',label:'可點選關鍵詞',desc:'點一下就把詞放進作答框，減少打字',showIf:typing},
-      {v:'leaderboard',icon:'🏆',label:'排行榜',desc:'顯示全班或本機高分',showIf:closedOnly} ]}
+      {v:'leaderboard',icon:'🏆',label:'排行榜',desc:'顯示全班或本機高分',showIf:soloGame} ]}
   ]},
   { id:'feedback', icon:'🎯', title:'回饋與計分', hint:'學生作答後看到什麼？分數怎麼算？', questions:[
     { key:'feedback', type:'single', label:'回饋方式', required:true, options:[
       {v:'instant',icon:'⚡',label:'即時對錯＋解說',desc:'每題作答後馬上看到結果',showIf:closedOnly},
-      {v:'end',icon:'🏁',label:'最後才看總分',desc:'全部做完才公布',showIf:closedOnly},
+      {v:'end',icon:'🏁',label:'最後才看總分',desc:'全部做完才公布',showIf:soloGame},
       {v:'instant_review',icon:'🔁',label:'即時回饋＋錯題回顧',desc:'結束時再複習答錯的題目',showIf:closedOnly},
       {v:'ref',icon:'💬',label:'寫完顯示參考觀點',desc:'送出後才看得到，避免照抄',showIf:openOnly},
       {v:'refcheck',icon:'✅',label:'參考觀點＋自我檢核',desc:'對照檢核清單，可以回頭修改或重新選擇',showIf:openOnly},
       {v:'discuss',icon:'🗣️',label:'不顯示參考，留待課堂討論',desc:'讓全班一起討論各種想法',showIf:openOnly} ]},
     { key:'scoring', type:'single', label:'計分方式', required:true, options:[
-      {v:'fixed',icon:'💯',label:'每題固定分數',desc:'答對得分，答錯不扣分',showIf:closedOnly},
-      {v:'penalty',icon:'➖',label:'答錯扣分',desc:'答對加分，答錯扣分',showIf:closedOnly},
-      {v:'speed',icon:'🚀',label:'速度加分',desc:'越快答對，分數越高',showIf:closedOnly},
+      {v:'fixed',icon:'💯',label:'每題固定分數',desc:'答對得分，答錯不扣分',showIf:soloGame},
+      {v:'penalty',icon:'➖',label:'答錯扣分',desc:'答對加分，答錯扣分',showIf:soloGame},
+      {v:'speed',icon:'🚀',label:'速度加分',desc:'越快答對，分數越高',showIf:soloGame},
+      {v:'duel',icon:'🆚',label:'搶答計分',desc:'答對 +1 分，兩隊中最快答對的再 +1 分',showIf:isDuel},
       {v:'complete',icon:'⭐',label:'完成制',desc:'每完成一題得一顆星，不評判內容',showIf:openOnly},
       {v:'minlen',icon:'✏️',label:'字數門檻',desc:'每個作答（或理由）要寫到指定字數才能送出',showIf:typing},
       {v:'scaffold',icon:'🧩',label:'鷹架完成',desc:'句型的每個空格都要填寫',showIf:a=>isOpen(a)&&a.answerMode==='write'},
@@ -1076,12 +1134,13 @@ const STEPS = [
   { id:'submit', icon:'📮', title:'身分與繳交', hint:'需要知道是誰作答嗎？成果怎麼交給老師？', questions:[
     { key:'identity', type:'single', label:'學生身分', required:true, options:[
       {v:'none',icon:'🚪',label:'不需輸入',desc:'打開就能玩'},
-      {v:'class',icon:'🔢',label:'班級＋座號',desc:'三位數班級，如 401、801'},
-      {v:'name',icon:'🪪',label:'班級＋座號＋姓名',desc:'方便老師辨識'} ]},
+      {v:'teams',icon:'🚩',label:'輸入兩隊隊名',desc:'開始前輸入左右兩隊的名稱',showIf:isDuel},
+      {v:'class',icon:'🔢',label:'班級＋座號',desc:'三位數班級，如 401、801',showIf:a=>!isDuel(a)},
+      {v:'name',icon:'🪪',label:'班級＋座號＋姓名',desc:'方便老師辨識',showIf:a=>!isDuel(a)} ]},
     { key:'submit', type:'single', label:'繳交方式', required:true, options:[
       {v:'none',icon:'➖',label:'不需繳交',desc:'練習用'},
       {v:'screenshot',icon:'📸',label:'截圖繳交',desc:'結果頁（開放題為思考彙整頁）截圖上傳'},
-      {v:'sheet',icon:'📊',label:'送到 Google 試算表',desc:'成績或作答自動回傳（需設定後端）'} ]}
+      {v:'sheet',icon:'📊',label:'送到 Google 試算表',desc:'成績或作答自動回傳（需設定後端）',showIf:a=>!isDuel(a)} ]}
   ]},
   { id:'device', icon:'📱', title:'學生裝置', hint:'學生主要用什麼裝置操作？', questions:[
     { key:'device', type:'single', label:'裝置', required:true, options:[
@@ -1139,22 +1198,31 @@ const RULES = [
   { when:a=>a.device==='tablet_land'||a.device==='mixed', text:'以平板橫向為主要版面；按鈕至少 48px；不依賴滑鼠懸停效果' },
   { when:a=>a.device==='phone'||a.device==='mixed', text:'手機直向單欄排版，字級至少 16px' },
   { when:a=>a.mode==='screen', text:'大字級、高對比，教室後排也看得清楚' },
-  { when:a=>a.mode==='group', text:'加入「換人作答」提示，字級適合多人共看一台裝置' },
+  { when:a=>a.mode==='group'&&!isDuel(a), text:'加入「換人作答」提示，字級適合多人共看一台裝置' },
+  { when:isDuel, text:'兩隊的選項與送出按鈕都用 pointerdown 事件（並 preventDefault），讓兩個人可以同時點平板的左右兩邊，互不干擾；整頁設定 touch-action:manipulation、禁止雙擊縮放與長按選字' },
+  { when:isDuel, text:'左右兩隊用不同顏色區分（例如左紅右藍），各自顯示隊名與分數；題目置中顯示在兩隊上方，字級大到兩邊都看得清楚' },
+  { when:isDuel, text:'畫面上方提供老師用的「直接揭曉」與「結束比賽」小按鈕（有隊伍遲遲不送出時使用）' },
+  { when:a=>isDuel(a)&&a.identity==='teams', text:'開始畫面輸入左右兩隊隊名（各 8 字以內，預設「紅隊」「藍隊」），並用 3～4 行說明比賽規則' },
+  { when:a=>isDuel(a)&&a.identity==='none', text:'隊名固定為「紅隊」「藍隊」；開始畫面用 3～4 行說明比賽規則' },
   { when:a=>a.identity==='class', text:'開始畫面輸入班級（三位數字，第一碼為 1～9，如 401 代表四年一班、801 代表八年一班）與座號（1～40），格式錯誤時提示且不能開始' },
   { when:a=>a.identity==='name', text:'開始畫面輸入班級（三位數字，第一碼為 1～9，如 401 代表四年一班、801 代表八年一班）、座號（1～40）與姓名，格式錯誤時提示且不能開始' },
-  { when:a=>a.feedback==='instant', text:'每次作答後立即顯示對錯與一句解說，按「下一題」繼續' },
+  { when:a=>a.feedback==='instant'&&!isDuel(a), text:'每次作答後立即顯示對錯與一句解說，按「下一題」繼續' },
   { when:a=>a.feedback==='end', text:'作答過程不顯示對錯，全部完成後才顯示總分與每題對錯' },
-  { when:a=>a.feedback==='instant_review', text:'每次作答後立即顯示對錯與一句解說；結束時列出答錯的題目與正確答案' },
+  { when:a=>a.feedback==='instant_review'&&!isDuel(a), text:'每次作答後立即顯示對錯與一句解說；結束時列出答錯的題目與正確答案' },
+  { when:a=>isDuel(a)&&(a.feedback==='instant'||a.feedback==='instant_review'), text:'兩隊都送出後，顯示揭曉視窗：正確答案、一句解說、兩隊各自選了什麼與這題得分，按「下一題」繼續' },
+  { when:a=>isDuel(a)&&a.feedback==='instant_review', text:'結束畫面顯示勝負、兩隊分數與答對題數，並列出「錯題複習」：任一隊答錯的題目、正確答案與解說' },
+  { when:a=>a.scoring==='duel', text:'計分：答對 +1 分；兩隊中最快答對的那一隊再 +1 分；答錯不扣分。全部正確答案都選到、而且沒有多選，才算答對' },
   { when:a=>a.scoring==='fixed', text:'計分：每題答對得分，答錯不扣分，滿分 100 分' },
   { when:a=>a.scoring==='penalty', text:'計分：答對加 10 分、答錯扣 5 分，總分最低為 0' },
   { when:a=>a.scoring==='speed', text:'計分：答對基本分 10 分，5 秒內答對再加 5 分；記錄每題作答秒數' },
   { when:a=>a.scoring==='none', text:'不顯示分數，只顯示完成進度與完成畫面' },
-  { when:a=>a.submit==='screenshot'&&!isOpen(a), text:'結果頁在同一畫面顯示班級座號、分數與完成時間，方便截圖繳交' },
+  { when:a=>a.submit==='screenshot'&&!isOpen(a)&&!isDuel(a), text:'結果頁在同一畫面顯示班級座號、分數與完成時間，方便截圖繳交' },
+  { when:a=>a.submit==='screenshot'&&isDuel(a), text:'結束畫面在同一畫面顯示兩隊隊名、分數、答對題數、勝負與完成時間，方便截圖繳交' },
   { when:a=>a.submit==='sheet', text:gasContract },
   { when:a=>has(a,'timer')&&!isOpen(a), text:'顯示倒數計時；時間到自動結算' },
   { when:a=>has(a,'lives'), text:'設 3 條生命，答錯扣 1 條；歸零時顯示結束畫面與「重新開始」按鈕' },
   { when:a=>has(a,'levels'), text:'分 3 關，題目依序分配到各關；每關結束顯示過關畫面，再進入下一關' },
-  { when:a=>has(a,'random'), text:'每次遊戲題目與選項順序隨機' },
+  { when:a=>has(a,'random'), text:a=>isDuel(a)?'每次遊戲題目順序隨機；答案按鈕的位置固定不變，方便兩隊快速找到':'每次遊戲題目與選項順序隨機' },
   { when:a=>has(a,'hint')&&!isOpen(a), text:'每題提供提示按鈕（提示內容放在資料區）' },
   { when:a=>has(a,'leaderboard')&&a.submit==='sheet', text:'排行榜以 GET 讀取 GAS_URL + "?game=" + encodeURIComponent(GAME_NAME) + "&top=10"，回傳格式為 {ok:true, top:[{who:"401-7", score:95}]}；GAS_URL 留空或讀取失敗時，改用本機排行（localStorage，讀寫要加 try/catch）' },
   { when:a=>has(a,'leaderboard')&&a.submit!=='sheet', text:'排行榜存在本機瀏覽器（localStorage，讀寫要加 try/catch），顯示這台裝置的前 10 名' },
@@ -1188,7 +1256,8 @@ const WARNS = [
   { when:a=>has(a,'leaderboard')&&a.submit!=='sheet', text:'排行榜要跨裝置需要後端；沒選「送到 Google 試算表」時，只能做同一台裝置的本機排行' },
   { when:a=>a.source==='ai'||a.source==='mix', text:'AI 產生的題目可能有錯，上課前務必逐題核對' },
   { when:a=>a.mode==='screen'&&a.identity&&a.identity!=='none', text:'全班共看大螢幕時通常不需要個人身分，可考慮改為「不需輸入」' },
-  { when:a=>a.form==='map', text:'地圖點選需要底圖，請先準備好圖片' },
+  { when:a=>isDuel(a)&&a.mode==='solo', text:'雙邊搶答是兩隊共用一台裝置對戰，使用方式建議改選「分組共用」或「全班大螢幕」' },
+  { when:a=>isDuel(a)&&a.device==='phone', text:'雙邊搶答要兩隊同時點同一個畫面，手機太小，建議用平板橫放或大螢幕觸控' },
   { when:a=>a.mode==='screen'&&a.submit&&a.submit!=='none', text:'大螢幕全班共用時，個人繳交通常用不到' },
   { when:a=>a.timing==='assess'&&(a.feedback==='instant'||a.feedback==='instant_review'), text:'小考評量搭配即時回饋，學生作答中就會看到答案；正式評量建議改為「最後才看總分」' },
   { when:a=>a.submit==='sheet', text:'選了送到 Google 試算表：完成頁會出現「連接 Google 試算表」引導，跟著做大約 5 分鐘；不設定也能先用截圖繳交' },
@@ -1205,7 +1274,7 @@ const FORM_PLAY = {
   flip:'卡片背面朝上排成格狀（成對的卡片內容彼此對應，例如名詞與解釋）。一次翻開兩張，配對成功就保持翻開，否則 1 秒後蓋回。全部配對完成即結束。',
   sort:'顯示一組打亂順序的卡片，學生用拖曳或每張卡片旁的「上移／下移」按鈕調整順序，按「檢查」後標示每張卡片位置是否正確。',
   scenario:'每個情境顯示一段描述與 2～3 個選擇；不同選擇導向不同的後續情境，最後顯示結局與學習重點說明。',
-  map:'顯示一張底圖（網址放在設定區 const MAP_IMAGE = \'\'，未設定時顯示灰色示意底圖）。每題要求點出一個地點，點擊位置在正確範圍內即答對，並在圖上標出正確位置。座標用百分比記錄，以適應不同螢幕。',
+  duel:'同一台平板橫放，畫面左右分成兩隊，題目置中顯示在上方。兩隊同時作答：各自點選自己這一邊的答案按鈕（所有題目共用同一組 2～4 個答案選項；答案可能不只一個，可以複選），選好按「送出」。送出後把這一隊的選擇藏起來，顯示「🔒 已送出，等待對手作答」，避免對手偷看。兩隊都送出才揭曉正確答案。全部題目結束後顯示勝負與兩隊成績。',
   battle:'畫面左邊是我方角色、右邊是敵方角色（都用 emoji 表示），各有血條。每題以選擇題作答：答對攻擊敵方、答錯我方受傷。敵方血量歸零勝利，我方歸零失敗。',
   role:'先顯示事件情境，再列出角色卡片（emoji、角色名稱、一句身分介紹）。學生選一個角色，以第一人稱寫下想法。送出後顯示所有角色的參考觀點，讓學生比較自己和其他角色想法的差異。學生至少完成一個角色，也可以再選其他角色繼續作答（已完成的角色卡片打勾）。',
   multi:'先顯示事件情境，接著依序站在每個立場發言，一個立場一頁。全部完成後，出現「觀點比較表」：每一列是一個立場，並排顯示學生寫的觀點與參考觀點，最後請學生寫一句「我的綜合看法」。',
@@ -1229,7 +1298,7 @@ const DATA_SHAPE = {
   flip:'const DATA = [ { a:"卡片A", b:"與A成對的卡片B" } ];',
   sort:'const DATA = [ { title:"排序題目", items:["第1個","第2個","第3個","第4個"], explain:"一句解說" } ];（items 為正確順序，顯示時打亂）',
   scenario:'const DATA = { start:"s1", scenes:{ s1:{ text:"情境描述", choices:[ { label:"選項", next:"s2" } ] }, end1:{ text:"結局說明", end:true } } };',
-  map:'const DATA = [ { q:"請點出某地點", x:50, y:40, r:6, explain:"一句解說" } ];（x、y 為百分比座標，r 為容許誤差百分比）',
+  duel:'const OPTIONS = ["選項A","選項B","選項C"]; const DATA = [ { q:"題目", a:["選項A"], explain:"一句解說" } ];（OPTIONS 是所有題目共用的答案按鈕，2～4 個；a 是正確答案，可以不只一個）',
   role:'const SCENE = "事件情境"; const DATA = [ { role:"角色名稱", emoji:"🧑", intro:"一句身分介紹", ref:"這個角色的參考觀點（2～3 句，第一人稱）", hint:"思考提示" } ];',
   multi:'const SCENE = "事件情境"; const DATA = [ { stance:"立場名稱", emoji:"🏭", ref:"這個立場的參考觀點（2～3 句）", hint:"思考提示" } ];',
   dilemma:'const DATA = [ { q:"兩難情境", a:"選項A", b:"選項B", counterA:"給選A的人看的反方論點", counterB:"給選B的人看的反方論點", hint:"思考提示" } ];'
@@ -1242,15 +1311,15 @@ const PASTE_FMT = {
   flip:{fmt:'卡片A｜卡片B（兩張成對）',ex:'玉山｜臺灣最高峰'},
   sort:{fmt:'每行一個項目，依正確順序排列',ex:'荷西時期\n明鄭時期\n清領時期'},
   scenario:{fmt:'情境描述｜選項A→結果｜選項B→結果',ex:'颱風要來了，你會？｜檢查門窗→家裡很安全｜出門看海→非常危險'},
-  map:{fmt:'題目｜正確地點（座標可在網頁完成後再調整）',ex:'請點出臺北市｜臺北市'},
+  duel:{fmt:'題目｜正確答案（不只一個時用「、」隔開）｜一句解說（可留空）',ex:'來臺灣的目的是貿易、傳教｜荷蘭人、西班牙人｜兩者都是為了貿易與傳教來臺'},
   role:{fmt:'角色｜一句身分介紹｜參考觀點（後兩欄可留空，由 AI 補上）',ex:'淡水的茶商｜靠賣茶葉維生的商人｜開港讓茶葉能賣到國外，我的生意變好了'},
   multi:{fmt:'立場｜參考觀點（參考觀點可留空，由 AI 補上）',ex:'淡水的茶商｜開港讓茶葉能賣到國外，生意變好了'},
   dilemma:{fmt:'兩難情境｜選項A｜選項B（反方論點由 AI 補上）',ex:'清朝該不該開放港口與外國通商？｜開放｜不開放'}
 };
-const UNIT = {match:'組',flip:'組',drag:'張卡片',scenario:'個情境',sort:'題',quiz:'題',battle:'題',map:'題',role:'個角色',multi:'個立場',dilemma:'個兩難情境'};
+const UNIT = {match:'組',flip:'組',drag:'張卡片',scenario:'個情境',sort:'題',quiz:'題',battle:'題',duel:'題',role:'個角色',multi:'個立場',dilemma:'個兩難情境'};
 
 /* ========== 3. 複雜度估算（決定是否分段、是否提醒減量） ========== */
-const FORM_W = {quiz:1,match:2,drag:3,flip:2,sort:2,scenario:2,map:3,battle:4,role:3,multi:3,dilemma:3};
+const FORM_W = {quiz:1,match:2,drag:3,flip:2,sort:2,scenario:2,duel:3,battle:4,role:3,multi:3,dilemma:3};
 const MECH_W = {timer:1,lives:1,levels:2,random:1,hint:1,leaderboard:3,keywords:1};
 function complexity(a){
   let s = FORM_W[a.form]||0;
@@ -1447,6 +1516,8 @@ function specBody(a){
   if(choosing(a)) data+=a.form==='role'?`\n每個角色的 ${a.qcount||3} 題處境選擇題（含選項與「選這個，代表你在乎……」說明）由你依角色身分與事件情境設計。`
     :a.form==='multi'?`\n${a.qcount||3} 題共用的處境選擇題（含選項與說明）由你依事件情境設計，選項要讓不同立場都有合理的選擇。`
     :'\n每個兩難情境兩邊各 3 個理由選項，由你依情境撰寫。';
+  if(isDuel(a)) data+=a.source==='ai'?'\n請先決定 2～4 個所有題目共用的答案選項（例如三個政權、三種地形、三個時期），每題的正確答案是其中一個或多個；各選項當正確答案的次數要平均，也要有幾題是多個答案。'
+    :'\n答案選項：從各題的正確答案整理出所有題目共用的 2～4 個選項，放在 OPTIONS。解說留空的題目，由你依題目補一句解說。';
   if(isOpen(a)&&a.form!=='dilemma')
     data=(a.scene&&a.scene.trim()?`事件情境（請直接使用）：${a.scene.trim()}`:`事件情境請依單元主題撰寫，約 80～120 字，適合${stageOf(a.grade)}程度。`)+'\n'+data;
   return `## 一、教學情境
@@ -1716,8 +1787,8 @@ function renderFinal(){
 }
 
 /* ========== 8. 可點假畫面預覽 ========== */
-const MVP_FORMS=['quiz','match','drag','flip','sort','scenario','map','battle','role','multi','dilemma'];
-const FORM_ICON={quiz:'❓',match:'🔗',drag:'🗂️',flip:'🃏',sort:'🔢',scenario:'🧭',map:'🗺️',battle:'⚔️',role:'🎭',multi:'🔄',dilemma:'⚖️'};
+const MVP_FORMS=['quiz','match','drag','flip','sort','scenario','duel','battle','role','multi','dilemma'];
+const FORM_ICON={quiz:'❓',match:'🔗',drag:'🗂️',flip:'🃏',sort:'🔢',scenario:'🧭',duel:'🆚',battle:'⚔️',role:'🎭',multi:'🔄',dilemma:'⚖️'};
 function pasteLines(a){
   if(a.source==='ai'||!a.paste) return [];
   return a.paste.split(/\n+/).map(l=>l.split(/[｜|]/).map(x=>x.trim()).filter(Boolean)).filter(p=>p.length);
@@ -1782,11 +1853,14 @@ function mockData(a){
     d.forEach(x=>{ x.reasonsA=[1,2,3].map(k=>`（支持「${x.a}」的理由 ${k}）`); x.reasonsB=[1,2,3].map(k=>`（支持「${x.b}」的理由 ${k}）`); });
     return {data:d};
   }
-  if(a.form==='map'){
-    const P=[[28,38],[66,30],[48,70],[78,62],[20,72]];
-    let d=L.slice(0,5).map((p,i)=>({q:p[0],x:P[i][0],y:P[i][1],r:9,explain:'（正確座標在網頁完成後調整）'}));
-    if(!d.length) d=['A','B','C'].map((c,i)=>({q:`（範例）請點出地點 ${c}`,x:P[i][0],y:P[i][1],r:9,explain:'綠色圈是正確位置'}));
-    return {data:d};
+  if(a.form==='duel'){
+    const split=t=>(t||'').split(/[、,，]/).map(x=>x.trim()).filter(Boolean);
+    let d=L.filter(p=>p.length>=2).slice(0,5).map(p=>({q:p[0],a:split(p[1]),explain:p[2]||'（解說由 AI 補上）'})).filter(x=>x.a.length);
+    let opts=[...new Set(d.flatMap(x=>x.a))].slice(0,4);
+    if(!d.length||opts.length<2){ opts=['選項 A','選項 B','選項 C'];
+      d=[[`（範例）${T} 第 1 題：這是誰的特色？`,['選項 A']],['（範例）第 2 題：答案可能不只一個',['選項 A','選項 C']],['（範例）第 3 題',['選項 B']]].map(([q,a])=>({q,a,explain:ex})); }
+    d.forEach(x=>x.a=x.a.filter(v=>opts.includes(v)));
+    return {data:d.filter(x=>x.a.length),opts};
   }
   let d=L.filter(p=>p.length>=2).slice(0,6).map(p=>({a:p[0],b:p[1]}));
   if(!d.length) d=[1,2,3,4].map(i=>({a:`名詞 ${i}`,b:`解釋 ${i}`}));
@@ -1803,7 +1877,7 @@ function mockHTML(a){
     identity:a.identity||'none',submit:a.submit||'none',mode:a.mode||'solo',
     scoring:a.form==='scenario'?'none':(a.scoring||(isOpen(a)?'complete':'fixed')),
     title:(a.topic||'').trim()||'我的互動教材',subtitle:`${a.subject||''}${a.grade?'・'+gradeShort(a.grade):''}`||'',
-    icon:FORM_ICON[a.form],data:md.data,cats:md.cats||[],
+    icon:FORM_ICON[a.form],data:md.data,cats:md.cats||[],opts:md.opts||[],
     open:isOpen(a),minlen:+a.minlen||20,mode:a.answerMode||'choice',qs:md.qs||[],
     scene:(a.scene||'').trim()||`（範例）這裡是關於「${(a.topic||'單元').trim()||'單元'}」的事件情境，學生會先讀這段文字，再開始作答。`,
     kw:typing(a)&&has(a,'keywords')?['因為','所以','我擔心','我希望','生活','工作','家人','未來']:null};
@@ -1906,8 +1980,8 @@ async function loadText(txt){
 }
 
 /* ========== 10. 講義變題目：產生指令 → 貼回 → 勾選＋修改 → 填入 ========== */
-const HANDOUT_FORMS=['quiz','match','drag','flip','sort','scenario','map','battle','role','multi'];
-const HAND_MIN={quiz:3,battle:3,match:2,drag:2,flip:2,scenario:2,sort:1,map:1,role:1,multi:1};
+const HANDOUT_FORMS=['quiz','match','drag','flip','sort','scenario','duel','battle','role','multi'];
+const HAND_MIN={quiz:3,battle:3,match:2,drag:2,flip:2,scenario:2,sort:1,duel:2,role:1,multi:1};
 const HAND_RULE={
   quiz:'錯誤選項要合理、像真的，但必須明確是錯的；正確答案只能有一個；每題 4 個選項。',
   battle:'錯誤選項要合理、像真的，但必須明確是錯的；正確答案只能有一個；每題 4 個選項。',
@@ -1916,7 +1990,7 @@ const HAND_RULE={
   flip:'兩張卡片要明確成對，例如名詞和它的解釋。',
   sort:'挑一段講義裡有明確先後順序的內容（時間、步驟或流程），依正確順序每行列一個項目。',
   scenario:'每個情境 2～3 個選項，每個選項寫成「選項→結果」。',
-  map:'只出講義裡提到、而且能在地圖上標出來的地點。',
+  duel:'先決定 2～4 個所有題目共用的答案選項（例如講義比較的幾個政權、人物或地區），每題的正確答案從這些選項中挑一個或多個，多個用「、」隔開；也要有幾題是多個答案。',
   role:'挑出講義裡立場不同的人物或群體；參考觀點用第一人稱，寫 2～3 句。',
   multi:'挑出講義裡對同一件事看法不同的立場；參考觀點寫 2～3 句。'
 };
@@ -2096,6 +2170,7 @@ const HO_FORMS={
   flip:'講義有很多成對的名詞與解釋，適合記憶',
   sort:'講義有清楚的時間先後、步驟或流程',
   scenario:'講義談到生活中的判斷或做法（安全、公民、環境）',
+  duel:'講義在比較 2～4 個對象（政權、人物、地區、時期）各自的特色，適合兩隊比賽',
   role:'講義裡有立場不同的人物或群體（開放題，沒有標準答案）',
   multi:'講義對同一件事有不同的看法（開放題，沒有標準答案）'
 };
