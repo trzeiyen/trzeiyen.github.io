@@ -1,0 +1,95 @@
+/**
+ * 經濟時光機大逃脫｜Apps Script 後台
+ *
+ * 用法：
+ * 1. 新增一份 Google 試算表 →「擴充功能」→「Apps Script」，把這整段貼上（取代原本內容）。
+ * 2. 把下面的 TEACHER_KEY 改成你自己的後台密碼。
+ * 3. 「部署」→「新增部署作業」→ 類型選「網頁應用程式」，
+ *    執行身分：我；誰可以存取：所有人 → 部署（第一次會要求授權，按允許）。
+ * 4. 複製網址（…/exec），貼到 index.html 和 teacher.html 的 GAS_URL。
+ */
+
+const TEACHER_KEY = '請改成你的後台密碼';
+const SHEET_NAME = '成績';
+const ROOM_COUNT = 9;
+const HEADER = ['時間', '班級', '座號', '第幾次挑戰', '用時(秒)', '用時', '提示次數', '答錯次數',
+  '稱號', '立場', '理由', '各關答錯', '各關提示', '各關用時(秒)'];
+
+function getSheet_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sh = ss.getSheetByName(SHEET_NAME);
+  if (!sh) {
+    sh = ss.insertSheet(SHEET_NAME);
+    sh.appendRow(HEADER);
+    sh.setFrozenRows(1);
+  }
+  return sh;
+}
+
+function json_(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// 避免學生輸入的文字被試算表當成公式
+function safeText_(v, max) {
+  let t = String(v == null ? '' : v).slice(0, max || 300);
+  if (/^[=+\-@]/.test(t)) t = "'" + t;
+  return t;
+}
+function int_(v, lo, hi) {
+  const n = Math.round(Number(v));
+  if (!isFinite(n) || n < lo || n > hi) return null;
+  return n;
+}
+function list_(v) {
+  const a = String(v || '').split(',').map(x => int_(x, 0, 99999));
+  if (a.length !== ROOM_COUNT || a.some(x => x === null)) return '';
+  return a.join(',');
+}
+function fmt_(sec) {
+  return Math.floor(sec / 60) + ':' + ('0' + (sec % 60)).slice(-2);
+}
+
+// 學生送成績
+function doPost(e) {
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(15000);
+    const d = JSON.parse((e.postData && e.postData.contents) || '{}');
+    const cls = String(d.cls || '');
+    const seat = int_(d.seat, 1, 40);
+    const sec = int_(d.seconds, 0, 6 * 3600);
+    if (!/^[1-6]\d{2}$/.test(cls) || seat === null || sec === null) {
+      return json_({ ok: false, error: 'invalid' });
+    }
+    getSheet_().appendRow([
+      new Date(), cls, seat, int_(d.attempt, 1, 999) || 1, sec, fmt_(sec),
+      int_(d.hints, 0, 999) || 0, int_(d.errors, 0, 9999) || 0,
+      safeText_(d.title, 20), safeText_(d.stance, 20), safeText_(d.reason, 300),
+      list_(d.roomErr), list_(d.roomHint), list_(d.roomTime)
+    ]);
+    return json_({ ok: true });
+  } catch (err) {
+    return json_({ ok: false, error: String(err) });
+  } finally {
+    try { lock.releaseLock(); } catch (e2) {}
+  }
+}
+
+// 老師後台讀成績（需要密碼）
+function doGet(e) {
+  const p = (e && e.parameter) || {};
+  if (p.action === 'ping') return json_({ ok: true });
+  if (p.key !== TEACHER_KEY) return json_({ ok: false, error: 'key' });
+  const sh = getSheet_();
+  const values = sh.getDataRange().getValues().slice(1);
+  const rows = values.map(r => ({
+    time: r[0] instanceof Date ? r[0].getTime() : r[0],
+    cls: String(r[1]), seat: Number(r[2]), attempt: Number(r[3]),
+    seconds: Number(r[4]), hints: Number(r[6]), errors: Number(r[7]),
+    title: String(r[8]), stance: String(r[9]), reason: String(r[10]).replace(/^'/, ''),
+    roomErr: String(r[11]), roomHint: String(r[12]), roomTime: String(r[13])
+  }));
+  return json_({ ok: true, rows: rows });
+}

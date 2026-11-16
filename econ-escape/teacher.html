@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>老師後台｜經濟時光機大逃脫</title>
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--line:#dde3e8;--text:#1f2a33;--muted:#6b7a86;--teal:#1f9e92;--amber:#e09a17;--red:#d9534f;--green:#2f9e5b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;font-size:16px}
+header{background:#14222e;color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+header h1{font-size:20px;margin:0}
+main{max-width:1100px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:14px}
+.card h2{font-size:18px;margin:0 0 12px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+select,input{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff}
+button{font:inherit;padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer}
+button.primary{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:700}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.stat{background:#f7f9fa;border-radius:12px;padding:14px;text-align:center}
+.stat .v{font-size:28px;font-weight:800;color:var(--teal);font-variant-numeric:tabular-nums}
+.stat .k{color:var(--muted);font-size:14px}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:center}
+th{background:#f7f9fa;cursor:pointer;user-select:none;position:sticky;top:0}
+td.l{text-align:left}
+.seats{display:flex;flex-wrap:wrap;gap:6px}
+.seat{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700}
+.seat.ok{background:#dff3e7;color:var(--green)}
+.seat.no{background:#fde8e7;color:var(--red)}
+.bar{display:grid;grid-template-columns:150px 1fr 70px 1fr 70px;gap:8px;align-items:center;margin:6px 0;font-size:15px}
+.bar .track{background:#eef2f4;border-radius:6px;height:16px;overflow:hidden}
+.bar .fill{height:100%}
+.legend{color:var(--muted);font-size:14px;margin-bottom:6px}
+.wall{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.note{border-radius:12px;padding:12px;font-size:15px;line-height:1.6}
+.note b{display:block;margin-bottom:4px}
+.note.env{background:#e6f5ee}.note.eco{background:#fff3dc}
+.muted{color:var(--muted)}
+.err{color:var(--red);font-weight:700}
+#login{max-width:420px;margin:60px auto}
+.hide{display:none}
+</style>
+</head>
+<body>
+<header>
+  <h1>🕰️ 經濟時光機大逃脫｜老師後台</h1>
+  <div class="row" id="topbar" style="display:none">
+    <label><input type="checkbox" id="auto" checked> 每 20 秒自動更新</label>
+    <button id="refresh">🔄 重新整理</button>
+    <button id="logout">登出</button>
+  </div>
+</header>
+
+<main>
+  <div class="card" id="login">
+    <h2>老師登入</h2>
+    <p class="muted">請輸入你在 Code.gs 設定的後台密碼。</p>
+    <div class="row"><input type="password" id="pw" placeholder="後台密碼" style="flex:1"><button class="primary" id="go">登入</button></div>
+    <p class="err" id="lerr"></p>
+  </div>
+
+  <div id="dash" class="hide">
+    <div class="card">
+      <div class="row">
+        <label>班級 <select id="cls"></select></label>
+        <label>應到人數 <input type="number" id="size" min="1" max="40" style="width:80px"></label>
+        <label>計算方式 <select id="mode">
+          <option value="first">每人第一次挑戰</option>
+          <option value="best">每人最快一次</option>
+          <option value="all">全部紀錄</option>
+        </select></label>
+        <button id="csv">⬇️ 匯出 CSV</button>
+        <span class="muted" id="updated"></span>
+      </div>
+    </div>
+
+    <div class="card"><h2>📊 全班概況</h2><div class="stats" id="stats"></div></div>
+    <div class="card"><h2>🪑 完成狀況</h2><div class="legend">綠色＝已逃脫並送出成績；紅色＝還沒有紀錄</div><div class="seats" id="seats"></div></div>
+    <div class="card"><h2>🧱 哪一關最卡？</h2><div class="legend">左：平均答錯次數　右：平均花費時間</div><div id="rooms"></div></div>
+    <div class="card"><h2>📋 成績表</h2><div style="overflow:auto;max-height:520px"><table id="tbl"></table></div></div>
+    <div class="card"><h2>📝 反思牆：經濟發展 vs. 生活環境</h2><div class="row" id="stanceSum" style="margin-bottom:10px"></div><div class="wall" id="wall"></div></div>
+  </div>
+</main>
+
+<script>
+/* ===== 後台設定：和 index.html 貼同一個 GAS 網址 ===== */
+const GAS_URL = '';
+/* ==================================================== */
+const ROOM_NAMES=['1 戰後的街頭','2 農村地契室','3 美援倉庫','4 加工出口區','5 能源危機指揮所','6 十大建設工地','7 十大建設地圖室','8 建設的代價','9 雪山隧道'];
+const KEY_PW='econ_escape_teacher_pw', KEY_SIZE='econ_escape_size_';
+let ROWS=[], sortKey='seat', sortDir=1, timer=null;
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt=s=>Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0;
+function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v);}catch(e){return null;}}
+
+async function load(pw){
+  if(!GAS_URL)throw new Error('nourl');
+  const r=await fetch(GAS_URL+'?key='+encodeURIComponent(pw)+'&t='+Date.now());
+  const j=await r.json();
+  if(!j.ok)throw new Error(j.error||'fail');
+  return j.rows;
+}
+
+async function login(pw){
+  $('#lerr').textContent='';
+  try{
+    ROWS=await load(pw);ls(KEY_PW,pw);
+    $('#login').classList.add('hide');$('#dash').classList.remove('hide');$('#topbar').style.display='flex';
+    buildClassList();draw();startAuto();
+  }catch(e){
+    $('#lerr').textContent=e.message==='key'?'密碼不對喔。':e.message==='nourl'?'teacher.html 還沒貼上 GAS 網址。':'連不上後台，請稍後再試。';
+  }
+}
+
+async function refresh(){
+  try{ROWS=await load(ls(KEY_PW));buildClassList();draw();}catch(e){$('#updated').textContent='⚠️ 更新失敗';}
+}
+function startAuto(){clearInterval(timer);if($('#auto').checked)timer=setInterval(refresh,20000);}
+
+function buildClassList(){
+  const cur=$('#cls').value;
+  const list=[...new Set(ROWS.map(r=>r.cls))].sort();
+  $('#cls').innerHTML=list.length?list.map(c=>`<option>${c}</option>`).join(''):'<option value="">（尚無資料）</option>';
+  if(list.includes(cur))$('#cls').value=cur;
+  $('#size').value=ls(KEY_SIZE+$('#cls').value)||30;
+}
+
+function pick(){
+  const c=$('#cls').value, mode=$('#mode').value;
+  const rows=ROWS.filter(r=>r.cls===c);
+  if(mode==='all')return rows;
+  const by={};
+  rows.forEach(r=>{const o=by[r.seat];
+    if(!o)by[r.seat]=r;
+    else if(mode==='first'&&(r.attempt<o.attempt||(r.attempt===o.attempt&&r.time<o.time)))by[r.seat]=r;
+    else if(mode==='best'&&r.seconds<o.seconds)by[r.seat]=r;});
+  return Object.values(by);
+}
+const nums=s=>String(s||'').split(',').map(Number);
+
+function draw(){
+  const rows=pick(), size=+$('#size').value||30;
+  $('#updated').textContent='更新於 '+new Date().toLocaleTimeString('zh-TW');
+  const seatsDone=new Set(rows.map(r=>r.seat));
+  const in40=rows.filter(r=>r.seconds<=2400).length;
+  $('#stats').innerHTML=[
+    [seatsDone.size+' / '+size,'已逃脫人數'],
+    [rows.length?fmt(Math.round(avg(rows.map(r=>r.seconds)))):'—','平均用時'],
+    [rows.length?avg(rows.map(r=>r.hints)).toFixed(1):'—','平均提示次數'],
+    [rows.length?avg(rows.map(r=>r.errors)).toFixed(1):'—','平均答錯次數'],
+    [rows.length?Math.round(in40/rows.length*100)+'%':'—','40 分鐘內完成'],
+  ].map(([v,k])=>`<div class="stat"><div class="v">${v}</div><div class="k">${k}</div></div>`).join('');
+
+  let seatHtml='';for(let i=1;i<=size;i++)seatHtml+=`<div class="seat ${seatsDone.has(i)?'ok':'no'}">${i}</div>`;
+  $('#seats').innerHTML=seatHtml;
+
+  const valid=rows.filter(r=>nums(r.roomErr).length===ROOM_NAMES.length);
+  const errAvg=ROOM_NAMES.map((_,i)=>avg(valid.map(r=>nums(r.roomErr)[i])));
+  const timeAvg=ROOM_NAMES.map((_,i)=>avg(valid.map(r=>nums(r.roomTime)[i])));
+  const mE=Math.max(1,...errAvg), mT=Math.max(1,...timeAvg);
+  $('#rooms').innerHTML=valid.length?ROOM_NAMES.map((n,i)=>`<div class="bar"><span>${n}</span>
+    <div class="track"><div class="fill" style="width:${errAvg[i]/mE*100}%;background:var(--red)"></div></div><span>${errAvg[i].toFixed(1)} 次</span>
+    <div class="track"><div class="fill" style="width:${timeAvg[i]/mT*100}%;background:var(--amber)"></div></div><span>${fmt(Math.round(timeAvg[i]))}</span></div>`).join('')
+    :'<p class="muted">還沒有資料。</p>';
+
+  const cols=[['seat','座號'],['attempt','第幾次'],['seconds','用時'],['hints','提示'],['errors','答錯'],['title','稱號'],['stance','立場'],['time','完成時間']];
+  const sorted=rows.slice().sort((a,b)=>(a[sortKey]>b[sortKey]?1:a[sortKey]<b[sortKey]?-1:a.seat-b.seat)*sortDir);
+  $('#tbl').innerHTML=`<tr>${cols.map(([k,n])=>`<th data-k="${k}">${n}${sortKey===k?(sortDir>0?' ▲':' ▼'):''}</th>`).join('')}</tr>`+
+    (sorted.length?sorted.map(r=>`<tr><td>${r.seat}</td><td>${r.attempt}</td><td>${fmt(r.seconds)}</td><td>${r.hints}</td><td>${r.errors}</td>
+      <td>${esc(r.title)}</td><td>${esc(r.stance.replace('我比較重視',''))}</td><td>${new Date(r.time).toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</td></tr>`).join('')
+      :`<tr><td colspan="${cols.length}" class="muted">還沒有資料</td></tr>`);
+  document.querySelectorAll('#tbl th').forEach(th=>th.onclick=()=>{const k=th.dataset.k;sortDir=sortKey===k?-sortDir:1;sortKey=k;draw();});
+
+  const eco=rows.filter(r=>r.stance.includes('經濟')), env=rows.filter(r=>r.stance.includes('環境'));
+  $('#stanceSum').innerHTML=`<span class="note eco">💰 重視經濟發展：<b style="display:inline">${eco.length}</b> 人</span><span class="note env">🌳 重視生活環境：<b style="display:inline">${env.length}</b> 人</span>`;
+  $('#wall').innerHTML=rows.filter(r=>r.reason).sort((a,b)=>a.seat-b.seat).map(r=>
+    `<div class="note ${r.stance.includes('環境')?'env':'eco'}"><b>${r.seat} 號｜${esc(r.stance.replace('我比較重視',''))}</b>${esc(r.reason)}</div>`).join('')||'<p class="muted">還沒有資料。</p>';
+}
+
+function csv(){
+  const rows=pick().sort((a,b)=>a.seat-b.seat);
+  const head=['班級','座號','第幾次挑戰','用時(秒)','用時','提示次數','答錯次數','稱號','立場','理由'].concat(ROOM_NAMES.map(n=>'答錯-第'+n));
+  const q=v=>'"'+String(v).replace(/"/g,'""')+'"';
+  const lines=[head.map(q).join(',')].concat(rows.map(r=>[r.cls,r.seat,r.attempt,r.seconds,fmt(r.seconds),r.hints,r.errors,r.title,r.stance,r.reason].concat(nums(r.roomErr)).map(q).join(',')));
+  const blob=new Blob(['﻿'+lines.join('\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`經濟時光機大逃脫_${$('#cls').value}.csv`;a.click();
+}
+
+$('#go').onclick=()=>login($('#pw').value);
+$('#pw').onkeydown=e=>{if(e.key==='Enter')login($('#pw').value);};
+$('#refresh').onclick=refresh;
+$('#auto').onchange=startAuto;
+$('#logout').onclick=()=>{try{localStorage.removeItem(KEY_PW);}catch(e){}location.reload();};
+$('#cls').onchange=()=>{$('#size').value=ls(KEY_SIZE+$('#cls').value)||30;draw();};
+$('#size').onchange=()=>{ls(KEY_SIZE+$('#cls').value,$('#size').value);draw();};
+$('#mode').onchange=draw;
+$('#csv').onclick=csv;
+const saved=ls(KEY_PW);if(saved)login(saved);
+</script>
+</body>
+</html>
