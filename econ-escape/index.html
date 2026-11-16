@@ -328,6 +328,12 @@ function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor
 function fmt(ms){const s=Math.max(0,Math.floor(ms/1000));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
 function elapsed(){if(!S.start)return 0;return (S.end||Date.now())-S.start;}
 const totalPz = ROOMS.reduce((n,r)=>n+r.puzzles.length,0);
+function progress(){
+  let solved=0;S.done.forEach(i=>solved+=ROOMS[i].puzzles.length);
+  const inRoom=(S.stage==='puzzle'||S.stage==='story')&&!S.done.includes(S.room);
+  if(inRoom)solved+=S.pz;
+  return {reached:S.done.length+(inRoom?1:0),solved};
+}
 function donePz(){let n=0;for(let i=0;i<S.room;i++)n+=ROOMS[i].puzzles.length;return n+(S.stage==='puzzle'||S.stage==='story'?S.pz:0);}
 
 /* ---------- HUD ---------- */
@@ -338,8 +344,39 @@ function hud(){
   h.innerHTML=`<span class="chip who">${S.cls} 班 ${S.seat} 號</span>
    <span class="chip">⏱ <b id="clock">${fmt(elapsed())}</b></span>
    <span class="chip">💡 ${S.hints}</span>
-   <span class="chip">❌ ${S.errors}</span>`;
+   <span class="chip">❌ ${S.errors}</span>
+   ${!S.end&&S.stage!=='result'?'<button class="chip" id="earlyBtn" style="background:var(--red);color:#fff;font-weight:800">📤 交卷</button>':''}`;
+  const eb=$('#earlyBtn');if(eb)eb.onclick=askEarly;
 }
+function askEarly(){
+  const pg=progress();
+  modal(`<h3>📤 確定要交卷嗎？</h3>
+    <div class="sub">你目前完成 <b>${pg.solved}</b> / ${totalPz} 題（${S.done.length} / ${ROOMS.length} 關）。<br>交卷後就不能繼續作答了喔！</div>
+    <div class="row"><button class="btn ghost" id="no">繼續挑戰</button><button class="btn amber" id="yes">確定交卷</button></div>`);
+  $('#no').onclick=closeModal;
+  $('#yes').onclick=()=>{closeModal();finish('提早交卷');};
+}
+function finish(status){
+  if(S.end&&S.stage==='result')return;
+  const pg=progress();
+  if((S.stage==='puzzle'||S.stage==='story')&&!S.done.includes(S.room)&&S.roomStart)
+    S.roomTime[S.room]=Math.round((Date.now()-S.roomStart)/1000);
+  S.reached=pg.reached;S.solved=pg.solved;S.status=status;
+  if(!S.end)S.end=Date.now();
+  S.stage='result';render();
+}
+// 老師一鍵收卷：每 30 秒問一次後台
+setInterval(async()=>{
+  if(!GAS_URL||!S.start||S.end||S.stage==='result'||S.stage==='login')return;
+  try{
+    const j=await (await fetch(GAS_URL+'?action=status&cls='+encodeURIComponent(S.cls)+'&t='+Date.now())).json();
+    if(j&&j.collect&&j.collect>S.start&&!S.end){
+      finish('老師收卷');
+      modal(`<h3>🔔 老師收卷囉！</h3><div class="sub">你的作答進度已經自動交給老師了。</div><button class="btn amber" id="no">好</button>`);
+      $('#no').onclick=closeModal;
+    }
+  }catch(e){}
+},30000);
 setInterval(()=>{const c=$('#clock');if(c)c.textContent=fmt(elapsed());
   const w=$('#warn');if(w&&!S.end&&elapsed()>30*60000)w.style.display='block';},1000);
 
@@ -659,7 +696,7 @@ function pReflect(r,p){
 
 function renderReward(){
   const i=S.done[S.done.length-1], r=ROOMS[i], last=S.done.length===ROOMS.length;
-  if(last&&!S.end)S.end=Date.now();
+  if(last&&!S.end){S.end=Date.now();S.status='逃脫成功';S.reached=ROOMS.length;S.solved=totalPz;}
   app().innerHTML=`
   <div class="card reward">
     <div class="icon">${r.reward.icon}</div>
@@ -677,7 +714,8 @@ function renderReward(){
 function payload(){
   const per=k=>ROOMS.map((_,i)=>S[k][i]||0).join(',');
   return {cls:S.cls,seat:S.seat,attempt:S.attempt||1,seconds:Math.round(elapsed()/1000),
-    hints:S.hints,errors:S.errors,title:title().replace(/^\S+\s/,''),
+    hints:S.hints,errors:S.errors,title:escaped()?title().replace(/^\S+\s/,''):'',
+    status:S.status||'逃脫成功',reached:S.reached!=null?S.reached:ROOMS.length,solved:S.solved!=null?S.solved:totalPz,
     stance:S.reflect?S.reflect.choice:'',reason:S.reflect?S.reflect.text:'',
     roomErr:per('roomErr'),roomHint:per('roomHint'),roomTime:per('roomTime')};
 }
@@ -696,6 +734,7 @@ function submitResult(force){
     .then(()=>{S.submit='ok';save();showSend();})
     .catch(()=>{S.submit='fail';save();showSend();});
 }
+function escaped(){return !S.status||S.status==='逃脫成功';}
 function title(){
   const m=elapsed()/60000;
   if(S.hints<=3&&S.errors<=6&&m<=LIMIT_MIN)return '🏆 時光大師';
@@ -704,19 +743,19 @@ function title(){
 }
 function renderResult(){
   hud();
-  const t=elapsed();
+  const t=elapsed(), esc=escaped();
   app().innerHTML=`
   <div class="card" style="text-align:center">
-    <div class="big">🎉</div>
-    <h1>逃脫成功！</h1>
+    <div class="big">${esc?'🎉':'📤'}</div>
+    <h1>${esc?'逃脫成功！':'已交卷！'}</h1>
     <div style="font-size:22px;font-weight:800;color:var(--amber)">${S.cls} 班 ${S.seat} 號</div>
-    <div style="font-size:24px;margin-top:6px">${title()}</div>
+    <div style="font-size:24px;margin-top:6px">${esc?title():`完成 ${S.solved} / ${totalPz} 題（${S.done.length} / ${ROOMS.length} 關）`}</div>
     <div class="stats">
-      <div class="stat"><div class="v">${fmt(t)}</div><div class="k">逃脫時間</div></div>
+      <div class="stat"><div class="v">${fmt(t)}</div><div class="k">${esc?'逃脫時間':'作答時間'}</div></div>
       <div class="stat"><div class="v">${S.hints}</div><div class="k">提示次數</div></div>
       <div class="stat"><div class="v">${S.errors}</div><div class="k">答錯次數</div></div>
     </div>
-    <div class="sub">${t<=LIMIT_MIN*60000?'✅ 在 40 分鐘內完成':'⏰ 超過 40 分鐘，但你堅持到最後了！'}</div>
+    <div class="sub">${!esc?(S.status==='老師收卷'?'🔔 下課囉，老師已經收卷。':'你提早交卷了，下次再挑戰逃脫吧！'):t<=LIMIT_MIN*60000?'✅ 在 40 分鐘內完成':'⏰ 超過 40 分鐘，但你堅持到最後了！'}</div>
     ${S.reflect?`<div class="hintbox" style="text-align:left">📝 我的想法：<b>${S.reflect.choice}</b><br>${S.reflect.text.replace(/</g,'&lt;')}</div>`:''}
     <div class="banner" id="sendStatus" style="margin-top:14px"></div>
     <div class="small" style="margin-top:10px">📸 也可以讓老師看這個畫面，或截圖上傳</div>

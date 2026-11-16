@@ -13,7 +13,9 @@ const TEACHER_KEY = '請改成你的後台密碼';
 const SHEET_NAME = '成績';
 const ROOM_COUNT = 9;
 const HEADER = ['時間', '班級', '座號', '第幾次挑戰', '用時(秒)', '用時', '提示次數', '答錯次數',
-  '稱號', '立場', '理由', '各關答錯', '各關提示', '各關用時(秒)'];
+  '稱號', '立場', '理由', '各關答錯', '各關提示', '各關用時(秒)', '狀態', '完成關數', '完成題數'];
+const STATUS = ['逃脫成功', '提早交卷', '老師收卷'];
+const COLLECT_TTL = 15 * 60 * 1000; // 收卷指令 15 分鐘內有效
 
 function getSheet_() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -22,6 +24,10 @@ function getSheet_() {
     sh = ss.insertSheet(SHEET_NAME);
     sh.appendRow(HEADER);
     sh.setFrozenRows(1);
+  }
+  // 舊版試算表補上新的欄位標題
+  if (sh.getLastColumn() < HEADER.length) {
+    sh.getRange(1, 1, 1, HEADER.length).setValues([HEADER]);
   }
   return sh;
 }
@@ -67,7 +73,10 @@ function doPost(e) {
       new Date(), cls, seat, int_(d.attempt, 1, 999) || 1, sec, fmt_(sec),
       int_(d.hints, 0, 999) || 0, int_(d.errors, 0, 9999) || 0,
       safeText_(d.title, 20), safeText_(d.stance, 20), safeText_(d.reason, 300),
-      list_(d.roomErr), list_(d.roomHint), list_(d.roomTime)
+      list_(d.roomErr), list_(d.roomHint), list_(d.roomTime),
+      STATUS.indexOf(d.status) >= 0 ? d.status : '逃脫成功',
+      int_(d.reached, 0, ROOM_COUNT) === null ? ROOM_COUNT : int_(d.reached, 0, ROOM_COUNT),
+      int_(d.solved, 0, 999) === null ? '' : int_(d.solved, 0, 999)
     ]);
     return json_({ ok: true });
   } catch (err) {
@@ -81,7 +90,21 @@ function doPost(e) {
 function doGet(e) {
   const p = (e && e.parameter) || {};
   if (p.action === 'ping') return json_({ ok: true });
+  const props = PropertiesService.getScriptProperties();
+  // 學生平板詢問：老師有沒有對這班按「全班收卷」
+  if (p.action === 'status') {
+    if (!/^[1-6]\d{2}$/.test(String(p.cls || ''))) return json_({ ok: false });
+    const t = Number(props.getProperty('collect_' + p.cls) || 0);
+    return json_({ ok: true, collect: (Date.now() - t < COLLECT_TTL) ? t : 0 });
+  }
   if (p.key !== TEACHER_KEY) return json_({ ok: false, error: 'key' });
+  // 老師按「全班收卷」
+  if (p.action === 'collect') {
+    if (!/^[1-6]\d{2}$/.test(String(p.cls || ''))) return json_({ ok: false, error: 'cls' });
+    const now = Date.now();
+    props.setProperty('collect_' + p.cls, String(now));
+    return json_({ ok: true, collect: now });
+  }
   const sh = getSheet_();
   const values = sh.getDataRange().getValues().slice(1);
   const rows = values.map(r => ({
@@ -90,7 +113,10 @@ function doGet(e) {
     seconds: Number(r[4]), hints: Number(r[6]), errors: Number(r[7]),
     title: String(r[8]), stance: String(r[9]), reason: String(r[10]).replace(/^'/, ''),
     roomErr: String(r[11]).replace(/\|/g, ','), roomHint: String(r[12]).replace(/\|/g, ','),
-    roomTime: String(r[13]).replace(/\|/g, ',')
+    roomTime: String(r[13]).replace(/\|/g, ','),
+    status: String(r[14] || '逃脫成功'),
+    reached: r[15] === '' || r[15] == null ? ROOM_COUNT : Number(r[15]),
+    solved: r[16] === '' || r[16] == null ? null : Number(r[16])
   }));
   return json_({ ok: true, rows: rows });
 }
