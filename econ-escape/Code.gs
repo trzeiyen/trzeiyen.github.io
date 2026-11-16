@@ -45,7 +45,7 @@ function int_(v, lo, hi) {
 function list_(v) {
   const a = String(v || '').split(',').map(x => int_(x, 0, 99999));
   if (a.length !== ROOM_COUNT || a.some(x => x === null)) return '';
-  return a.join(',');
+  return a.join('|'); // 用 | 分隔，避免試算表把 100,120 當成千分位數字
 }
 function fmt_(sec) {
   return Math.floor(sec / 60) + ':' + ('0' + (sec % 60)).slice(-2);
@@ -89,7 +89,8 @@ function doGet(e) {
     cls: String(r[1]), seat: Number(r[2]), attempt: Number(r[3]),
     seconds: Number(r[4]), hints: Number(r[6]), errors: Number(r[7]),
     title: String(r[8]), stance: String(r[9]), reason: String(r[10]).replace(/^'/, ''),
-    roomErr: String(r[11]), roomHint: String(r[12]), roomTime: String(r[13])
+    roomErr: String(r[11]).replace(/\|/g, ','), roomHint: String(r[12]).replace(/\|/g, ','),
+    roomTime: String(r[13]).replace(/\|/g, ',')
   }));
   return json_({ ok: true, rows: rows });
 }
