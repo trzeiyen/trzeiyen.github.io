@@ -13,7 +13,7 @@ const TEACHER_KEY = '請改成你的後台密碼';
 const SHEET_NAME = '成績';
 const ROOM_COUNT = 9;
 const HEADER = ['時間', '班級', '座號', '第幾次挑戰', '用時(秒)', '用時', '提示次數', '答錯次數',
-  '稱號', '立場', '理由', '各關答錯', '各關提示', '各關用時(秒)', '狀態', '完成關數', '完成題數'];
+  '稱號', '立場', '理由', '各關答錯', '各關提示', '各關用時(秒)', '狀態', '完成關數', '完成題數', '同組座號'];
 const STATUS = ['逃脫成功', '提早交卷', '老師收卷'];
 const COLLECT_TTL = 15 * 60 * 1000; // 收卷指令 15 分鐘內有效
 
@@ -76,7 +76,10 @@ function doPost(e) {
       list_(d.roomErr), list_(d.roomHint), list_(d.roomTime),
       STATUS.indexOf(d.status) >= 0 ? d.status : '逃脫成功',
       int_(d.reached, 0, ROOM_COUNT) === null ? ROOM_COUNT : int_(d.reached, 0, ROOM_COUNT),
-      int_(d.solved, 0, 999) === null ? '' : int_(d.solved, 0, 999)
+      int_(d.solved, 0, 999) === null ? '' : int_(d.solved, 0, 999),
+      // 多人共用一台平板：第 2、3 位座號（用 | 分隔，避免被當成數字）
+      (Array.isArray(d.mates) ? d.mates : []).slice(0, 2).map(n => int_(n, 1, 40))
+        .filter((n, i, a) => n !== null && n !== seat && a.indexOf(n) === i).join('|')
     ]);
     return json_({ ok: true });
   } catch (err) {
@@ -116,7 +119,8 @@ function doGet(e) {
     roomTime: String(r[13]).replace(/\|/g, ','),
     status: String(r[14] || '逃脫成功'),
     reached: r[15] === '' || r[15] == null ? ROOM_COUNT : Number(r[15]),
-    solved: r[16] === '' || r[16] == null ? null : Number(r[16])
+    solved: r[16] === '' || r[16] == null ? null : Number(r[16]),
+    mates: String(r[17] == null ? '' : r[17]).split('|').map(Number).filter(n => n)
   }));
   return json_({ ok: true, rows: rows });
 }

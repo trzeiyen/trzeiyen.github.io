@@ -153,6 +153,11 @@ html,body{overflow:hidden;height:100%;overscroll-behavior:none;-webkit-user-sele
 @media (max-width:700px){#goal{font-size:15px}#joy{width:128px;height:128px}#act{min-width:120px;font-size:18px}}
 
 #hud{z-index:12}
+.mates{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px}
+.mates label{font-size:16px;color:var(--muted)}
+.mates small{font-weight:400}
+.mates input{margin-top:6px}
+.matehint{color:var(--muted);font-size:15px;margin-top:8px;line-height:1.5}
 </style>
 </head>
 <body>
@@ -378,6 +383,7 @@ S = load() || fresh();
 if(S.submit==='sending')S.submit='fail';
 
 const $ = s => document.querySelector(s);
+function seatsText(){return [S.seat].concat(S.mates||[]).join('、');}
 const app = () => $('#app');
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 function fmt(ms){const s=Math.max(0,Math.floor(ms/1000));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
@@ -396,7 +402,7 @@ function hud(){
   const h=$('#hud');
   if(S.stage==='login'||!S.start){h.innerHTML='';return;}
   h.className='hud';
-  h.innerHTML=`<span class="chip who">${S.cls} 班 ${S.seat} 號</span>
+  h.innerHTML=`<span class="chip who">${S.cls} 班 ${seatsText()} 號</span>
    <span class="chip">⏱ <b id="clock">${fmt(elapsed())}</b></span>
    <span class="chip">💡 ${S.hints}</span>
    <span class="chip">❌ ${S.errors}</span>
@@ -666,7 +672,7 @@ function pReflect(r,p){
 
 function payload(){
   const per=k=>ROOMS.map((_,i)=>S[k][i]||0).join(',');
-  return {cls:S.cls,seat:S.seat,attempt:S.attempt||1,seconds:Math.round(elapsed()/1000),
+  return {cls:S.cls,seat:S.seat,mates:S.mates||[],attempt:S.attempt||1,seconds:Math.round(elapsed()/1000),
     hints:S.hints,errors:S.errors,title:escaped()?title().replace(/^\S+\s/,''):'',
     status:S.status||'逃脫成功',reached:S.reached!=null?S.reached:ROOMS.length,solved:S.solved!=null?S.solved:totalPz,
     stance:S.reflect?S.reflect.choice:'',reason:S.reflect?S.reflect.text:'',
@@ -701,7 +707,7 @@ function renderResult(){
   <div class="card" style="text-align:center">
     <div class="big">${esc?'🎉':'📤'}</div>
     <h1>${esc?'逃脫成功！':'已交卷！'}</h1>
-    <div style="font-size:22px;font-weight:800;color:var(--amber)">${S.cls} 班 ${S.seat} 號</div>
+    <div style="font-size:22px;font-weight:800;color:var(--amber)">${S.cls} 班 ${seatsText()} 號</div>
     <div style="font-size:24px;margin-top:6px">${esc?title():`完成 ${S.solved} / ${totalPz} 題（${S.done.length} / ${ROOMS.length} 關）`}</div>
     <div class="stats">
       <div class="stat"><div class="v">${fmt(t)}</div><div class="k">${esc?'逃脫時間':'作答時間'}</div></div>
@@ -721,7 +727,7 @@ function renderResult(){
     modal(`<h3>確定要重新挑戰嗎？</h3><div class="sub">目前的成績會被清除。</div>
       <div class="row"><button class="btn ghost" id="no">取消</button><button class="btn amber" id="yes">確定重來</button></div>`);
     $('#no').onclick=closeModal;
-    $('#yes').onclick=()=>{const c=S.cls,s=S.seat;S=fresh();S.cls=c;S.seat=s;S.stage='intro';closeModal();render();};
+    $('#yes').onclick=()=>{const c=S.cls,s=S.seat,m=S.mates;S=fresh();S.cls=c;S.seat=s;S.mates=m;S.stage='intro';closeModal();render();};
   };
 }
 
@@ -1185,7 +1191,7 @@ function hud(){
   const h=$('#hud');
   if(S.stage==='login'||!S.start){h.innerHTML='';h.className='';return;}
   h.className='hud';
-  h.innerHTML=`<span class="chip who">${S.cls} 班 ${S.seat} 號</span>
+  h.innerHTML=`<span class="chip who">${S.cls} 班 ${seatsText()} 號</span>
    <span class="chip">⏱ <b id="clock">${fmt(elapsed())}</b></span>
    <span class="chip">🧩 ${progress().solved}/${totalPz}</span>
    <span class="chip">💡 ${S.hints}</span>
@@ -1234,6 +1240,11 @@ function renderLogin(){
     <input type="text" id="cls" inputmode="numeric" maxlength="3" placeholder="608" autocomplete="off">
     <label for="seat">座號</label>
     <input type="text" id="seat" inputmode="numeric" maxlength="2" placeholder="1" autocomplete="off">
+    <div class="mates">
+      <label>第 2 位座號<small>（選填）</small><input type="text" id="seat2" inputmode="numeric" maxlength="2" placeholder="—" autocomplete="off"></label>
+      <label>第 3 位座號<small>（選填）</small><input type="text" id="seat3" inputmode="numeric" maxlength="2" placeholder="—" autocomplete="off"></label>
+    </div>
+    <div class="matehint">多人共用一台平板時，再填第 2、3 位同學的座號；一個人玩就留空。</div>
     <div class="feedback bad" id="lerr"></div>
     <button class="btn amber" id="go" style="width:100%;margin-top:8px">登入時光機 🚀</button>
     ${W?'':'<div class="banner" style="margin-top:12px">⚠️ 這台裝置無法顯示 3D 畫面，請改用 <a href="../share/" style="color:#ffd88a">一般版</a>。</div>'}
@@ -1243,7 +1254,12 @@ function renderLogin(){
     const c=$('#cls').value.trim(), s=$('#seat').value.trim();
     if(!/^[1-6]\d{2}$/.test(c)){$('#lerr').textContent='請輸入三位數班級，例如 608';return;}
     if(!/^\d{1,2}$/.test(s)||+s<1||+s>40){$('#lerr').textContent='請輸入正確的座號（1～40）';return;}
-    S.cls=c;S.seat=String(+s);S.stage='intro';render();
+    const mates=[];
+    for(const id of ['#seat2','#seat3']){const v=$(id).value.trim();if(!v)continue;
+      if(!/^\d{1,2}$/.test(v)||+v<1||+v>40){$('#lerr').textContent='第 2、3 位座號請填 1～40，沒有就留空';return;}
+      const n=String(+v);if(n===String(+s)||mates.includes(n)){$('#lerr').textContent='座號重複了，請再檢查一次';return;}
+      mates.push(n);}
+    S.cls=c;S.seat=String(+s);S.mates=mates;S.stage='intro';render();
   };
 }
 function renderIntro(){
@@ -1385,7 +1401,7 @@ function renderResult(){
   <div class="card" style="text-align:center">
     <div class="big">${esc?'🎉':'📤'}</div>
     <h1>${esc?'逃脫成功！':'已交卷！'}</h1>
-    <div style="font-size:22px;font-weight:800;color:var(--amber)">${S.cls} 班 ${S.seat} 號</div>
+    <div style="font-size:22px;font-weight:800;color:var(--amber)">${S.cls} 班 ${seatsText()} 號</div>
     <div style="font-size:24px;margin-top:6px">${esc?title():`完成 ${S.solved} / ${totalPz} 題（${S.done.length} / ${ROOMS.length} 關）`}</div>
     <div class="stats">
       <div class="stat"><div class="v">${fmt(t)}</div><div class="k">${esc?'逃脫時間':'作答時間'}</div></div>
@@ -1410,7 +1426,7 @@ function renderResult(){
     modal(`<h3>確定要重新挑戰嗎？</h3><div class="sub">目前的成績會被清除。</div>
       <div class="row"><button class="btn ghost" id="no">取消</button><button class="btn amber" id="yes">確定重來</button></div>`);
     $('#no').onclick=closeModal;
-    $('#yes').onclick=()=>{const c=S.cls,s=S.seat;S=fresh();S.cls=c;S.seat=s;S.stage='intro';closeModal();render();};
+    $('#yes').onclick=()=>{const c=S.cls,s=S.seat,m=S.mates;S=fresh();S.cls=c;S.seat=s;S.mates=m;S.stage='intro';closeModal();render();};
   };
 }
 
