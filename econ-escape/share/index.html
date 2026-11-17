@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>經濟時光機大逃脫｜戰後經濟發展（分享版）</title>
+<style>
+:root{
+  --bg:#0f1a24;--panel:#182836;--panel2:#20364a;--line:#2f4c63;
+  --amber:#f2b544;--teal:#4fd1c5;--red:#ff6b6b;--green:#5fd38d;
+  --text:#eef4f8;--muted:#9fb3c4;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);
+  font-family:-apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
+  touch-action:manipulation;-webkit-text-size-adjust:100%}
+body{background:radial-gradient(circle at 20% 0%,#1d3347 0%,var(--bg) 60%);min-height:100%}
+#app{max-width:880px;margin:0 auto;padding:16px 16px calc(32px + env(safe-area-inset-bottom))}
+h1,h2,h3{margin:.2em 0 .5em}
+button{font:inherit;color:inherit;border:none;cursor:pointer}
+.hud{position:sticky;top:0;z-index:5;display:flex;gap:8px;justify-content:space-between;align-items:center;
+  background:rgba(15,26,36,.92);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  padding:10px 12px;border-bottom:1px solid var(--line);font-size:16px}
+.hud .chip{background:var(--panel2);padding:6px 10px;border-radius:999px;white-space:nowrap}
+.hud .who{color:var(--amber);font-weight:700}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px;margin:14px 0;
+  box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.era{display:inline-block;background:var(--amber);color:#2a1c00;font-weight:800;padding:4px 12px;border-radius:999px;font-size:15px}
+.story{font-size:19px;line-height:1.8;color:#dfe9f0}
+.q{font-size:21px;line-height:1.6;font-weight:700;margin-bottom:14px}
+.sub{color:var(--muted);font-size:16px;margin-bottom:12px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:52px;padding:12px 22px;
+  border-radius:14px;font-size:19px;font-weight:700;background:var(--teal);color:#06302c;transition:transform .08s}
+.btn:active{transform:scale(.97)}
+.btn.amber{background:var(--amber);color:#2a1c00}
+.btn.ghost{background:transparent;border:2px solid var(--line);color:var(--text)}
+.btn:disabled{opacity:.4}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.spread{justify-content:space-between}
+.opts{display:grid;gap:10px}
+.opt{text-align:left;background:var(--panel2);border:2px solid var(--line);border-radius:14px;padding:16px 18px;
+  font-size:19px;line-height:1.5;min-height:56px}
+.opt.sel{border-color:var(--amber);background:#3a3420}
+.opt.used{opacity:.35}
+.opt.ok{border-color:var(--green);background:#1d3d2c}
+.opt.bad{border-color:var(--red);background:#3d1f22}
+.seq{display:flex;flex-direction:column;gap:8px;margin:12px 0;min-height:40px}
+.seq .slot{background:#13212c;border:2px dashed var(--line);border-radius:12px;padding:12px 14px;font-size:18px;color:var(--muted)}
+.seq .slot.filled{border-style:solid;border-color:var(--teal);color:var(--text)}
+.num{display:inline-flex;width:30px;height:30px;border-radius:50%;background:var(--amber);color:#2a1c00;
+  font-weight:800;align-items:center;justify-content:center;margin-right:8px;flex:none}
+.match{display:grid;grid-template-columns:1fr 1.4fr;gap:12px}
+.match .col{display:flex;flex-direction:column;gap:10px}
+.tag{display:inline-block;min-width:28px;padding:2px 8px;border-radius:8px;margin-left:6px;font-weight:800;font-size:16px;color:#111}
+.sortitem{background:var(--panel2);border:2px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:10px}
+.sortitem .t{font-size:18px;margin-bottom:10px;line-height:1.5}
+.sortitem.bad{border-color:var(--red)}
+.binbtn{flex:1;min-height:48px;border-radius:12px;background:#13212c;border:2px solid var(--line);font-size:17px;font-weight:700}
+.binbtn.on{background:var(--teal);color:#06302c;border-color:var(--teal)}
+.cloze{font-size:20px;line-height:2.4;background:#13212c;border-radius:14px;padding:14px 16px}
+.blank{min-width:96px;min-height:40px;padding:4px 12px;margin:0 4px;border-radius:10px;border:2px dashed var(--amber);background:#2a2a18;font-size:19px;font-weight:700;color:var(--amber);vertical-align:middle}
+.blank.filled{border-style:solid;background:#3a3420;color:#fff}
+.bank{display:flex;flex-wrap:wrap;gap:10px}
+.chip2{min-height:48px;padding:8px 18px;border-radius:999px;background:var(--panel2);border:2px solid var(--line);font-size:19px;font-weight:700}
+.chip2.used{opacity:.3}
+.lock{display:flex;gap:12px;justify-content:center;margin:18px 0}
+.wheel{display:flex;flex-direction:column;align-items:center;gap:6px}
+.wheel button{width:72px;height:52px;border-radius:12px;background:var(--panel2);font-size:24px}
+.wheel .d{width:72px;height:84px;border-radius:14px;background:#0b141c;border:3px solid var(--amber);
+  font-size:52px;font-weight:800;display:flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums}
+.hintbox{margin-top:14px;background:#2a2a18;border-left:5px solid var(--amber);border-radius:10px;padding:12px 14px;font-size:17px;line-height:1.6}
+.feedback{min-height:30px;font-size:18px;font-weight:700;margin-top:12px}
+.feedback.ok{color:var(--green)} .feedback.bad{color:var(--red)}
+.shake{animation:shake .35s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.map{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.node{text-align:left;background:var(--panel2);border:2px solid var(--line);border-radius:16px;padding:16px;min-height:110px}
+.node .ic{font-size:34px}
+.node .nm{font-size:19px;font-weight:800;margin-top:6px}
+.node .yr{color:var(--muted);font-size:15px}
+.node.cur{border-color:var(--amber);animation:pulse 1.6s infinite}
+.node.done{border-color:var(--green);background:#1b3427}
+.node.lock{opacity:.4}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(242,181,68,.5)}50%{box-shadow:0 0 0 10px rgba(242,181,68,0)}}
+.parts{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.part{width:48px;height:48px;border-radius:12px;background:#13212c;border:2px dashed var(--line);display:flex;align-items:center;justify-content:center;font-size:26px}
+.part.got{border:2px solid var(--amber);background:#3a3420}
+input[type=text],textarea{width:100%;font-size:20px;padding:14px;border-radius:12px;border:2px solid var(--line);background:#0b141c;color:var(--text)}
+textarea{min-height:120px;line-height:1.6;font-size:18px}
+label{display:block;font-weight:700;margin:12px 0 6px;font-size:18px}
+.big{font-size:64px;text-align:center}
+.reward{text-align:center}
+.reward .icon{font-size:96px;animation:pop .6s}
+@keyframes pop{0%{transform:scale(.2) rotate(-30deg);opacity:0}70%{transform:scale(1.15)}100%{transform:scale(1)}}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0}
+.stat{background:var(--panel2);border-radius:14px;padding:14px;text-align:center}
+.stat .v{font-size:32px;font-weight:800;color:var(--amber);font-variant-numeric:tabular-nums}
+.stat .k{color:var(--muted);font-size:15px}
+.progress{height:8px;background:#13212c;border-radius:99px;overflow:hidden;margin:6px 0 2px}
+.progress i{display:block;height:100%;background:var(--teal)}
+.banner{background:#3d2a12;border:1px solid var(--amber);color:#ffd88a;padding:10px 14px;border-radius:12px;margin-top:10px;font-size:16px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:20;padding:20px}
+.modal .card{max-width:460px;width:100%}
+.small{font-size:14px;color:var(--muted)}
+svg{max-width:100%;height:auto}
+@media (max-width:560px){.match{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr 1fr}.q{font-size:19px}}
+</style>
+</head>
+<body>
+<div id="hud"></div>
+<div id="app"></div>
+<div id="modal"></div>
+
+<script>
+/* ======================================================
+   經濟時光機大逃脫｜六年級 第三單元 第1課
+   戰後經濟發展如何影響人們生活？（課本 P.62–73）
+   ====================================================== */
+/* ===== 後台設定：貼上 Google Apps Script 網頁應用程式網址（…/exec）===== */
+const GAS_URL = ''; // 分享版：不回傳成績
+/* ======================================================================= */
+const STORE_KEY = 'escape_postwar_econ_v2_share';
+const ATTEMPT_KEY = 'escape_postwar_econ_attempts';
+const COOLDOWN = 5; // 答錯後冷卻秒數
+const LIMIT_MIN = 40;
+
+const DAM_SVG = `<svg viewBox="0 0 400 180" role="img" aria-label="水庫示意圖">
+<rect width="400" height="180" rx="14" fill="#13212c"/>
+<path d="M0 120 L80 40 L150 95 L220 30 L300 90 L400 50 L400 180 L0 180Z" fill="#2a4a3a"/>
+<path d="M0 110 Q100 95 190 108 L190 180 L0 180Z" fill="#3a86c8"/>
+<path d="M190 70 L240 70 L270 180 L190 180Z" fill="#c9d2d8"/>
+<rect x="196" y="78" width="40" height="6" fill="#8a97a1"/><rect x="200" y="95" width="44" height="6" fill="#8a97a1"/>
+<path d="M245 150 Q300 140 400 160 L400 180 L250 180Z" fill="#3a86c8" opacity=".8"/>
+<text x="16" y="28" fill="#9fb3c4" font-size="15">❓ 這是什麼設施？</text></svg>`;
+
+const ROOMS = [
+ { id:'r1', icon:'🏚️', name:'戰後的街頭', era:'民國34年（1945）', reward:{icon:'⚙️',name:'時間齒輪'},
+   story:'時光機轟的一聲停下來，螢幕顯示：<b>民國34年</b>。街上的人說日本投降了，中華民國政府來接收臺灣。可是沒過多久，東西愈來愈貴、米也買不到……先弄清楚發生了什麼事，才能修好「時間齒輪」！<br>📖 請翻開課本 P.64。',
+   puzzles:[
+    {type:'order', q:'依照發生的先後順序，依序點選下面的事件。',
+     items:['甲午戰爭，簽訂馬關條約','推翻清帝國，建立中華民國','第二次世界大戰結束，日本投降','國共內戰，中共建國'],
+     hint:'臺灣被割讓給日本，是因為哪一場戰爭？日本投降之後，中國大陸又打了什麼仗？'},
+    {type:'cloze', q:'修復破損的課本：點選下方詞語，填入空格。',
+     text:'民國34年日本戰敗後，中華民國接收臺灣、{0}。因官員{1}及與中國共產黨作戰失利，導致當時臺灣經濟{2}，民眾生活大多困苦。',
+     blanks:['澎湖','施政不當','困頓'], extra:['琉球','認真負責','繁榮'],
+     hint:'課本 P.64「戰後的臺灣」第一段。'},
+    {type:'mcq', q:'日本時期臺灣農業發展快速，為什麼戰後反而糧食和物資短缺？',
+     opts:['中國大陸爆發國共內戰，臺灣的糧食物資被運送出去','戰後臺灣的農民都不想種田了','美國禁止臺灣種稻米','颱風把全臺灣的稻田都吹壞了'], ans:0,
+     hint:'政府和中國共產黨作戰……東西被送到哪裡去了？'},
+    {type:'multi', q:'戰後初期，政府遇到哪些問題？（選出<u>所有</u>正確的）',
+     opts:['建築受到戰火波及','物價飛漲','糧食不足','高速公路大塞車','手機太貴買不起'], ans:[0,1,2],
+     hint:'剛打完仗、東西又被運走，生活會出現什麼狀況？注意：當時還沒有高速公路和手機喔！'},
+    {type:'lock', q:'🔐 時間齒輪密碼：日本戰敗、中華民國接收臺灣，是民國幾年？', code:'34',
+     hint:'時光機螢幕一開始就顯示過了！'}
+   ]},
+ { id:'r2', icon:'🌾', name:'農村地契室', era:'民國38～42年', reward:{icon:'🌾',name:'稻穗能源棒'},
+   story:'時光機飄到一片稻田旁。農夫阿土伯嘆氣：「我辛苦種的稻子，大部分都要交給地主當租金……」政府決定推動<b>土地改革</b>。地契室的保險箱裡藏著下一個零件！<br>📖 請翻開課本 P.64–65。',
+   puzzles:[
+    {type:'match', q:'把土地改革政策和它的做法配對起來。（先點左邊，再點右邊）',
+     left:['三七五減租','公地放領','耕者有其田'],
+     right:['降低農民要繳給地主的租金','政府把公有的土地放領給農民','政府徵收地主的土地，讓農民分期付款購買'],
+     hint:'「減租」就是少繳租金；「公地」是誰的地？公家的！'},
+    {type:'cloze', q:'修復破損的課本：點選下方詞語，填入空格。',
+     text:'政府先{0}農民的租金，又讓農民可透過{1}的方式購買土地。地主失去出租土地的收益，部分地主則運用{2}，投入{3}生產或商業經營。',
+     blanks:['降低','分期付款','補償金','工業'], extra:['提高','一次付清','壓歲錢','漁業'],
+     hint:'課本 P.64–65 兩段課文。地主的土地被政府收購，有拿到什麼？'},
+    {type:'sort', q:'土地改革後，這些改變發生在誰身上？', bins:['👨‍🌾 農民','🎩 地主'],
+     items:[['大部分的收成可以留給自己',0],['失去出租土地的收入',1],['拿政府的補償金去開工廠、做生意',1],['有了自己的土地，更願意努力耕作',0],['產量提高、收入增加，生活較有保障',0]],
+     hint:'誰原本要「繳」租金？誰原本「收」租金？'},
+    {type:'mcq', q:'「三七五減租」和「耕者有其田」都能幫助農民。哪一項讓農民真正成為土地的主人？',
+     opts:['耕者有其田','三七五減租','兩項都沒有','兩項都一樣'], ans:0,
+     hint:'減租之後，農民還是在「別人的土地」上耕作嗎？'},
+    {type:'lock', q:'🔐 保險箱密碼：就是那個「減租政策」名稱裡的三個數字！', code:'375',
+     hint:'租金最高不超過主要作物收成的 37.5%。'}
+   ]},
+ { id:'r3', icon:'📦', name:'美援倉庫', era:'民國40～50年代', reward:{icon:'📦',name:'美援補給箱'},
+   story:'倉庫裡堆滿印著「中美合作」握手圖案的麵粉袋。隨著國際局勢變化，美國開始援助臺灣。找出<b>美援</b>怎麼改變大家的生活！<br>📖 請翻開課本 P.66。',
+   puzzles:[
+    {type:'mcq', q:'美國為什麼要援助臺灣？',
+     opts:['基於軍事防衛的考量','因為臺灣幫美國蓋了水庫','因為臺灣借錢給美國','為了讓美國人來臺灣觀光'], ans:0,
+     hint:'課本 P.66：隨著國際局勢變化，美國基於……的考量。'},
+    {type:'sort', q:'美援同時提供「物資」和「資金」。把下面的項目分類。', bins:['🥫 物資援助','💰 資金援助'],
+     items:[['麵粉',0],['奶粉',0],['棉花',0],['興建發電廠',1],['興建石門水庫',1]],
+     hint:'可以直接拿來吃、穿的是物資；要花很多錢、很多年才能蓋好的建設，用的是……'},
+    {type:'cloze', q:'修復破損的課本：點選下方詞語，填入空格。',
+     text:'美援帶來棉花、{0}、奶粉等物資，讓{1}漸漸成為餐桌上常見的食物。政府也運用美援的{2}，興建電力、{3}與交通等基礎設施。',
+     blanks:['麵粉','麵食','資金','水利'], extra:['稻米','生魚片','軍隊','觀光'],
+     hint:'饅頭是用什麼做的？石門水庫屬於哪一類建設？'},
+    {type:'mcq', q:'當時有人把用完的麵粉袋拿來做成什麼？',
+     opts:['衣服','雨傘','鞋子','風箏'], ans:0,
+     hint:'麵粉袋是棉布做的，可以穿在身上喔！'},
+    {type:'mcq', q:'線索：提供北部地區民生、農業與工業用水，還能發電、防洪、觀光。這是什麼設施？', img:DAM_SVG,
+     opts:['石門水庫','西螺大橋','雪山隧道','中山高速公路'], ans:0,
+     hint:'名字裡有「水」的那一個！'},
+    {type:'lock', q:'🔐 補給箱密碼：美國從民國「幾十」年代開始援助臺灣？', code:'40',
+     hint:'這一關的年代標籤上就有寫喔！'}
+   ]},
+ { id:'r4', icon:'🏭', name:'加工出口區工廠', era:'民國50～60年代', reward:{icon:'🔩',name:'生產線馬達'},
+   story:'轟隆隆！工廠的生產線正在運轉。政府先發展<b>民生工業</b>，後來又設立<b>加工出口區</b>，很多人從農村來到工廠工作。啟動生產線就能拿到零件！<br>📖 請翻開課本 P.67–69。',
+   puzzles:[
+    {type:'multi', q:'民國40年代，政府開始發展「民生工業」。哪些屬於民生工業？（選出<u>所有</u>正確的）',
+     opts:['紡織','塑膠製品','食品加工','煉鋼','造船'], ans:[0,1,2],
+     hint:'民生＝人民生活需要的東西：穿的、用的、吃的。'},
+    {type:'cloze', q:'修復破損的課本：點選下方詞語，填入空格。',
+     text:'民國{0}、六十年代，政府陸續設立{1}，鼓勵國內、外廠商在臺灣設立工廠，生產成衣、塑膠製品或{2}產品，也逐漸打開{3}市場。',
+     blanks:['五十','加工出口區','家電','國外'], extra:['三十','科學園區','太空船','月球'],
+     hint:'課本 P.68「加工出口區與工作機會的增加」。'},
+    {type:'mcq', q:'政府為什麼要在加工出口區提供完善的生產環境，而不是讓廠商自己找地方設廠？',
+     opts:['降低廠商設廠的困難，吸引廠商來臺灣投資','為了讓農民不能再種田','為了把工廠變成觀光景點','因為廠商不想賺錢'], ans:0,
+     hint:'如果你是老闆，什麼都準備好了的地方，你會不會比較想來？'},
+    {type:'sort', q:'判斷下面的說法是對還是錯。', bins:['⭕ 正確','❌ 錯誤'],
+     items:[['早年加工出口區的工作者以男性占大多數',1],['民國56年到62年，加工出口區員工人數持續增加',0],['許多年輕人離開農村到工廠工作，農村勞動力減少',0],['農村勞動力減少，促使農村改用機械化生產',0],['女性到工廠工作，開始改變「男主外、女主內」的家庭結構',0]],
+     hint:'課本 P.68–69 和統計圖。只有一句是錯的！'},
+    {type:'multi', q:'當時的女工們加班多賺的錢，可能拿來做什麼？（選出<u>所有</u>正確的）',
+     opts:['貼補家用','購買衣服','報名夜間部學校進修','買智慧型手機'], ans:[0,1,2],
+     hint:'課本 P.69「臺灣經濟發展的女力展現」。民國五、六十年代有智慧型手機嗎？'},
+    {type:'mcq', q:'民國62年到64年，加工出口區員工人數反而下降，可能和什麼有關？',
+     opts:['國際能源危機','美援開始','土地改革','雪山隧道通車'], ans:0,
+     hint:'下一關就會遇到它了……'}
+   ]},
+ { id:'r5', icon:'🛢️', name:'能源危機指揮所', era:'民國60年代初期', reward:{icon:'🧭',name:'指揮所羅盤'},
+   story:'🚨 警報響起！國際發生<b>能源危機</b>，油價大漲，全球經濟陷入不景氣，臺灣也受到影響。指揮官說：「我們必須想辦法！」接下來的四個關卡，都和<b>十大建設</b>有關。<br>📖 請翻開課本 P.70–71。',
+   puzzles:[
+    {type:'mcq', q:'國際能源危機發生在哪一個時期？',
+     opts:['民國六十年代初期','民國三十年代','民國九十年代','日治時期'], ans:0,
+     hint:'看看這一關的年代標籤！'},
+    {type:'order', q:'把事情的「因果關係」依序排好。',
+     items:['國際發生能源危機','全球經濟不景氣，臺灣也受影響','政府推動十大建設','創造就業機會，能源供應更穩定'],
+     hint:'先有「問題」，政府才想「辦法」，最後看到「結果」。'},
+    {type:'cloze', q:'修復破損的課本：點選下方詞語，填入空格。',
+     text:'為了因應情勢，政府推動「十大建設」，發展多項{0}建設，並推動煉鋼、造船與{1}等重工業，同時增建{2}設施，使能源供應穩定。',
+     blanks:['交通','石油化學','發電'], extra:['觀光','紡織','遊樂'],
+     hint:'課本 P.70 康軒課文。'},
+    {type:'mcq', q:'面對能源危機，政府為什麼不只增建發電設施，還同時推動交通建設與重工業？',
+     opts:['經濟也不景氣，需要改善運輸、建立工業基礎，並創造工作機會','因為發電廠已經夠多了','為了舉辦國際運動會','因為只要蓋發電廠就會更不景氣'], ans:0,
+     hint:'能源危機不只讓能源不足，也讓全球經濟……'},
+    {type:'mcq', q:'推動十大建設，對當時的人民生活有什麼直接幫助？',
+     opts:['創造許多就業機會','東西全部變成免費','大家都不用上學','農民不能再種田'], ans:0,
+     hint:'蓋那麼多建設，需要很多……'}
+   ]},
+ { id:'r6', icon:'🏗️', name:'十大建設工地', era:'民國63～68年', reward:{icon:'🏗️',name:'鋼骨支架'},
+   story:'工地上到處是起重機和工人。工頭遞給你一疊混在一起的建設藍圖：「快幫我把它們整理好，我才能把鋼骨支架交給你！」<br>📖 對照課本 P.70「十大建設」地圖。',
+   puzzles:[
+    {type:'match', q:'「我是誰？」把建設和它的介紹配對起來。（先點左邊，再點右邊）',
+     left:['北迴鐵路','鐵路電氣化','桃園國際機場','大造船廠','核能發電廠'],
+     right:['連接宜蘭蘇澳與花蓮，讓東部交通更方便','火車改用電力行駛，速度更快、運量更大','新的國際機場，讓臺灣和世界往來更方便','在高雄建造大型船隻','增加電力供應，讓能源更穩定'],
+     hint:'先找最有把握的：名字有「電」的有兩個，一個跟火車有關、一個跟發電有關！'},
+    {type:'sort', q:'把「十大建設」全部分類。', bins:['🛣️ 交通','🏭 重工業','⚡ 能源'],
+     items:[['中山高速公路',0],['鐵路電氣化',0],['北迴鐵路',0],['桃園國際機場',0],['臺中港',0],['蘇澳港',0],['大造船廠',1],['大煉鋼廠',1],['石油化學工業',1],['核能發電廠',2]],
+     hint:'能讓「人和貨物移動」的（公路、鐵路、機場、港口）是交通；造船、煉鋼、石化是重工業。'},
+    {type:'lock', q:'🔐 工地密碼：交通、重工業、能源建設各有「幾項」？依序輸入三個數字。', code:'631',
+     hint:'數數看你剛剛分好的三類！'},
+    {type:'mcq', q:'十大建設中，哪兩項是「港口」？',
+     opts:['臺中港和蘇澳港','高雄港和基隆港','臺中港和高雄港','蘇澳港和花蓮港'], ans:0,
+     hint:'剛剛分類時出現過，名字裡有「港」！'}
+   ]},
+ { id:'r7', icon:'🗺️', name:'十大建設地圖室', era:'民國60年代', reward:{icon:'🗺️',name:'建設地圖'},
+   story:'地圖室的大地圖被風吹亂了，建設的標籤散落一地。請把它們放回正確的位置！<br>📖 對照課本 P.70「十大建設」地圖。',
+   puzzles:[
+    {type:'sort', q:'這些建設在臺灣的哪個區域？', bins:['北部','中部','南部','東部'],
+     items:[['桃園國際機場',0],['核能發電廠（新北石門）',0],['臺中港',1],['大造船廠',2],['大煉鋼廠',2],['石油化學工業',2],['北迴鐵路（蘇澳—花蓮）',3]],
+     hint:'造船、煉鋼、石化都在同一個城市——高雄！'},
+    {type:'mcq', q:'中山高速公路（國道1號）的路線大約是？',
+     opts:['北起基隆，南到高雄','從臺北到宜蘭','從花蓮到臺東','從桃園到臺中'], ans:0,
+     hint:'它是貫穿西部的高速公路，一路從北到南。'},
+    {type:'mcq', q:'為什麼造船、煉鋼、石化等重工業都集中在高雄？',
+     opts:['高雄有大型港口，方便運進原料、運出產品','高雄人口最少','高雄天氣最冷','高雄沒有颱風'], ans:0,
+     hint:'船造好要下水、原料要從國外運進來……需要什麼？'},
+    {type:'mcq', q:'北迴鐵路完成後，哪個地區的交通改善最多？',
+     opts:['東部','中部','南部','離島'], ans:0,
+     hint:'北迴鐵路連接蘇澳和花蓮。'}
+   ]},
+ { id:'r8', icon:'🛡️', name:'建設的代價', era:'民國60年代以後', reward:{icon:'🛡️',name:'安全護盾'},
+   story:'建設帶來便利，但工程師皺著眉頭說：「有些問題我們不能不注意……」想清楚建設的好處和代價，才能拿到安全護盾。<br>📖 請翻開課本 P.71。',
+   puzzles:[
+    {type:'mcq', q:'民國六十年代政府興建的中山高速公路，是現在的國道幾號？',
+     opts:['國道1號','國道3號','國道5號','國道6號'], ans:0,
+     hint:'它是臺灣第一條高速公路。'},
+    {type:'lock', q:'🔐 隨著用路需求增加，政府又陸續興建了兩條高速公路。密碼＝課文提到的三條國道編號（由小到大）。', code:'135',
+     hint:'課本 P.71：中山高速公路（國道__號），又陸續興建國道__號、國道__號。'},
+    {type:'sort', q:'判斷下面的說法是對還是錯。', bins:['⭕ 正確','❌ 錯誤'],
+     items:[['交通建設可以縮短運輸時間，促進城鄉交流',0],['高速鐵路運行時可能產生噪音',0],['公共建設只有好處，沒有任何壞處',1],['工業發展可能造成環境汙染',0],['環島鐵路與西部高速鐵路讓交通往來更便利',0]],
+     hint:'課本 P.71 第二段：公共建設在帶來便利的同時……'},
+    {type:'mcq', q:'位於高雄的煉油廠過去曾發生火警事故，引起社會重視哪一個問題？',
+     opts:['公共建設的安全','觀光景點太少','學校作業太多','手機收訊不好'], ans:0,
+     hint:'課本 P.71 最後一句。'},
+    {type:'multi', q:'興建高速鐵路時，路線可能經過野生動物的棲息地。政府應該怎麼做？（選出<u>所有</u>正確的）',
+     opts:['施工前先調查沿線的生態環境','聽取居民和專家的意見','設置生態廊道或隔音設施','為了趕工，直接開挖不用調查'], ans:[0,1,2],
+     hint:'想一想：怎麼樣才能「兼顧交通需求與環境保護」？'}
+   ]},
+ { id:'r9', icon:'🚇', name:'雪山隧道出口', era:'民國95年（2006）', reward:{icon:'🏠',name:'回家！'},
+   story:'最後一站！時光機要穿過<b>雪山山脈</b>才能回到現代。從前從臺北到宜蘭可一點都不容易……<br>📖 請翻開課本 P.72–73「社會充電站」。',
+   puzzles:[
+    {type:'multi', q:'國道5號位在哪些縣市之間？（選出<u>所有</u>正確的）',
+     opts:['臺北市','新北市','宜蘭縣','桃園市','花蓮縣'], ans:[0,1,2],
+     hint:'課本 P.72 課本討論：找找看國道5號在哪裡？'},
+    {type:'match', q:'雪山隧道興建以前，從臺北到宜蘭的方式各有什麼不便？（先點左邊，再點右邊）',
+     left:['步行（淡蘭古道）','北宜公路','北部濱海公路','搭火車'],
+     right:['從萬華走到宜蘭要二到四天','道路彎曲起伏，有些路段較危險','路線較長，要花比較多時間','車票常常一票難求'],
+     hint:'課本 P.72：早期徒步、山區道路、沿著海邊的路、火車……'},
+    {type:'mcq', q:'雪山隧道通車後，宜蘭哪一種產業迅速成長？',
+     opts:['觀光產業','煉鋼業','造船業','石油化學業'], ans:0,
+     hint:'週末很多人開車去宜蘭做什麼？'},
+    {type:'sort', q:'雪山隧道通車後，這些是「方便」還是「困擾」？', bins:['😊 方便','😣 困擾'],
+     items:[['住在外地的宜蘭人更容易返鄉',0],['假日交通壅塞',1],['物價上漲',1],['當地居民有更多就業機會',0],['垃圾汙染',1],['農地過度開發',1]],
+     hint:'課本 P.73：便利的交通帶來……然而，也帶來不良的影響……'},
+    {type:'lock', q:'🔐 啟動時光機！輸入雪山隧道完工通車的年份：民國 ＿＿ 年', code:'95',
+     hint:'看看這一關的年代標籤！課本 P.73。'},
+    {type:'reflect', q:'回家前留下你的想法：在「經濟發展」與「生活環境」之間，你會怎麼考量與選擇？',
+     choices:['我比較重視經濟發展','我比較重視生活環境'], min:20,
+     hint:'這題沒有標準答案！說出你的理由就可以。例如：環境被破壞後很難恢復……或：開發前做好評估，也能兼顧……'}
+   ]}
+];
+
+/* ---------- state ---------- */
+let S = null;
+function fresh(){return {cls:'',seat:'',start:0,end:0,room:0,pz:0,hints:0,errors:0,hintUsed:{},done:[],reflect:null,stage:'login',roomErr:{},roomHint:{},roomTime:{},roomStart:0,attempt:1,submit:''};}
+function save(){try{localStorage.setItem(STORE_KEY,JSON.stringify(S));}catch(e){}}
+function load(){try{const v=JSON.parse(localStorage.getItem(STORE_KEY));if(v&&v.stage)return v;}catch(e){}return null;}
+S = load() || fresh();
+['roomErr','roomHint','roomTime'].forEach(k=>{if(!S[k])S[k]={};});
+if(S.submit==='sending')S.submit='fail';
+
+const $ = s => document.querySelector(s);
+const app = () => $('#app');
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function fmt(ms){const s=Math.max(0,Math.floor(ms/1000));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
+function elapsed(){if(!S.start)return 0;return (S.end||Date.now())-S.start;}
+const totalPz = ROOMS.reduce((n,r)=>n+r.puzzles.length,0);
+function progress(){
+  let solved=0;S.done.forEach(i=>solved+=ROOMS[i].puzzles.length);
+  const inRoom=(S.stage==='puzzle'||S.stage==='story')&&!S.done.includes(S.room);
+  if(inRoom)solved+=S.pz;
+  return {reached:S.done.length+(inRoom?1:0),solved};
+}
+function donePz(){let n=0;for(let i=0;i<S.room;i++)n+=ROOMS[i].puzzles.length;return n+(S.stage==='puzzle'||S.stage==='story'?S.pz:0);}
+
+/* ---------- HUD ---------- */
+function hud(){
+  const h=$('#hud');
+  if(S.stage==='login'||!S.start){h.innerHTML='';return;}
+  h.className='hud';
+  h.innerHTML=`<span class="chip who">${S.cls} 班 ${S.seat} 號</span>
+   <span class="chip">⏱ <b id="clock">${fmt(elapsed())}</b></span>
+   <span class="chip">💡 ${S.hints}</span>
+   <span class="chip">❌ ${S.errors}</span>
+   ${!S.end&&S.stage!=='result'?'<button class="chip" id="earlyBtn" style="background:var(--red);color:#fff;font-weight:800">📤 交卷</button>':''}`;
+  const eb=$('#earlyBtn');if(eb)eb.onclick=askEarly;
+}
+function askEarly(){
+  const pg=progress();
+  modal(`<h3>📤 確定要交卷嗎？</h3>
+    <div class="sub">你目前完成 <b>${pg.solved}</b> / ${totalPz} 題（${S.done.length} / ${ROOMS.length} 關）。<br>交卷後就不能繼續作答了喔！</div>
+    <div class="row"><button class="btn ghost" id="no">繼續挑戰</button><button class="btn amber" id="yes">確定交卷</button></div>`);
+  $('#no').onclick=closeModal;
+  $('#yes').onclick=()=>{closeModal();finish('提早交卷');};
+}
+function finish(status){
+  if(S.end&&S.stage==='result')return;
+  const pg=progress();
+  if((S.stage==='puzzle'||S.stage==='story')&&!S.done.includes(S.room)&&S.roomStart)
+    S.roomTime[S.room]=Math.round((Date.now()-S.roomStart)/1000);
+  S.reached=pg.reached;S.solved=pg.solved;S.status=status;
+  if(!S.end)S.end=Date.now();
+  S.stage='result';render();
+}
+// 老師一鍵收卷：每 30 秒問一次後台
+setInterval(async()=>{
+  if(!GAS_URL||!S.start||S.end||S.stage==='result'||S.stage==='login')return;
+  try{
+    const j=await (await fetch(GAS_URL+'?action=status&cls='+encodeURIComponent(S.cls)+'&t='+Date.now())).json();
+    if(j&&j.collect&&j.collect>S.start&&!S.end){
+      finish('老師收卷');
+      modal(`<h3>🔔 老師收卷囉！</h3><div class="sub">你的作答進度已經自動交給老師了。</div><button class="btn amber" id="no">好</button>`);
+      $('#no').onclick=closeModal;
+    }
+  }catch(e){}
+},30000);
+setInterval(()=>{const c=$('#clock');if(c)c.textContent=fmt(elapsed());
+  const w=$('#warn');if(w&&!S.end&&elapsed()>30*60000)w.style.display='block';},1000);
+
+function modal(html){$('#modal').innerHTML=`<div class="modal"><div class="card">${html}</div></div>`;}
+function closeModal(){$('#modal').innerHTML='';}
+
+/* ---------- screens ---------- */
+function render(){
+  hud(); window.scrollTo(0,0);
+  ({login:renderLogin,intro:renderIntro,map:renderMap,story:renderStory,puzzle:renderPuzzle,reward:renderReward,result:renderResult})[S.stage]();
+  save();
+}
+
+function renderLogin(){
+  app().innerHTML=`
+  <div class="card" style="text-align:center">
+    <div class="big">🕰️</div>
+    <h1>經濟時光機大逃脫</h1><div style="margin:-4px 0 8px"><span class="era">分享版・成績不會上傳</span></div>
+    <div class="sub">六年級社會｜戰後經濟發展如何影響人們生活？（課本 P.62–73）</div>
+  </div>
+  <div class="card">
+    <label for="cls">班級（三位數，例如 608）</label>
+    <input type="text" id="cls" inputmode="numeric" maxlength="3" placeholder="608" autocomplete="off">
+    <label for="seat">座號</label>
+    <input type="text" id="seat" inputmode="numeric" maxlength="2" placeholder="1" autocomplete="off">
+    <div class="feedback bad" id="lerr"></div>
+    <button class="btn amber" id="go" style="width:100%;margin-top:8px">登入時光機 🚀</button>
+  </div>
+  <div class="card" style="text-align:center;color:var(--muted);font-size:15px;letter-spacing:.08em;padding:12px 16px">✨ <b style="color:#ffe2a3">Zeiyen老師</b>製作</div>`;
+  $('#go').onclick=()=>{
+    const c=$('#cls').value.trim(), s=$('#seat').value.trim();
+    if(!/^[1-6]\d{2}$/.test(c)){$('#lerr').textContent='請輸入三位數班級，例如 608';return;}
+    if(!/^\d{1,2}$/.test(s)||+s<1||+s>40){$('#lerr').textContent='請輸入正確的座號（1～40）';return;}
+    S.cls=c;S.seat=String(+s);S.stage='intro';render();
+  };
+}
+
+function renderIntro(){
+  app().innerHTML=`
+  <div class="card">
+    <span class="era">任務說明</span>
+    <h2 style="margin-top:12px">⚠️ 時光機故障了！</h2>
+    <div class="story">你搭乘的時光機突然故障，被困在<b>民國34年</b>的臺灣。<br>
+    你必須穿越 <b>${ROOMS.length} 個關卡</b>，蒐集零件，最後在<b>雪山隧道</b>啟動時光機，才能回到現代！</div>
+    <div class="hintbox">📏 規則<br>
+    ⏱ 計時從按下「出發」開始，目標 <b>${LIMIT_MIN} 分鐘</b>內逃脫<br>
+    💡 卡關可以按「提示」，但會記錄使用次數<br>
+    ❌ 答錯會記錄次數，而且系統會冷卻 ${COOLDOWN} 秒才能再作答，請想清楚再按！<br>
+    📖 準備好課本 P.62–73，裡面藏著所有答案！</div>
+    <div class="row" style="margin-top:18px"><button class="btn amber" id="go">出發！⏱ 開始計時</button></div>
+  </div>`;
+  $('#go').onclick=()=>{
+    if(!S.start){S.start=Date.now();
+      let n=1;try{n=(+localStorage.getItem(ATTEMPT_KEY)||0)+1;localStorage.setItem(ATTEMPT_KEY,n);}catch(e){}
+      S.attempt=n;}
+    S.stage='map';render();};
+}
+
+function partsBar(){
+  return `<div class="parts">${ROOMS.map((r,i)=>`<div class="part ${S.done.includes(i)?'got':''}">${S.done.includes(i)?r.reward.icon:'？'}</div>`).join('')}</div>`;
+}
+
+function renderMap(){
+  app().innerHTML=`
+  <div class="card">
+    <div class="row spread"><h2>🗺️ 時光地圖</h2><span class="small">已完成 ${S.done.length} / ${ROOMS.length} 關</span></div>
+    <div class="progress"><i style="width:${donePz()/totalPz*100}%"></i></div>
+    <div class="sub" style="margin-top:10px">已蒐集的零件：</div>${partsBar()}
+    <div class="banner" id="warn" style="display:none">⏰ 已經超過 30 分鐘了，加油！快到終點了！</div>
+  </div>
+  <div class="map">${ROOMS.map((r,i)=>{
+     const st=S.done.includes(i)?'done':(i===S.room?'cur':'lock');
+     return `<button class="node ${st}" data-i="${i}" ${st!=='cur'?'disabled':''}>
+       <div class="ic">${st==='done'?'✅':(st==='lock'?'🔒':r.icon)}</div>
+       <div class="nm">第 ${i+1} 關｜${r.name}</div><div class="yr">${r.era}</div></button>`;}).join('')}
+  </div>`;
+  document.querySelectorAll('.node.cur').forEach(b=>b.onclick=()=>{S.pz=0;S.roomStart=Date.now();S.stage='story';render();});
+}
+
+function renderStory(){
+  const r=ROOMS[S.room];
+  app().innerHTML=`
+  <div class="card">
+    <span class="era">第 ${S.room+1} 關｜${r.era}</span>
+    <h2 style="margin-top:12px">${r.icon} ${r.name}</h2>
+    <div class="story">${r.story}</div>
+    <div class="sub" style="margin-top:12px">本關有 ${r.puzzles.length} 道謎題</div>
+    <button class="btn amber" id="go">進入關卡 ➜</button>
+  </div>`;
+  $('#go').onclick=()=>{S.stage='puzzle';render();};
+}
+
+function hintKey(){return S.room+'-'+S.pz;}
+function puzzleShell(r,p,body){
+  const used=S.hintUsed[hintKey()];
+  return `
+  <div class="card">
+    <div class="row spread"><span class="era">${r.icon} ${r.name}</span><span class="small">謎題 ${S.pz+1} / ${r.puzzles.length}</span></div>
+    <div class="progress" style="margin-top:12px"><i style="width:${(S.pz)/r.puzzles.length*100}%"></i></div>
+    <div class="q" style="margin-top:14px">${p.q}</div>
+    ${p.img?`<div style="margin-bottom:14px">${p.img}</div>`:''}
+    <div id="body">${body}</div>
+    <div class="feedback" id="fb"></div>
+    <div class="row spread" style="margin-top:12px">
+      <button class="btn ghost" id="hintBtn">💡 ${used?'再看提示':'提示'}</button>
+      <button class="btn" id="submit" style="display:none">送出答案</button>
+    </div>
+    <div id="hint">${used?`<div class="hintbox">💡 ${p.hint}</div>`:''}</div>
+  </div>`;
+}
+
+function renderPuzzle(){
+  const r=ROOMS[S.room], p=r.puzzles[S.pz];
+  clearInterval(coolTimer);
+  const T={order:pOrder,mcq:pMcq,multi:pMulti,match:pMatch,sort:pSort,lock:pLock,reflect:pReflect,cloze:pCloze}[p.type];
+  T(r,p);
+  $('#hintBtn').onclick=()=>{
+    if(!S.hintUsed[hintKey()]){
+      if(p.type==='reflect'){ S.hintUsed[hintKey()]=true; } // 開放題提示不扣
+      else {S.hintUsed[hintKey()]=true;S.hints++;S.roomHint[S.room]=(S.roomHint[S.room]||0)+1;}
+      save();hud();
+    }
+    $('#hint').innerHTML=`<div class="hintbox">💡 ${p.hint}</div>`;
+    $('#hintBtn').textContent='💡 再看提示';
+  };
+}
+
+let coolTimer=null;
+function wrong(msg){
+  S.errors++;S.roomErr[S.room]=(S.roomErr[S.room]||0)+1;save();hud();
+  const fb=$('#fb');fb.className='feedback bad';
+  const c=$('#body');c.classList.remove('shake');void c.offsetWidth;c.classList.add('shake');
+  // 冷卻：暫時鎖住所有可按的按鈕
+  const locked=[...document.querySelectorAll('#body button, #submit')].filter(b=>!b.disabled);
+  locked.forEach(b=>b.disabled=true);
+  const base=msg||'❌ 不對喔，再想想看！';
+  let n=COOLDOWN; fb.textContent=`${base}（🔒 冷卻 ${n} 秒）`;
+  clearInterval(coolTimer);
+  coolTimer=setInterval(()=>{n--;
+    if(n>0){fb.textContent=`${base}（🔒 冷卻 ${n} 秒）`;return;}
+    clearInterval(coolTimer);fb.textContent=base;
+    locked.forEach(b=>{if(document.body.contains(b))b.disabled=false;});
+    document.dispatchEvent(new Event('cooldown-end'));
+  },1000);
+}
+function right(){
+  const fb=$('#fb');fb.className='feedback ok';fb.textContent='✅ 答對了！';
+  document.querySelectorAll('#body button, #submit').forEach(b=>b.disabled=true);
+  setTimeout(next,750);
+}
+function next(){
+  const r=ROOMS[S.room];
+  if(S.pz<r.puzzles.length-1){S.pz++;render();}
+  else{S.roomTime[S.room]=S.roomStart?Math.round((Date.now()-S.roomStart)/1000):0;S.done.push(S.room);S.stage='reward';render();}
+}
+
+/* --- puzzle types --- */
+function pOrder(r,p){
+  const disp=shuffle(p.items.map((t,i)=>({t,i})));
+  let seq=[];
+  app().innerHTML=puzzleShell(r,p,`
+    <div class="opts" id="pool">${disp.map(o=>`<button class="opt" data-i="${o.i}">${o.t}</button>`).join('')}</div>
+    <div class="sub" style="margin-top:14px">你排的順序：</div>
+    <div class="seq" id="seq"></div>
+    <button class="btn ghost" id="reset">↺ 重新排</button>`);
+  const sub=$('#submit');sub.style.display='';
+  function draw(){
+    $('#seq').innerHTML=p.items.map((_,k)=>seq[k]!==undefined
+      ?`<div class="slot filled"><span class="num">${k+1}</span>${p.items[seq[k]]}</div>`
+      :`<div class="slot"><span class="num" style="opacity:.4">${k+1}</span>（點上方的事件）</div>`).join('');
+    document.querySelectorAll('#pool .opt').forEach(b=>{b.classList.toggle('used',seq.includes(+b.dataset.i));});
+    sub.disabled=seq.length<p.items.length;
+  }
+  document.querySelectorAll('#pool .opt').forEach(b=>b.onclick=()=>{const i=+b.dataset.i;if(!seq.includes(i)){seq.push(i);draw();}});
+  $('#reset').onclick=()=>{seq=[];$('#fb').textContent='';draw();};
+  sub.onclick=()=>{if(seq.every((v,k)=>v===k))right();else{wrong('❌ 順序不對，按「重新排」再試一次！');}};
+  draw();
+}
+
+function pMcq(r,p){
+  const disp=shuffle(p.opts.map((t,i)=>({t,i})));
+  app().innerHTML=puzzleShell(r,p,`<div class="opts">${disp.map(o=>`<button class="opt" data-i="${o.i}">${o.t}</button>`).join('')}</div>`);
+  document.querySelectorAll('#body .opt').forEach(b=>b.onclick=()=>{
+    const i=+b.dataset.i;
+    if(i===p.ans){b.classList.add('ok');right();}
+    else{b.classList.add('bad');b.disabled=true;wrong();}
+  });
+}
+
+function pMulti(r,p){
+  const disp=shuffle(p.opts.map((t,i)=>({t,i})));
+  const sel=new Set();
+  app().innerHTML=puzzleShell(r,p,`<div class="opts">${disp.map(o=>`<button class="opt" data-i="${o.i}">☐ ${o.t}</button>`).join('')}</div>`);
+  const sub=$('#submit');sub.style.display='';sub.disabled=true;
+  document.querySelectorAll('#body .opt').forEach(b=>b.onclick=()=>{
+    const i=+b.dataset.i;const t=p.opts[i];
+    if(sel.has(i)){sel.delete(i);b.classList.remove('sel');b.textContent='☐ '+t;}
+    else{sel.add(i);b.classList.add('sel');b.textContent='☑ '+t;}
+    sub.disabled=sel.size===0;$('#fb').textContent='';
+  });
+  sub.onclick=()=>{
+    const ok=sel.size===p.ans.length&&p.ans.every(a=>sel.has(a));
+    if(ok)right();
+    else{
+      const missing=p.ans.filter(a=>!sel.has(a)).length, extra=[...sel].filter(a=>!p.ans.includes(a)).length;
+      wrong(extra?'❌ 有選項選錯了，再檢查一次！':`❌ 還少選了 ${missing} 個喔！`);
+    }
+  };
+}
+
+const TAGC=['#f2b544','#4fd1c5','#ff9ad5','#9ad0ff','#b8f27a'];
+function pMatch(r,p){
+  const rdisp=shuffle(p.right.map((t,i)=>({t,i})));
+  let pick=null; const pair={}; // left -> right
+  app().innerHTML=puzzleShell(r,p,`<div class="match">
+    <div class="col">${p.left.map((t,i)=>`<button class="opt" data-l="${i}">${t}</button>`).join('')}</div>
+    <div class="col">${rdisp.map(o=>`<button class="opt" data-r="${o.i}">${o.t}</button>`).join('')}</div></div>`);
+  const sub=$('#submit');sub.style.display='';
+  function draw(){
+    document.querySelectorAll('[data-l]').forEach(b=>{const l=+b.dataset.l;b.classList.toggle('sel',pick===l);
+      b.innerHTML=p.left[l]+(pair[l]!==undefined?`<span class="tag" style="background:${TAGC[l]}">${l+1}</span>`:'');});
+    document.querySelectorAll('[data-r]').forEach(b=>{const ri=+b.dataset.r;const l=Object.keys(pair).find(k=>pair[k]===ri);
+      b.innerHTML=p.right[ri]+(l!==undefined?`<span class="tag" style="background:${TAGC[l]}">${+l+1}</span>`:'');});
+    sub.disabled=Object.keys(pair).length<p.left.length;
+  }
+  document.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{pick=+b.dataset.l;$('#fb').textContent='';draw();});
+  document.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{
+    if(pick===null){$('#fb').className='feedback';$('#fb').textContent='👆 請先點左邊的政策';return;}
+    const ri=+b.dataset.r;
+    Object.keys(pair).forEach(k=>{if(pair[k]===ri)delete pair[k];});
+    pair[pick]=ri;pick=null;draw();
+  });
+  sub.onclick=()=>{
+    const bad=p.left.map((_,l)=>l).filter(l=>pair[l]!==l);
+    if(!bad.length)right();
+    else{bad.forEach(l=>delete pair[l]);draw();wrong(`❌ 有 ${bad.length} 組配錯了，已幫你拿掉，再配一次！`);}
+  };
+  draw();
+}
+
+function pSort(r,p){
+  const disp=shuffle(p.items.map((it,i)=>({t:it[0],i})));
+  const choice={};
+  app().innerHTML=puzzleShell(r,p,disp.map(o=>`
+    <div class="sortitem" data-i="${o.i}"><div class="t">${o.t}</div>
+    <div class="row">${p.bins.map((b,k)=>`<button class="binbtn" data-i="${o.i}" data-k="${k}">${b}</button>`).join('')}</div></div>`).join(''));
+  const sub=$('#submit');sub.style.display='';
+  function draw(){
+    document.querySelectorAll('.binbtn').forEach(b=>b.classList.toggle('on',choice[b.dataset.i]===+b.dataset.k));
+    sub.disabled=Object.keys(choice).length<p.items.length;
+  }
+  document.querySelectorAll('.binbtn').forEach(b=>b.onclick=()=>{
+    choice[b.dataset.i]=+b.dataset.k;
+    document.querySelector(`.sortitem[data-i="${b.dataset.i}"]`).classList.remove('bad');
+    $('#fb').textContent='';draw();});
+  sub.onclick=()=>{
+    const bad=p.items.map((_,i)=>i).filter(i=>choice[i]!==p.items[i][1]);
+    if(!bad.length)right();
+    else{bad.forEach(i=>{delete choice[i];document.querySelector(`.sortitem[data-i="${i}"]`).classList.add('bad');});
+      draw();wrong(`❌ 有 ${bad.length} 個分錯了（紅框），再分一次！`);}
+  };
+  draw();
+}
+
+function pCloze(r,p){
+  const words=shuffle(p.blanks.concat(p.extra||[]));
+  const fill=Array(p.blanks.length).fill(null);
+  const parts=p.text.split(/\{(\d+)\}/);
+  const html=parts.map((t,k)=>k%2?`<button class="blank" data-b="${t}"></button>`:t).join('');
+  app().innerHTML=puzzleShell(r,p,`
+    <div class="cloze">${html}</div>
+    <div class="sub" style="margin-top:14px">詞語庫（點一下填入；點空格可以拿掉）：</div>
+    <div class="bank">${words.map(w=>`<button class="chip2" data-w="${w}">${w}</button>`).join('')}</div>`);
+  const sub=$('#submit');sub.style.display='';
+  function draw(){
+    document.querySelectorAll('.blank').forEach(b=>{const v=fill[+b.dataset.b];b.textContent=v||'　？　';b.classList.toggle('filled',!!v);});
+    document.querySelectorAll('.chip2').forEach(c=>{const used=fill.includes(c.dataset.w);c.classList.toggle('used',used);});
+    sub.disabled=fill.some(v=>!v);
+  }
+  document.querySelectorAll('.chip2').forEach(c=>c.onclick=()=>{
+    if(fill.includes(c.dataset.w))return;
+    const k=fill.indexOf(null);if(k<0)return;fill[k]=c.dataset.w;$('#fb').textContent='';draw();});
+  document.querySelectorAll('.blank').forEach(b=>b.onclick=()=>{fill[+b.dataset.b]=null;$('#fb').textContent='';draw();});
+  sub.onclick=()=>{
+    const bad=fill.map((v,k)=>v===p.blanks[k]?-1:k).filter(k=>k>=0);
+    if(!bad.length)right();
+    else{bad.forEach(k=>fill[k]=null);draw();wrong(`❌ 有 ${bad.length} 個空格填錯了，已幫你清掉！`);}
+  };
+  document.addEventListener('cooldown-end',draw,{once:true});
+  draw();
+}
+
+function pLock(r,p){
+  const n=p.code.length; const d=Array(n).fill(0);
+  app().innerHTML=puzzleShell(r,p,`<div class="lock">${d.map((_,k)=>`
+    <div class="wheel"><button data-k="${k}" data-v="1">▲</button><div class="d" id="d${k}">0</div><button data-k="${k}" data-v="-1">▼</button></div>`).join('')}</div>`);
+  const sub=$('#submit');sub.style.display='';sub.textContent='🔓 開鎖';
+  document.querySelectorAll('.wheel button').forEach(b=>b.onclick=()=>{
+    const k=+b.dataset.k;d[k]=(d[k]+ +b.dataset.v+10)%10;$('#d'+k).textContent=d[k];$('#fb').textContent='';});
+  sub.onclick=()=>{if(d.join('')===p.code)right();else wrong('🔒 密碼錯誤！鎖還是打不開……');};
+}
+
+function pReflect(r,p){
+  let c=null;
+  app().innerHTML=puzzleShell(r,p,`
+    <div class="opts">${p.choices.map((t,i)=>`<button class="opt" data-i="${i}">${t}</button>`).join('')}</div>
+    <label for="why">我的理由（至少 ${p.min} 個字）</label>
+    <textarea id="why" placeholder="因為……"></textarea>
+    <div class="small" id="cnt">0 字</div>`);
+  const sub=$('#submit');sub.style.display='';sub.textContent='🚀 啟動時光機，回家！';
+  const chk=()=>{const len=$('#why').value.trim().length;$('#cnt').textContent=len+' 字';sub.disabled=!(c!==null&&len>=p.min);};
+  document.querySelectorAll('#body .opt').forEach(b=>b.onclick=()=>{c=+b.dataset.i;
+    document.querySelectorAll('#body .opt').forEach(x=>x.classList.toggle('sel',x===b));chk();});
+  $('#why').oninput=chk;chk();
+  sub.onclick=()=>{S.reflect={choice:p.choices[c],text:$('#why').value.trim()};
+    $('#fb').className='feedback ok';$('#fb').textContent='✅ 收到你的想法了！';sub.disabled=true;setTimeout(next,700);};
+}
+
+function renderReward(){
+  const i=S.done[S.done.length-1], r=ROOMS[i], last=S.done.length===ROOMS.length;
+  if(last&&!S.end){S.end=Date.now();S.status='逃脫成功';S.reached=ROOMS.length;S.solved=totalPz;}
+  app().innerHTML=`
+  <div class="card reward">
+    <div class="icon">${r.reward.icon}</div>
+    <h2>${last?'時光機啟動成功！':'獲得零件：'+r.reward.name}</h2>
+    <div class="sub">${last?'轟——！時光機穿過雪山隧道，帶你回到了現代！':`第 ${i+1} 關「${r.name}」通關！`}</div>
+    ${partsBar()}
+    <button class="btn amber" id="go" style="margin-top:18px">${last?'查看逃脫成績 🏆':'回到時光地圖 ➜'}</button>
+  </div>`;
+  $('#go').onclick=()=>{
+    if(last){S.stage='result';}else{S.room=i+1;S.pz=0;S.stage='map';}
+    render();
+  };
+}
+
+function payload(){
+  const per=k=>ROOMS.map((_,i)=>S[k][i]||0).join(',');
+  return {cls:S.cls,seat:S.seat,attempt:S.attempt||1,seconds:Math.round(elapsed()/1000),
+    hints:S.hints,errors:S.errors,title:escaped()?title().replace(/^\S+\s/,''):'',
+    status:S.status||'逃脫成功',reached:S.reached!=null?S.reached:ROOMS.length,solved:S.solved!=null?S.solved:totalPz,
+    stance:S.reflect?S.reflect.choice:'',reason:S.reflect?S.reflect.text:'',
+    roomErr:per('roomErr'),roomHint:per('roomHint'),roomTime:per('roomTime')};
+}
+function showSend(){
+  const el=$('#sendStatus');if(!el)return;
+  if(!GAS_URL){el.innerHTML='ℹ️ 這是分享版，成績不會上傳；請截圖給老師。';return;}
+  if(S.submit==='ok'){el.innerHTML='✅ 成績已經送到老師的後台了！';return;}
+  if(S.submit==='sending'){el.innerHTML='⏳ 正在把成績送給老師……';return;}
+  el.innerHTML='⚠️ 成績還沒送出（可能是網路不穩）<br><button class="btn amber" id="resend" style="margin-top:8px">🔁 重新送出</button>';
+  $('#resend').onclick=()=>{S.submit='';submitResult(true);};
+}
+function submitResult(force){
+  if(!GAS_URL||S.submit==='ok'||(S.submit==='sending'&&!force)){showSend();return;}
+  S.submit='sending';save();showSend();
+  fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload())})
+    .then(()=>{S.submit='ok';save();showSend();})
+    .catch(()=>{S.submit='fail';save();showSend();});
+}
+function escaped(){return !S.status||S.status==='逃脫成功';}
+function title(){
+  const m=elapsed()/60000;
+  if(S.hints<=3&&S.errors<=6&&m<=LIMIT_MIN)return '🏆 時光大師';
+  if(S.hints<=10&&S.errors<=15)return '🥈 歷史偵探';
+  return '🥉 勇敢的時光旅人';
+}
+function renderResult(){
+  hud();
+  const t=elapsed(), esc=escaped();
+  app().innerHTML=`
+  <div class="card" style="text-align:center">
+    <div class="big">${esc?'🎉':'📤'}</div>
+    <h1>${esc?'逃脫成功！':'已交卷！'}</h1>
+    <div style="font-size:22px;font-weight:800;color:var(--amber)">${S.cls} 班 ${S.seat} 號</div>
+    <div style="font-size:24px;margin-top:6px">${esc?title():`完成 ${S.solved} / ${totalPz} 題（${S.done.length} / ${ROOMS.length} 關）`}</div>
+    <div class="stats">
+      <div class="stat"><div class="v">${fmt(t)}</div><div class="k">${esc?'逃脫時間':'作答時間'}</div></div>
+      <div class="stat"><div class="v">${S.hints}</div><div class="k">提示次數</div></div>
+      <div class="stat"><div class="v">${S.errors}</div><div class="k">答錯次數</div></div>
+    </div>
+    <div class="sub">${!esc?(S.status==='老師收卷'?'🔔 下課囉，老師已經收卷。':'你提早交卷了，下次再挑戰逃脫吧！'):t<=LIMIT_MIN*60000?'✅ 在 40 分鐘內完成':'⏰ 超過 40 分鐘，但你堅持到最後了！'}</div>
+    ${S.reflect?`<div class="hintbox" style="text-align:left">📝 我的想法：<b>${S.reflect.choice}</b><br>${S.reflect.text.replace(/</g,'&lt;')}</div>`:''}
+    <div class="banner" id="sendStatus" style="margin-top:14px"></div>
+    <div class="small" style="margin-top:10px">📸 也可以讓老師看這個畫面，或截圖上傳</div>
+    <div class="row" style="justify-content:center;margin-top:14px">
+      <button class="btn ghost" id="again">🔁 重新挑戰</button>
+    </div>
+  </div>
+  <div class="card" style="text-align:center;color:var(--muted);font-size:15px;letter-spacing:.08em;padding:12px 16px">✨ <b style="color:#ffe2a3">Zeiyen老師</b>製作</div>`;
+  submitResult();
+  $('#again').onclick=()=>{
+    modal(`<h3>確定要重新挑戰嗎？</h3><div class="sub">目前的成績會被清除。</div>
+      <div class="row"><button class="btn ghost" id="no">取消</button><button class="btn amber" id="yes">確定重來</button></div>`);
+    $('#no').onclick=closeModal;
+    $('#yes').onclick=()=>{const c=S.cls,s=S.seat;S=fresh();S.cls=c;S.seat=s;S.stage='intro';closeModal();render();};
+  };
+}
+
+render();
+</script>
+</body>
+</html>
