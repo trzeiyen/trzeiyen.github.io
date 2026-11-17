@@ -243,7 +243,7 @@ const FULL_MIN = 15, STEP = 2;      // 每一課 15 分鐘內時間分滿分，�
 const ROOMS = [
 { yr:'西元 1684 年', title:'漳州渡口', seal:'渡', deco:'渡',
   bg:'linear-gradient(#9cc7e6 0 38%,#3f7fa8 38% 60%,#c9a36b 60%)',
-  intro:'你是福建漳州的農家青年<b>陳阿水</b>。家鄉人越來越多，田卻不夠種。聽說海的另一邊有個地方叫「臺灣」……但渡口站著驗票的官兵，要怎麼過去呢？',
+  intro:'你是福建漳州的{job}<b>陳阿水</b>。{why}聽說海的另一邊有個地方叫「臺灣」……但渡口站著驗票的官兵，要怎麼過去呢？',
   spots:[
    {id:'1a',x:16,y:26,ic:'📜',lb:'官府告示',type:'clue',text:'【告示】西元 1684 年，清帝國將臺灣納入版圖。為了防止過多漢人移入而發生反叛事件，特此頒布禁令：<b>要渡海來臺，必須事先向官府提出申請，而且不准攜帶家眷。</b>'},
    {id:'1b',x:42,y:78,ic:'🌾',lb:'見底的米缸',type:'clue',text:'米缸快空了。中國的<b>人口持續成長，米糧不足</b>，<b>耕地面積又有限</b>，福建、廣東一帶的人們只好向外尋找新的開墾地。大家都說：<b>臺灣的自然環境很適合水稻生長</b>。'},
@@ -262,7 +262,7 @@ const ROOMS = [
   ]},
 { yr:'清帝國前期', title:'圳頭與碼頭', seal:'墾', deco:'墾',
   bg:'linear-gradient(#bfe0c0 0 30%,#7fb37a 30% 62%,#5a9bc0 62% 74%,#b8925a 74%)',
-  intro:'你平安抵達臺灣，在中部落腳開墾。田是有了，可是<b>沒有穩定的水</b>，稻子長不好。庄裡的人決定一起興建水圳；收成的米，還要想辦法賣出去。',
+  intro:'你平安抵達臺灣，和同鄉一起在中部落腳開墾。田是有了，可是<b>沒有穩定的水</b>，稻子長不好。庄裡的人決定一起興建水圳；收成的米，還要想辦法賣出去。',
   spots:[
    {id:'2a',x:13,y:24,ic:'🗺️',lb:'水圳地圖',type:'clue',text:'為了獲得穩定水源、增加耕地面積，各地積極興建水圳。地圖上標著三大水圳：<b>瑠公圳在北部</b>、<b>八堡圳在中部</b>、<b>曹公圳在南部</b>。'},
    {id:'2b',npc:'villager',x:37,y:22,ic:'🎋',lb:'林先生與石笱',type:'clue',text:'<b>施世榜</b>發現中部地區如果有穩定的灌溉水源，不但可以提高稻米產量，還能增加土地價格，因此<b>投資開發水圳</b>。<br>可是溪水引不進來——有位<b>林先生</b>教大家把竹子綁成<b>石笱</b>，裡面放入石塊，放在溪中<b>抬高水位</b>，溪水才順利引入水圳。<br>八堡圳完成後，吸引許多人前來開墾，形成了<b>員林仔街</b>（今彰化縣員林市）。'},
@@ -399,6 +399,13 @@ function load(ch){ try{ return JSON.parse(localStorage.getItem(skey(ch))); }catc
 function who(){ try{ return JSON.parse(localStorage.getItem(KEY+'-who')); }catch(e){ return null; } }
 function save(){ try{ localStorage.setItem(skey(S.ch), JSON.stringify(S)); localStorage.setItem(KEY+'-who', JSON.stringify({cls:S.cls,seat:S.seat,av:S.av,mates:S.mates||[]})); }catch(e){} }
 function fresh(cls,seat,ch){ return {ch,cls,seat,sid:Date.now().toString(36)+Math.random().toString(36).slice(2,6),start:Date.now(),end:0,ri:0,solved:{},seen:{},hinted:{},wrongBy:{},errors:0,hints:0,done:false,introSeen:-1}; }
+// 開場白依學生選的人物調整
+const JOBS = {
+  farmer:['農家青年','家鄉人越來越多，田卻不夠種。'],
+  merchant:['年輕商人','家鄉人越來越多，米糧不足，生意也越來越難做。'],
+  scholar:['年輕書生','家鄉人越來越多，田少糧食不足，日子越過越苦。']
+};
+function fill(t){ const j = JOBS[S.av]||JOBS.farmer; return t.replace('{job}', j[0]).replace('{why}', j[1]); }
 function seats(){ return [S.seat].concat(S.mates||[]).join('、'); }
 function nSolved(){ return Object.keys(S.solved).length; }
 function secs(){ return Math.floor(((S.end||Date.now())-S.start)/1000); }
@@ -650,7 +657,7 @@ function renderRoom(){
 function showIntro(again){
   const r = RS()[S.ri];
   S.introSeen = Math.max(S.introSeen, S.ri); save();
-  modal(`<span class="tag">${r.yr}</span><h3>${rtitle()}</h3><p style="font-size:19px">${r.intro}</p>
+  modal(`<span class="tag">${r.yr}</span><h3>${rtitle()}</h3><p style="font-size:19px">${fill(r.intro)}</p>
     <p style="color:var(--ink2);font-size:16px">🕹 用左下角的搖桿、或直接點地面來走動。金色「？」是線索，紅色「！」是現在要解開的機關，機關要<b>照順序</b>解開。迷路了就按「帶我去」。</p>
     <div class="acts"><button class="btn" onclick="closeModal()">${again?'知道了':'出發'}</button></div>`);
 }
