@@ -133,6 +133,11 @@ html,body{overflow:hidden;height:100%;overscroll-behavior:none;-webkit-user-sele
 #nav.on{background:#d9534f}
 #joy,#act,#nav{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 #act[hidden],#joy[hidden],#goal[hidden],#edge[hidden],#nav[hidden]{display:none}
+.credit{text-align:center;color:var(--muted);font-size:15px;letter-spacing:.08em;padding:12px 16px;margin:6px 0 14px}
+.credit b{color:#ffe2a3;font-weight:700}
+.ans{background:#1d3d2c;border:1px solid var(--green);border-radius:12px;padding:12px 14px;margin:8px 0;font-size:18px;line-height:1.7}
+.ans b.k{color:#9be7b4}
+.ans ol,.ans ul{margin:4px 0;padding-left:24px}
 #toast{position:fixed;left:50%;bottom:130px;transform:translateX(-50%);z-index:6;background:rgba(15,26,36,.94);
   border:1px solid var(--line);padding:12px 18px;border-radius:14px;font-size:18px;max-width:86vw;text-align:center;pointer-events:none;
   transition:opacity .3s;opacity:0}
@@ -956,7 +961,7 @@ const W=(function(){
     return 'todo';
   }
   function refresh(){
-    doors.forEach((d,i)=>{const open=i<=S.room||!!S.end;
+    doors.forEach((d,i)=>{const open=i<=S.room||(!!S.end&&escaped());
       if(open&&!d.open){d.open=true;const k=solids.indexOf(d.sol);if(k>=0)solids.splice(k,1);d.lock.visible=false;d.anim=d.anim||0.0001;}
       if(!open&&d.open){d.open=false;solids.push(d.sol);d.mesh.position.y=0.75;d.mesh.visible=true;d.lock.visible=true;d.anim=0;}
       d.sign.userData.set(`${S.done.includes(i)?'✅':open?'🚪':'🔒'} ${i+1}｜${ROOMS[i].name}`,S.done.includes(i)?'#1d3d2c':open?'#3a3420':'#1b2a38',open?'#ffe2a3':'#9fb3c4');
@@ -1051,6 +1056,12 @@ const W=(function(){
   }
   function act(){
     if(!near)return;
+    if(S.end){
+      if(near.type==='st'){if(stState(near.st)==='done')openReview(near.st.i,near.st.j);else toast('這一題你還沒解開喔');}
+      else if(near.type==='door')toast('🔒 這一關你還沒走到喔');
+      else toast('⚠ 時光機已經修好，帶你回到現代了！');
+      return;
+    }
     if(near.type==='door'){toast(`🔒 先完成「${ROOMS[near.i-1].name}」，這扇門才會打開`);return;}
     if(near.type==='start'){toast('⚠ 時光機故障了！沿著走廊往右，闖過 9 個年代，蒐集零件修好它。');return;}
     const st=near.st, s=stState(st);
@@ -1070,6 +1081,7 @@ const W=(function(){
     const st=stations.find(s=>s.i===S.room&&s.j===S.pz);return st?[st.x,st.z,st.top]:null;
   }
   function goalText(){
+    if(S.stage==='world'&&S.end&&S.review)return '🏛️ 回味模式：走到打勾的人物或物品旁邊，重看題目和答案';
     if(S.stage!=='world'||S.end)return '';
     if(!(S.entered&&S.entered[S.room]))return `🚪 前往第 ${S.room+1} 關：${ROOMS[S.room].name}`;
     return `🔎 第 ${S.room+1} 關｜去找「${STATIONS[S.room][S.pz].n}」（${S.pz+1}/${ROOMS[S.room].puzzles.length}）`;
@@ -1081,7 +1093,7 @@ const W=(function(){
     requestAnimationFrame(loop);
     if(document.hidden)return;
     const dt=Math.min(0.05,(now-last)/1000);last=now;
-    const canMove=S.stage==='world'&&$('#ov').hidden&&!$('#modal').innerHTML&&!S.end;
+    const canMove=S.stage==='world'&&$('#ov').hidden&&!$('#modal').innerHTML&&(!S.end||!!S.review);
     let mx=0,mz=0;
     if(!canMove){if(jid!==null||jv[0]||jv[1])resetInput();if(nav)stopNav();}
     if(canMove){
@@ -1178,8 +1190,10 @@ function hud(){
    <span class="chip">🧩 ${progress().solved}/${totalPz}</span>
    <span class="chip">💡 ${S.hints}</span>
    <span class="chip">❌ ${S.errors}</span>
-   ${!S.end&&S.stage==='world'?'<button class="chip" id="earlyBtn" style="background:var(--red);color:#fff;font-weight:800">📤 交卷</button>':''}`;
+   ${!S.end&&S.stage==='world'?'<button class="chip" id="earlyBtn" style="background:var(--red);color:#fff;font-weight:800">📤 交卷</button>':''}
+   ${S.end&&S.stage==='world'?'<button class="chip" id="backRes" style="background:var(--amber);color:#2a1c00;font-weight:800">🏆 看成績</button>':''}`;
   const eb=$('#earlyBtn');if(eb)eb.onclick=askEarly;
+  const br=$('#backRes');if(br)br.onclick=()=>{S.review=false;S.stage='result';render();};
 }
 function finish(status){
   if(S.stage==='result')return;
@@ -1223,7 +1237,8 @@ function renderLogin(){
     <div class="feedback bad" id="lerr"></div>
     <button class="btn amber" id="go" style="width:100%;margin-top:8px">登入時光機 🚀</button>
     ${W?'':'<div class="banner" style="margin-top:12px">⚠️ 這台裝置無法顯示 3D 畫面，請改用 <a href="../" style="color:#ffd88a">一般版</a>。</div>'}
-  </div>`;
+  </div>
+  ${CREDIT}`;
   $('#go').onclick=()=>{
     const c=$('#cls').value.trim(), s=$('#seat').value.trim();
     if(!/^[1-6]\d{2}$/.test(c)){$('#lerr').textContent='請輸入三位數班級，例如 608';return;}
@@ -1329,6 +1344,76 @@ function next(){
     <button class="btn amber" id="no" style="margin-top:16px">${last?'查看逃脫成績 🏆':'繼續前進 ➜'}</button></div>`);
   $('#no').onclick=()=>{closeModal();if(last){S.stage='result';render();}};
 }
+
+/* ===== 結果畫面：回味模式 + 作者欄 ===== */
+const CREDIT='<div class="card credit">✨ <b>Zeiyen老師</b>製作</div>';
+const escH=t=>String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+function answerHTML(p){
+  switch(p.type){
+    case 'order':return '<ol>'+p.items.map(t=>`<li>${t}</li>`).join('')+'</ol>';
+    case 'mcq':return `<b class="k">✔</b> ${p.opts[p.ans]}`;
+    case 'multi':return '<ul>'+p.ans.map(a=>`<li>${p.opts[a]}</li>`).join('')+'</ul>';
+    case 'match':return '<ul>'+p.left.map((l,i)=>`<li><b class="k">${l}</b> → ${p.right[i]}</li>`).join('')+'</ul>';
+    case 'sort':return p.bins.map((b,k)=>`<div><b class="k">${b}</b>：${p.items.filter(it=>it[1]===k).map(it=>it[0]).join('、')}</div>`).join('');
+    case 'lock':return `🔓 密碼：<b class="k" style="font-size:24px;letter-spacing:.2em">${p.code}</b>`;
+    case 'cloze':return p.text.replace(/\{(\d+)\}/g,(m,n)=>`<b class="k"><u>${p.blanks[+n]}</u></b>`);
+    case 'reflect':return S.reflect?`📝 你的想法：<b class="k">${escH(S.reflect.choice)}</b><br>${escH(S.reflect.text)}`:'（開放題，沒有標準答案）';
+  }
+  return '';
+}
+function openReview(i,j){
+  const r=ROOMS[i],p=r.puzzles[j],st=STATIONS[i][j],ov=$('#ov');
+  ov.hidden=false;ov.className='';controls(false);
+  app().innerHTML=`
+  <div class="card">
+    <div class="row spread"><span class="era">${r.icon} 第 ${i+1} 關｜${r.name}</span><button class="leave" id="rvBack">↩ 回到走廊</button></div>
+    <div class="say"><div class="who" style="background:#${st.c.toString(16).padStart(6,'0')}">${st.e}</div><div><b>${st.n}</b><p>${st.say}</p></div></div>
+    <div class="small">${r.era}｜謎題 ${j+1} / ${r.puzzles.length}</div>
+    <div class="q" style="margin-top:10px">${p.q}</div>
+    ${p.img?`<div style="margin-bottom:10px">${p.img}</div>`:''}
+    <div class="sub" style="margin:0">${p.type==='reflect'?'你的作答':'正確答案'}</div>
+    <div class="ans">${answerHTML(p)}</div>
+    ${p.type==='reflect'?'':`<div class="hintbox">💡 線索：${p.hint}</div>`}
+  </div>`;
+  ov.scrollTop=0;
+  $('#rvBack').onclick=()=>{ov.hidden=true;controls(true);};
+}
+function renderResult(){
+  hud();
+  const t=elapsed(), esc=escaped(), solved=progress().solved;
+  app().innerHTML=`
+  <div class="card" style="text-align:center">
+    <div class="big">${esc?'🎉':'📤'}</div>
+    <h1>${esc?'逃脫成功！':'已交卷！'}</h1>
+    <div style="font-size:22px;font-weight:800;color:var(--amber)">${S.cls} 班 ${S.seat} 號</div>
+    <div style="font-size:24px;margin-top:6px">${esc?title():`完成 ${S.solved} / ${totalPz} 題（${S.done.length} / ${ROOMS.length} 關）`}</div>
+    <div class="stats">
+      <div class="stat"><div class="v">${fmt(t)}</div><div class="k">${esc?'逃脫時間':'作答時間'}</div></div>
+      <div class="stat"><div class="v">${S.hints}</div><div class="k">提示次數</div></div>
+      <div class="stat"><div class="v">${S.errors}</div><div class="k">答錯次數</div></div>
+    </div>
+    <div class="sub">${!esc?(S.status==='老師收卷'?'🔔 下課囉，老師已經收卷。':'你提早交卷了，下次再挑戰逃脫吧！'):t<=LIMIT_MIN*60000?'✅ 在 40 分鐘內完成':'⏰ 超過 40 分鐘，但你堅持到最後了！'}</div>
+    ${S.reflect?`<div class="hintbox" style="text-align:left">📝 我的想法：<b>${escH(S.reflect.choice)}</b><br>${escH(S.reflect.text)}</div>`:''}
+    <div class="banner" id="sendStatus" style="margin-top:14px"></div>
+    <div class="small" style="margin-top:10px">📸 也可以讓老師看這個畫面，或截圖上傳</div>
+    <div class="row" style="justify-content:center;margin-top:14px">
+      ${solved>0?'<button class="btn amber" id="stay">🏛️ 留在時光走廊回味</button>':''}
+      <button class="btn ghost" id="again">🔁 重新挑戰</button>
+    </div>
+    ${solved>0?`<div class="small" style="margin-top:8px">回味模式可以重看${esc?'每一題':'已經解開的題目'}的題目、答案和線索，不會影響成績。</div>`:''}
+  </div>
+  ${CREDIT}`;
+  submitResult();
+  const sb=$('#stay');if(sb)sb.onclick=()=>{S.review=true;S.stage='world';S.open=false;render();
+    setTimeout(()=>toast('🏛️ 走到打勾（✓）的人物或物品旁邊，按黃色按鈕就能重看題目和答案'),300);};
+  $('#again').onclick=()=>{
+    modal(`<h3>確定要重新挑戰嗎？</h3><div class="sub">目前的成績會被清除。</div>
+      <div class="row"><button class="btn ghost" id="no">取消</button><button class="btn amber" id="yes">確定重來</button></div>`);
+    $('#no').onclick=closeModal;
+    $('#yes').onclick=()=>{const c=S.cls,s=S.seat;S=fresh();S.cls=c;S.seat=s;S.stage='intro';closeModal();render();};
+  };
+}
+
 render();
 
 </script>

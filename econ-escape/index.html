@@ -404,7 +404,8 @@ function renderLogin(){
     <input type="text" id="seat" inputmode="numeric" maxlength="2" placeholder="1" autocomplete="off">
     <div class="feedback bad" id="lerr"></div>
     <button class="btn amber" id="go" style="width:100%;margin-top:8px">登入時光機 🚀</button>
-  </div>`;
+  </div>
+  <div class="card" style="text-align:center;color:var(--muted);font-size:15px;letter-spacing:.08em;padding:12px 16px">✨ <b style="color:#ffe2a3">Zeiyen老師</b>製作</div>`;
   $('#go').onclick=()=>{
     const c=$('#cls').value.trim(), s=$('#seat').value.trim();
     if(!/^[1-6]\d{2}$/.test(c)){$('#lerr').textContent='請輸入三位數班級，例如 608';return;}
@@ -762,7 +763,8 @@ function renderResult(){
     <div class="row" style="justify-content:center;margin-top:14px">
       <button class="btn ghost" id="again">🔁 重新挑戰</button>
     </div>
-  </div>`;
+  </div>
+  <div class="card" style="text-align:center;color:var(--muted);font-size:15px;letter-spacing:.08em;padding:12px 16px">✨ <b style="color:#ffe2a3">Zeiyen老師</b>製作</div>`;
   submitResult();
   $('#again').onclick=()=>{
     modal(`<h3>確定要重新挑戰嗎？</h3><div class="sub">目前的成績會被清除。</div>
