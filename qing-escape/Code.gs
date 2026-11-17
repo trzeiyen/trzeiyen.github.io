@@ -2,11 +2,10 @@
  * 穿越清帝國大逃脫 — 教師後台（Google Apps Script）
  * 安裝：
  * 1. 新增一份 Google 試算表 → 擴充功能 → Apps Script，貼上本檔全部內容。
- * 2. 把下面的 TEACHER_KEY 改成自己的後台密碼。
- * 3. 部署 → 新增部署作業 → 類型「網頁應用程式」；執行身分「我」；存取權「所有人」。
- * 4. 把部署後的網址（結尾是 /exec）貼到 index.html 和 teacher.html 最上方的 GAS_URL。
+ * 2. 部署 → 新增部署作業 → 類型「網頁應用程式」；執行身分「我」；存取權「所有人」。
+ * 3. 把部署後的網址（結尾是 /exec）貼到 index.html 和 teacher.html 最上方的 GAS_URL。
+ * 4. 後台密碼不寫在程式裡：請填在試算表「設定」工作表的 B1 儲存格（沒填之前後台讀不到任何成績）。
  */
-const TEACHER_KEY = '請改成自己的密碼';
 const SHEET = 'records';
 const HEAD = ['時間','sid','班級','座號','解開機關','機關總數','所在關卡','逃脫','總分','通關分','時間分','精準分','用時秒','提示','錯誤','各題錯誤(JSON)','課別','同組座號'];
 
@@ -16,6 +15,13 @@ function sheet_() {
   if (!sh) { sh = ss.insertSheet(SHEET); sh.appendRow(HEAD); sh.setFrozenRows(1); }
   return sh;
 }
+function key_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sh = ss.getSheetByName('設定');
+  if (!sh) { sh = ss.insertSheet('設定'); sh.getRange('A1').setValue('後台密碼（請填在右邊 B1）'); sh.setColumnWidth(1, 220); }
+  return String(sh.getRange('B1').getValue()).trim();
+}
+function setup() { sheet_(); key_(); }
 function json_(o) {
   return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
 }
@@ -42,7 +48,8 @@ function doPost(e) {
 // 教師端：?key=密碼&cls=501&ch=1（cls、ch 可省略）
 function doGet(e) {
   const q = e.parameter || {};
-  if (q.key !== TEACHER_KEY) return json_({ ok: false, error: 'key' });
+  const k = key_();
+  if (!k || q.key !== k) return json_({ ok: false, error: 'key' });
   const rows = sheet_().getDataRange().getValues().slice(1);
   const out = rows
     .filter(r => (!q.cls || String(r[2]) === String(q.cls)) && (!q.ch || String(r[16]) === String(q.ch)))
