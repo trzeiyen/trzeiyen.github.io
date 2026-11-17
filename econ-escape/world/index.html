@@ -127,7 +127,12 @@ html,body{overflow:hidden;height:100%;overscroll-behavior:none;-webkit-user-sele
 #act{position:fixed;right:calc(24px + env(safe-area-inset-right));bottom:calc(36px + env(safe-area-inset-bottom));z-index:4;
   min-width:150px;min-height:72px;padding:12px 22px;border-radius:20px;font-size:21px;font-weight:800;
   background:var(--amber);color:#2a1c00;box-shadow:0 6px 18px rgba(0,0,0,.45);animation:pulse 1.6s infinite}
-#act[hidden],#joy[hidden],#goal[hidden],#edge[hidden]{display:none}
+#nav{position:fixed;right:calc(24px + env(safe-area-inset-right));bottom:calc(122px + env(safe-area-inset-bottom));z-index:4;
+  min-width:150px;min-height:56px;padding:10px 18px;border-radius:18px;font-size:19px;font-weight:800;
+  background:#1f9e92;color:#fff;box-shadow:0 6px 18px rgba(0,0,0,.45)}
+#nav.on{background:#d9534f}
+#joy,#act,#nav{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+#act[hidden],#joy[hidden],#goal[hidden],#edge[hidden],#nav[hidden]{display:none}
 #toast{position:fixed;left:50%;bottom:130px;transform:translateX(-50%);z-index:6;background:rgba(15,26,36,.94);
   border:1px solid var(--line);padding:12px 18px;border-radius:14px;font-size:18px;max-width:86vw;text-align:center;pointer-events:none;
   transition:opacity .3s;opacity:0}
@@ -152,6 +157,7 @@ html,body{overflow:hidden;height:100%;overscroll-behavior:none;-webkit-user-sele
 <div id="edge" hidden>➤</div>
 <div id="joy" hidden><i></i></div>
 <button id="act" hidden></button>
+<button id="nav" hidden>🧭 自動帶路</button>
 <div id="toast"></div>
 <div id="ov" class="full"><div id="app"></div></div>
 <div id="modal"></div>
@@ -424,7 +430,7 @@ setInterval(async()=>{
 setInterval(()=>{const c=$('#clock');if(c)c.textContent=fmt(elapsed());
   const w=$('#warn');if(w&&!S.end&&elapsed()>30*60000)w.style.display='block';},1000);
 
-function modal(html){$('#modal').innerHTML=`<div class="modal"><div class="card">${html}</div></div>`;}
+function modal(html){if(typeof W!=='undefined'&&W){W.resetInput();}$('#modal').innerHTML=`<div class="modal"><div class="card">${html}</div></div>`;}
 function closeModal(){$('#modal').innerHTML='';}
 
 function hintKey(){return S.room+'-'+S.pz;}
@@ -801,7 +807,9 @@ const W=(function(){
   const canvas=$('#scene');
   let renderer;
   try{renderer=new T.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});}catch(e){return null;}
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.6));
+  const COARSE=(()=>{try{return matchMedia('(pointer:coarse)').matches;}catch(e){return false;}})();
+  let pr=Math.min(window.devicePixelRatio||1,COARSE?1.25:1.6);
+  renderer.setPixelRatio(pr);
   renderer.outputEncoding=T.sRGBEncoding;
   const scene=new T.Scene();
   scene.background=new T.Color(0x16222d);
@@ -981,6 +989,54 @@ const W=(function(){
   const jend=e=>{if(e.pointerId!==jid)return;jid=null;jv=[0,0];knob.style.transform='';};
   ['pointerup','pointercancel','lostpointercapture'].forEach(t=>joy.addEventListener(t,jend));
 
+  function resetInput(){jid=null;jv=[0,0];knob.style.transform='';for(const k in keys)keys[k]=false;}
+
+  // ---------- 自動帶路（格子 A* 尋路） ----------
+  const GC=0.3, GX0=X0-0.5, GZ0=-(CH+RD)-0.6, NCOL=Math.ceil((X1-X0+1)/GC), NROW=Math.ceil(((CH+RD)*2+1.2)/GC);
+  function buildGrid(){const g=new Uint8Array(NCOL*NROW),r=0.34;
+    for(const s of solids){const c0=Math.max(0,Math.floor((s.x0-r-GX0)/GC)),c1=Math.min(NCOL-1,Math.floor((s.x1+r-GX0)/GC)),
+      r0=Math.max(0,Math.floor((s.z0-r-GZ0)/GC)),r1=Math.min(NROW-1,Math.floor((s.z1+r-GZ0)/GC));
+      for(let rr=r0;rr<=r1;rr++)for(let cc=c0;cc<=c1;cc++)g[rr*NCOL+cc]=1;}
+    return g;}
+  function astar(sx,sz,tx,tz){
+    const g=buildGrid(),N=NCOL*NROW;
+    const idx=(x,z)=>{const c=Math.max(0,Math.min(NCOL-1,Math.floor((x-GX0)/GC))),r=Math.max(0,Math.min(NROW-1,Math.floor((z-GZ0)/GC)));return r*NCOL+c;};
+    const free=i=>{if(!g[i])return i;const c=i%NCOL,r=i/NCOL|0;for(let d=1;d<14;d++)for(let dr=-d;dr<=d;dr++)for(let dc=-d;dc<=d;dc++){
+      if(Math.max(Math.abs(dr),Math.abs(dc))!==d)continue;const cc=c+dc,rr=r+dr;if(cc>=0&&rr>=0&&cc<NCOL&&rr<NROW&&!g[rr*NCOL+cc])return rr*NCOL+cc;}return -1;};
+    const s0=free(idx(sx,sz)),t=free(idx(tx,tz));if(s0<0||t<0)return null;
+    const G=new Float32Array(N).fill(1e9),from=new Int32Array(N).fill(-1),closed=new Uint8Array(N);
+    const tc=t%NCOL,tr=t/NCOL|0,h=i=>{const dc=Math.abs(i%NCOL-tc),dr=Math.abs((i/NCOL|0)-tr);return Math.max(dc,dr)+0.414*Math.min(dc,dr);};
+    const heap=[];
+    const push=(f,i)=>{heap.push([f,i]);let k=heap.length-1;while(k>0){const q=(k-1)>>1;if(heap[q][0]<=heap[k][0])break;[heap[q],heap[k]]=[heap[k],heap[q]];k=q;}};
+    const pop=()=>{const top=heap[0],l=heap.pop();if(heap.length){heap[0]=l;let k=0;for(;;){const a=2*k+1,b=a+1;let m=k;
+      if(a<heap.length&&heap[a][0]<heap[m][0])m=a;if(b<heap.length&&heap[b][0]<heap[m][0])m=b;if(m===k)break;[heap[m],heap[k]]=[heap[k],heap[m]];k=m;}}return top;};
+    G[s0]=0;push(h(s0),s0);
+    while(heap.length){const cur=pop()[1];if(cur===t)break;if(closed[cur])continue;closed[cur]=1;const c=cur%NCOL,r=cur/NCOL|0;
+      for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){if(!dr&&!dc)continue;const cc=c+dc,rr=r+dr;if(cc<0||rr<0||cc>=NCOL||rr>=NROW)continue;
+        const ni=rr*NCOL+cc;if(g[ni]||closed[ni])continue;if(dr&&dc&&(g[r*NCOL+cc]||g[rr*NCOL+c]))continue;
+        const ng=G[cur]+(dr&&dc?1.414:1);if(ng<G[ni]){G[ni]=ng;from[ni]=cur;push(ng+h(ni),ni);}}}
+    if(s0!==t&&from[t]<0)return null;
+    const pts=[];for(let i=t;i!==s0&&i>=0;i=from[i])pts.unshift([GX0+(i%NCOL+.5)*GC,GZ0+((i/NCOL|0)+.5)*GC]);
+    const los=(a,b)=>{const n=Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/(GC/2));for(let k=1;k<n;k++){if(g[idx(a[0]+(b[0]-a[0])*k/n,a[1]+(b[1]-a[1])*k/n)])return false;}return true;};
+    const out=[];let cur=[sx,sz],k=0;while(k<pts.length){let j=pts.length-1;while(j>k&&!los(cur,pts[j]))j--;out.push(pts[j]);cur=pts[j];k=j+1;}
+    return out;
+  }
+  let nav=null;
+  function navTarget(){
+    if(S.end||S.stage!=='world')return null;
+    if(!(S.entered&&S.entered[S.room])){const p=toWorld(S.room,0,1.8);return {x:p[0],z:p[1],kind:'room'};}
+    const st=stations.find(q=>q.i===S.room&&q.j===S.pz);if(!st)return null;
+    const sl=slotsFor(st.i)[st.j],p=toWorld(st.i,sl[0],sl[1]-1.25);return {x:p[0],z:p[1],kind:'st',st};
+  }
+  function startNav(){
+    const t=navTarget();if(!t)return;
+    const path=astar(me.position.x,me.position.z,t.x,t.z);
+    if(!path){toast('找不到路，請用搖桿走走看');return;}
+    nav={path,t,chk:performance.now(),lp:[me.position.x,me.position.z],retry:0};
+  }
+  function stopNav(){nav=null;}
+  $('#nav').onclick=()=>{if(nav)stopNav();else startNav();};
+
   function blocked(x,z){const r=0.3;for(const s of solids){if(x+r>s.x0&&x-r<s.x1&&z+r>s.z0&&z-r<s.z1)return true;}return false;}
   function inRoom(i,x,z){const g=roomGeo(i);const zz=g.side*z;return x>g.cx-RW/2&&x<g.cx+RW/2&&zz>CH+0.5&&zz<CH+RD;}
 
@@ -1005,7 +1061,7 @@ const W=(function(){
   $('#act').onclick=act;
 
   // ---------- 主迴圈 ----------
-  let last=performance.now(), snapCam=true, saveT=0, uiT=0;
+  let last=performance.now(), snapCam=true, saveT=0, uiT=0, ftAcc=0, ftN=0;
   const camPos=new T.Vector3(), look=new T.Vector3();
   function target(){
     if(S.end||S.stage!=='world')return null;
@@ -1027,11 +1083,28 @@ const W=(function(){
     const dt=Math.min(0.05,(now-last)/1000);last=now;
     const canMove=S.stage==='world'&&$('#ov').hidden&&!$('#modal').innerHTML&&!S.end;
     let mx=0,mz=0;
+    if(!canMove){if(jid!==null||jv[0]||jv[1])resetInput();if(nav)stopNav();}
     if(canMove){
       mx=jv[0]+((keys.ArrowRight||keys.KeyD)?1:0)-((keys.ArrowLeft||keys.KeyA)?1:0);
       mz=jv[1]+((keys.ArrowDown||keys.KeyS)?1:0)-((keys.ArrowUp||keys.KeyW)?1:0);
       const L=Math.hypot(mx,mz);if(L>1){mx/=L;mz/=L;}
+      if(nav){
+        if(L>0.1)stopNav();                       // 學生自己動搖桿就取消帶路
+        else{
+          while(nav.path.length&&Math.hypot(nav.path[0][0]-me.position.x,nav.path[0][1]-me.position.z)<0.22)nav.path.shift();
+          if(!nav.path.length){const t=nav.t;stopNav();
+            if(t.kind==='st'){me.rotation.y=Math.atan2(t.st.x-me.position.x,t.st.z-me.position.z);near=findNear();if(near&&near.type==='st'&&near.st===t.st)act();}}
+          else{const w=nav.path[0],dx=w[0]-me.position.x,dz=w[1]-me.position.z,d=Math.hypot(dx,dz);mx=dx/d;mz=dz/d;
+            if(now-nav.chk>900){ // 卡住偵測
+              if(Math.hypot(me.position.x-nav.lp[0],me.position.z-nav.lp[1])<0.15){
+                if(nav.retry++<2){const p=astar(me.position.x,me.position.z,nav.t.x,nav.t.z);if(p)nav.path=p;}else{stopNav();toast('前面好像擋住了，請用搖桿走走看');}}
+              nav.chk=now;nav.lp=[me.position.x,me.position.z];}}
+        }
+      }
     }
+    // 畫面太卡時自動降低解析度
+    ftAcc+=dt;ftN++;
+    if(ftN>=90){const avg=ftAcc/ftN;ftAcc=0;ftN=0;if(avg>0.034&&pr>0.75){pr=Math.max(0.75,+(pr-0.2).toFixed(2));renderer.setPixelRatio(pr);resize();}}
     const moving=Math.hypot(mx,mz)>0.05;
     if(moving){
       const sp=4.6*dt, nx=me.position.x+mx*sp, nz=me.position.z+mz*sp;
@@ -1063,6 +1136,8 @@ const W=(function(){
       const a=$('#act');
       if(near){const lbl=near.type==='door'?'🔒 門鎖著':near.type==='start'?'⚠ 時光機':(STATIONS[near.st.i][near.st.j].k==='npc'?'💬 對話：':'🔍 調查：')+STATIONS[near.st.i][near.st.j].n;
         if(a.dataset.lbl!==lbl){a.textContent=lbl;a.dataset.lbl=lbl;}a.hidden=false;}else a.hidden=true;
+      const nb=$('#nav'),showNav=canMove&&!!tg;nb.hidden=!showNav;
+      if(showNav){const t=nav?'⏹ 停止帶路':'🧭 自動帶路';if(nb.textContent!==t)nb.textContent=t;nb.classList.toggle('on',!!nav);}
       const gt=goalText(),ge=$('#goal');ge.hidden=!gt||!canMove;if(ge.textContent!==gt)ge.textContent=gt;
       // 畫面外箭頭
       const ed=$('#edge');
@@ -1075,7 +1150,7 @@ const W=(function(){
     if(now-saveT>2000&&S.stage==='world'){saveT=now;S.pos=[+me.position.x.toFixed(2),+me.position.z.toFixed(2)];save();}
   }
   requestAnimationFrame(loop);
-  return {sync,refresh,unlock:refresh,me};
+  return {sync,refresh,unlock:refresh,me,resetInput,stopNav,startNav,isNav:()=>!!nav};
 })();
 
 
@@ -1118,7 +1193,7 @@ function finish(status){
 let toastT=0;
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2600);}
 
-function controls(on){$('#joy').hidden=!on;if(!on){$('#act').hidden=true;$('#goal').hidden=true;$('#edge').hidden=true;}}
+function controls(on){$('#joy').hidden=!on;if(!on){$('#act').hidden=true;$('#nav').hidden=true;$('#goal').hidden=true;$('#edge').hidden=true;if(W){W.resetInput();W.stopNav();}}}
 function render(){
   hud();
   const ov=$('#ov');
