@@ -9,6 +9,26 @@
 const SHEET = 'records';
 const HEAD = ['時間','sid','班級','座號','解開機關','機關總數','所在關卡','逃脫','總分','通關分','時間分','精準分','用時秒','提示','錯誤','各題錯誤(JSON)','課別','同組座號'];
 
+const LIVE = '即時';   // 學生一進入遊戲就會出現在這裡，每次挑戰一列、持續更新
+const LIVE_HEAD = ['sid','最後更新','班級','座號','同組座號','課別','解開機關','機關總數','所在關卡','狀態'];
+function live_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sh = ss.getSheetByName(LIVE);
+  if (!sh) { sh = ss.insertSheet(LIVE); sh.appendRow(LIVE_HEAD); sh.setFrozenRows(1); }
+  return sh;
+}
+function liveUpsert_(d, cls, seat, mates, status) {
+  const sid = String(d.sid || '').replace(/[^a-z0-9]/gi, '').slice(0, 20);
+  if (!sid) return;
+  const sh = live_(), n = sh.getLastRow();
+  const ids = n > 1 ? sh.getRange(2, 1, n - 1, 1).getValues() : [];
+  let row = -1;
+  for (let i = ids.length - 1; i >= 0; i--) if (String(ids[i][0]) === sid) { row = i + 2; break; }
+  const v = [sid, new Date(), cls, seat, mates, Number(d.ch) === 2 ? 2 : 1,
+    Number(d.solved) || 0, Number(d.total) || 0, Number(d.room) || 1, status];
+  if (row > 0) sh.getRange(row, 1, 1, v.length).setValues([v]); else sh.appendRow(v);
+}
+
 function sheet_() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let sh = ss.getSheetByName(SHEET);
@@ -28,20 +48,28 @@ function json_(o) {
 
 // 學生端：每過一關與逃脫成功時上傳一筆
 function doPost(e) {
+  const lock = LockService.getScriptLock();
   try {
+    lock.waitLock(15000);
     const d = JSON.parse(e.postData.contents);
     if (d.game !== 'qing-escape') return json_({ ok: false });
     const cls = String(d.cls || '').replace(/\D/g, '').slice(0, 3);
     const seat = Math.max(0, Math.min(99, parseInt(d.seat, 10) || 0));
+    const mates = (Array.isArray(d.mates) ? d.mates : []).slice(0, 2).map(n => Math.max(0, Math.min(99, parseInt(n, 10) || 0))).filter(n => n).join(',');
+    // 即時回報（進入遊戲、每解一個機關、每 90 秒）
+    if (d.type === 'live') { liveUpsert_(d, cls, seat, mates, '作答中'); return json_({ ok: true }); }
     sheet_().appendRow([new Date(), String(d.sid || '').slice(0, 20), cls, seat,
       Number(d.solved) || 0, Number(d.total) || 0, Number(d.room) || 0, d.done ? 'Y' : '',
       Number(d.score) || 0, Number(d.pass) || 0, Number(d.time) || 0, Number(d.acc) || 0,
       Number(d.secs) || 0, Number(d.hints) || 0, Number(d.errors) || 0,
       JSON.stringify(d.wrongBy || {}).slice(0, 2000), Number(d.ch) === 2 ? 2 : 1,
-      (Array.isArray(d.mates) ? d.mates : []).slice(0, 2).map(n => Math.max(0, Math.min(99, parseInt(n, 10) || 0))).filter(n => n).join(',')]);
+      mates]);
+    liveUpsert_(d, cls, seat, mates, d.done ? '逃脫成功' : '作答中');
     return json_({ ok: true });
   } catch (err) {
     return json_({ ok: false });
+  } finally {
+    try { lock.releaseLock(); } catch (e2) {}
   }
 }
 
@@ -57,6 +85,14 @@ function doGet(e) {
       solved: r[4], total: r[5], room: r[6], done: r[7] === 'Y', score: r[8], pass: r[9], time: r[10],
       acc: r[11], secs: r[12], hints: r[13], errors: r[14], wrongBy: safe_(r[15]), ch: Number(r[16]) || 1,
       mates: String(r[17] || '').split(',').map(Number).filter(n => n) }));
-  return json_({ ok: true, rows: out });
+  // 即時作答名單（12 小時內有更新的）
+  const lsh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(LIVE), since = Date.now() - 12 * 3600 * 1000;
+  const live = (lsh && lsh.getLastRow() > 1 ? lsh.getRange(2, 1, lsh.getLastRow() - 1, 10).getValues() : [])
+    .filter(r => r[1] instanceof Date && r[1].getTime() > since)
+    .filter(r => (!q.cls || String(r[2]) === String(q.cls)) && (!q.ch || String(r[5]) === String(q.ch)))
+    .map(r => ({ sid: String(r[0]), t: r[1].getTime(), cls: String(r[2]), seat: Number(r[3]),
+      mates: String(r[4] || '').split(',').map(Number).filter(n => n), ch: Number(r[5]) || 1,
+      solved: Number(r[6]) || 0, total: Number(r[7]) || 0, room: Number(r[8]) || 1, status: String(r[9]) }));
+  return json_({ ok: true, rows: out, live: live });
 }
 function safe_(s) { try { return JSON.parse(s); } catch (e) { return {}; } }

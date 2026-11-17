@@ -417,6 +417,17 @@ function report(){
     done:S.done,score:sc.total,pass:sc.pass,time:sc.time,acc:sc.acc,secs:secs(),hints:S.hints,errors:S.errors,wrongBy:S.wrongBy};
   try{ fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body),keepalive:true}).catch(()=>{}); }catch(e){}
 }
+/* ===== 即時回報：學生一進入遊戲，老師後台就看得到 ===== */
+let liveSig='', liveAt=0;
+function liveTick(force){
+  if(!GAS_URL || !S || S.done || !$('#game').classList.contains('on')) return;
+  const sig = S.sid+'|'+nSolved()+'|'+S.ri, now = Date.now();
+  if(!force && sig===liveSig && now-liveAt<90000) return;   // 有進度就回報，沒進度每 90 秒報一次
+  liveSig = sig; liveAt = now;
+  const body = {game:GAME_ID,type:'live',ch:S.ch,sid:S.sid,cls:S.cls,seat:S.seat,mates:S.mates||[],solved:nSolved(),total:TOTAL(),room:Math.min(S.ri+1,RS().length)};
+  try{ fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body),keepalive:true}).catch(()=>{}); }catch(e){}
+}
+setInterval(liveTick, 4000);
 function show(id){ document.querySelectorAll('.screen').forEach(e=>e.classList.toggle('on',e.id===id)); window.scrollTo(0,0); }
 function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; }
 
@@ -465,6 +476,7 @@ function startGame(){
   clearInterval(tick); tick = setInterval(()=>{ $('#clock').textContent = fmt(secs()); },1000);
   try{ buildWorld(); }catch(e){ console.error(e); alert('這台裝置無法顯示 3D 畫面，請換一台或更新瀏覽器再試一次。'); return; }
   renderRoom();
+  liveSig=''; setTimeout(()=>liveTick(true), 300);
 }
 
 /* ========== 3D 世界 ========== */

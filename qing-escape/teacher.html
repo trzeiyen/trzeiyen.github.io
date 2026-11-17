@@ -28,6 +28,23 @@ h2{font-family:"Songti TC",serif;font-size:21px;margin:22px 0 8px}
 .miss i{height:14px;background:#b3261e;border-radius:7px;display:block}
 .miss span{flex:1}
 .tbl{overflow-x:auto}
+.auto{display:flex;align-items:center;gap:6px;font-weight:700;font-size:14px;height:42px}
+.auto input{display:inline;height:auto;width:auto;margin:0}
+.box{background:#fffaf0;border:2px solid #c9b68c;border-radius:12px;padding:12px;margin:10px 0}
+.box h2{margin:0 0 6px}
+.note{color:#7a6650;font-size:14px;margin-bottom:8px}
+.live{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+.live>div{background:#eef4fb;border:1px solid #b9cfe6;border-radius:10px;padding:8px 10px;font-size:15px}
+.live>div.stale{opacity:.5}
+.live b{color:#2f4a6b;font-size:17px}
+.live .tr{background:#d6e3f1;border-radius:6px;height:9px;overflow:hidden;margin:5px 0 3px}
+.live .tr i{display:block;height:100%;background:#2f4a6b}
+.seats{display:flex;flex-wrap:wrap;gap:6px}
+.seats span{width:44px;height:44px;border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:800;line-height:1.05}
+.seats small{font-size:10px;font-weight:600}
+.s-ok{background:#dcebdf;color:#3d6b4a}.s-ing{background:#dfe9f5;color:#2f4a6b}.s-part{background:#f6e6c3;color:#8a6414}.s-no{background:#f6dcd9;color:#b3261e}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:#3d6b4a;margin-right:6px;animation:bl 1.4s infinite}
+@keyframes bl{50%{opacity:.3}}
 </style>
 </head>
 <body><div class="wrap">
@@ -37,11 +54,19 @@ h2{font-family:"Songti TC",serif;font-size:21px;margin:22px 0 8px}
   <label>班級<input id="cls" inputmode="numeric" maxlength="3" placeholder="全部" style="width:110px"></label>
   <label>課別<select id="ch"><option value="1">第一課</option><option value="2">第二課</option></select></label>
   <label>顯示<select id="mode"><option value="best">每人最高分</option><option value="last">每人最新一筆</option></select></label>
+  <label>應到人數<input id="size" type="number" min="1" max="45" value="30" style="width:90px"></label>
   <button id="go">讀取成績</button>
+  <span class="auto"><input type="checkbox" id="auto" checked>每 20 秒自動更新</span>
   <button id="csv" class="g">下載 CSV</button>
 </div>
 <div id="msg"></div>
 <div class="cards" id="cards"></div>
+<div class="box"><h2><span class="dot"></span>即時作答</h2>
+  <div class="note">學生一進入遊戲就會出現；每解開一個機關或每 90 秒更新一次。超過 5 分鐘沒有更新會變淡（可能離開或沒網路）。</div>
+  <div class="live" id="live"></div></div>
+<div class="box" id="seatBox" hidden><h2>座位狀況</h2>
+  <div class="note">綠色＝逃脫成功；藍色＝作答中；橘色＝玩過但沒逃脫；紅色＝還沒有紀錄。格子下方是解開的機關數。</div>
+  <div class="seats" id="seats"></div></div>
 <div class="tbl"><table id="tb"></table></div>
 <h2>最常答錯的機關（全班錯誤次數）</h2>
 <div class="miss" id="miss"></div>
@@ -51,7 +76,7 @@ h2{font-family:"Songti TC",serif;font-size:21px;margin:22px 0 8px}
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbzqfvkWjqjGsLnnDsFNqlfvwluKJmvKC1KPbZjzwebmnk8PfmVhxOeSMGQUrRAP2fkVAg/exec';
 const NAMES = {'1L1':'一-驗票官(渡臺禁令)','1L2':'一-偷渡原因','1L3':'一-納入版圖年份','2L1':'二-三大水圳位置','2L2':'二-八堡圳順序','2L3':'二-進出口貨物','2L4':'二-一府二鹿三艋舺','3L1':'三-民變/械鬥分類','3L2':'三-界線變動','3L3':'三-平埔族群漢化','4L1':'一-港口古今地名','4L2':'一-商品與出口港','4L3':'一-大稻埕集散地','5L1':'二-事件順序','5L2':'二-沈葆楨/劉銘傳建設','5L3':'二-建省年份','6L1':'三-西方人事蹟配對','6L2':'三-醫療教育傳教','6L3':'三-外國人來臺活動','7L1':'終-前期/後期','7L2':'終-治臺態度轉變原因'};
 const $ = s=>document.querySelector(s);
-let view = [];
+let view = [], LIVE = [];
 const fmt = s=>String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
 
 $('#go').onclick = async ()=>{
@@ -61,11 +86,33 @@ $('#go').onclick = async ()=>{
     const u = GAS_URL+'?key='+encodeURIComponent($('#key').value)+'&cls='+encodeURIComponent($('#cls').value.trim())+'&ch='+$('#ch').value;
     const j = await (await fetch(u)).json();
     if(!j.ok){ $('#msg').textContent='密碼不正確。'; return; }
+    try{ localStorage.setItem('qing-teacher-key', $('#key').value); }catch(e){}
+    LIVE = j.live || [];
     render(j.rows);
-    $('#msg').textContent = j.rows.length ? '' : '目前沒有紀錄。';
+    $('#msg').textContent = (j.rows.length || LIVE.length) ? '更新於 '+new Date().toLocaleTimeString('zh-TW',{hour12:false}) : '目前沒有紀錄。';
   }catch(e){ $('#msg').textContent='讀取失敗，請確認網址與部署權限（存取權需設為「所有人」）。'; }
 };
-$('#mode').onchange = $('#ch').onchange = ()=>$('#go').click();
+$('#mode').onchange = $('#ch').onchange = $('#size').onchange = ()=>$('#go').click();
+setInterval(()=>{ if($('#auto').checked && $('#key').value) $('#go').click(); }, 20000);
+try{ const k = localStorage.getItem('qing-teacher-key'); if(k){ $('#key').value = k; $('#go').click(); } }catch(e){}
+
+function drawLive(){
+  const now = Date.now(), cls = $('#cls').value.trim();
+  const ago = t=>{ const x = Math.round((now-t)/1000); return x<60 ? x+' 秒前' : Math.round(x/60)+' 分鐘前'; };
+  const L = LIVE.filter(l=>l.status==='作答中' && now-l.t < 2*3600*1000).sort((a,b)=>a.cls.localeCompare(b.cls)||a.seat-b.seat);
+  $('#live').innerHTML = L.length ? L.map(l=>`<div class="${now-l.t>5*60000?'stale':''}"><b>${cls?'':l.cls+' 班 '}${[l.seat].concat(l.mates||[]).join('、')} 號</b>　第 ${l.room} 關
+      <div class="tr"><i style="width:${l.total?Math.min(100,l.solved/l.total*100):0}%"></i></div>
+      <span style="color:#7a6650">解開 ${l.solved}/${l.total}・${ago(l.t)}更新</span></div>`).join('')
+    : '<div style="background:none;border:0;color:#7a6650">目前沒有正在作答的同學。</div>';
+  // 座位格（有填班級才顯示）
+  $('#seatBox').hidden = !cls;
+  if(!cls) return;
+  const size = Math.max(1, Math.min(45, +$('#size').value || 30)), st = {};
+  view.filter(r=>r.cls===cls).forEach(r=>{ st[r.seat] = r.done ? {c:'ok',n:r.solved} : (st[r.seat]&&st[r.seat].c==='ok' ? st[r.seat] : {c:'part',n:r.solved}); });
+  L.filter(l=>l.cls===cls).forEach(l=>[l.seat].concat(l.mates||[]).forEach(n=>{ if(!st[n] || st[n].c==='part') st[n] = {c:'ing',n:l.solved}; }));
+  let h=''; for(let i=1;i<=size;i++){ const x = st[i]; h += x ? `<span class="s-${x.c}">${i}<small>${x.n}</small></span>` : `<span class="s-no">${i}</span>`; }
+  $('#seats').innerHTML = h;
+}
 
 function render(rows){
   const by = {}, mode = $('#mode').value;
@@ -79,13 +126,15 @@ function render(rows){
   const n = view.length, done = view.filter(r=>r.done).length;
   const avg = n ? Math.round(view.reduce((s,r)=>s+r.score,0)/n) : 0;
   const dn = view.filter(r=>r.done), avgT = dn.length ? Math.round(dn.reduce((s,r)=>s+r.secs,0)/dn.length) : 0;
-  $('#cards').innerHTML = `<div><b>${n}</b>參與人數</div><div><b>${done}</b>逃脫成功</div><div><b>${avg}</b>平均分數</div><div><b>${dn.length?fmt(avgT):'—'}</b>平均逃脫時間</div>`;
+  const ingN = new Set(LIVE.filter(l=>l.status==='作答中' && Date.now()-l.t<2*3600*1000).flatMap(l=>[l.cls+'-'+l.seat].concat((l.mates||[]).map(m=>l.cls+'-'+m)))).size;
+  $('#cards').innerHTML = `<div><b>${ingN}</b>作答中</div><div><b>${n}</b>參與人數</div><div><b>${done}</b>逃脫成功</div><div><b>${avg}</b>平均分數</div><div><b>${dn.length?fmt(avgT):'—'}</b>平均逃脫時間</div>`;
   $('#tb').innerHTML = '<tr><th>班級</th><th>座號</th><th>同組</th><th>進度</th><th>逃脫</th><th>總分</th><th>通關</th><th>時間</th><th>精準</th><th>用時</th><th>提示</th><th>錯誤</th><th>更新時間</th></tr>'+
     view.map(r=>`<tr class="${r.done?'done':'ing'}"><td>${r.cls}</td><td>${r.seat}</td><td>${r.group||'—'}</td><td>${r.solved}/${r.total}</td><td>${r.done?'✅':'第 '+r.room+' 關'}</td><td><b>${r.score}</b></td><td>${r.pass}</td><td>${r.time}</td><td>${r.acc}</td><td>${fmt(r.secs)}</td><td>${r.hints}</td><td>${r.errors}</td><td>${new Date(r.ts).toLocaleString('zh-TW',{hour12:false})}</td></tr>`).join('');
   const miss = {};
   const seen = new Set();
   view.forEach(r=>{ if(seen.has(r.sid)) return; seen.add(r.sid); Object.entries(r.wrongBy||{}).forEach(([k,v])=>miss[k]=(miss[k]||0)+v); });
   const list = Object.entries(miss).sort((a,b)=>b[1]-a[1]).slice(0,10), max = list.length?list[0][1]:1;
+  drawLive();
   $('#miss').innerHTML = list.length ? list.map(([k,v])=>`<div><span>${NAMES[k]||k}</span><i style="width:${Math.round(220*v/max)}px"></i><b>${v}</b></div>`).join('') : '<div>還沒有錯誤紀錄。</div>';
 }
 $('#csv').onclick = ()=>{
