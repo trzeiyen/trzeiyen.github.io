@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>穿越清帝國大逃脫｜教師後台</title>
+<style>
+body{font-family:"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;background:#f4ead3;color:#2b2118;margin:0;padding:18px;font-size:16px}
+.wrap{max-width:1100px;margin:0 auto}
+h1{font-family:"Songti TC","Noto Serif TC",serif;color:#b3261e;margin:0 0 12px;font-size:28px}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:end;background:#fffaf0;border:2px solid #c9b68c;border-radius:12px;padding:12px}
+label{font-weight:700;font-size:14px}
+input,select{display:block;height:42px;font-size:17px;padding:0 10px;border:2px solid #5c4a3a;border-radius:8px;background:#fff;margin-top:3px}
+button{height:42px;padding:0 18px;border:0;border-radius:8px;background:#b3261e;color:#fff;font-weight:700;font-size:16px;cursor:pointer}
+button.g{background:#2f4a6b}
+#msg{margin:10px 2px;font-weight:700;color:#b3261e;min-height:1.5em}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:8px 0 14px}
+.cards div{background:#fffaf0;border:2px solid #c9b68c;border-radius:10px;padding:10px;text-align:center}
+.cards b{display:block;font-size:28px;font-family:"Songti TC",serif}
+table{width:100%;border-collapse:collapse;background:#fffaf0;border-radius:10px;overflow:hidden}
+th,td{padding:8px 10px;border-bottom:1px solid #e3d5b0;text-align:center;font-variant-numeric:tabular-nums}
+th{background:#2b2118;color:#f4ead3;font-size:14px}
+tr.done td:first-child{border-left:5px solid #3d6b4a}
+tr.ing td:first-child{border-left:5px solid #b8892b}
+h2{font-family:"Songti TC",serif;font-size:21px;margin:22px 0 8px}
+.miss{display:grid;gap:6px}
+.miss div{display:flex;gap:10px;align-items:center;background:#fffaf0;border-radius:8px;padding:6px 10px}
+.miss i{height:14px;background:#b3261e;border-radius:7px;display:block}
+.miss span{flex:1}
+.tbl{overflow-x:auto}
+</style>
+</head>
+<body><div class="wrap">
+<h1>穿越清帝國大逃脫｜教師後台</h1>
+<div class="bar">
+  <label>後台密碼<input id="key" type="password" autocomplete="off"></label>
+  <label>班級<input id="cls" inputmode="numeric" maxlength="3" placeholder="全部" style="width:110px"></label>
+  <label>課別<select id="ch"><option value="1">第一課</option><option value="2">第二課</option></select></label>
+  <label>顯示<select id="mode"><option value="best">每人最高分</option><option value="last">每人最新一筆</option></select></label>
+  <button id="go">讀取成績</button>
+  <button id="csv" class="g">下載 CSV</button>
+</div>
+<div id="msg"></div>
+<div class="cards" id="cards"></div>
+<div class="tbl"><table id="tb"></table></div>
+<h2>最常答錯的機關（全班錯誤次數）</h2>
+<div class="miss" id="miss"></div>
+</div>
+<script>
+// 與 index.html 相同的 Apps Script 網址
+const GAS_URL = '';
+const NAMES = {'1L1':'一-驗票官(渡臺禁令)','1L2':'一-偷渡原因','1L3':'一-納入版圖年份','2L1':'二-三大水圳位置','2L2':'二-八堡圳順序','2L3':'二-進出口貨物','2L4':'二-一府二鹿三艋舺','3L1':'三-民變/械鬥分類','3L2':'三-界線變動','3L3':'三-平埔族群漢化','4L1':'一-港口古今地名','4L2':'一-商品與出口港','4L3':'一-大稻埕集散地','5L1':'二-事件順序','5L2':'二-沈葆楨/劉銘傳建設','5L3':'二-建省年份','6L1':'三-西方人事蹟配對','6L2':'三-醫療教育傳教','6L3':'三-外國人來臺活動','7L1':'終-前期/後期','7L2':'終-治臺態度轉變原因'};
+const $ = s=>document.querySelector(s);
+let view = [];
+const fmt = s=>String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+
+$('#go').onclick = async ()=>{
+  if(!GAS_URL){ $('#msg').textContent='尚未設定 GAS_URL：請在本檔案最上方貼上 Apps Script 部署網址。'; return; }
+  $('#msg').textContent='讀取中…';
+  try{
+    const u = GAS_URL+'?key='+encodeURIComponent($('#key').value)+'&cls='+encodeURIComponent($('#cls').value.trim())+'&ch='+$('#ch').value;
+    const j = await (await fetch(u)).json();
+    if(!j.ok){ $('#msg').textContent='密碼不正確。'; return; }
+    render(j.rows);
+    $('#msg').textContent = j.rows.length ? '' : '目前沒有紀錄。';
+  }catch(e){ $('#msg').textContent='讀取失敗，請確認網址與部署權限（存取權需設為「所有人」）。'; }
+};
+$('#mode').onchange = $('#ch').onchange = ()=>$('#go').click();
+
+function render(rows){
+  const by = {}, mode = $('#mode').value;
+  rows.forEach(r=>{
+    const k = r.cls+'-'+r.seat, o = by[k];
+    if(!o || (mode==='best' ? (r.score>o.score || (r.score===o.score && r.ts>o.ts)) : r.ts>o.ts)) by[k]=r;
+  });
+  view = Object.values(by).sort((a,b)=>a.cls.localeCompare(b.cls)||a.seat-b.seat);
+  const n = view.length, done = view.filter(r=>r.done).length;
+  const avg = n ? Math.round(view.reduce((s,r)=>s+r.score,0)/n) : 0;
+  const dn = view.filter(r=>r.done), avgT = dn.length ? Math.round(dn.reduce((s,r)=>s+r.secs,0)/dn.length) : 0;
+  $('#cards').innerHTML = `<div><b>${n}</b>參與人數</div><div><b>${done}</b>逃脫成功</div><div><b>${avg}</b>平均分數</div><div><b>${dn.length?fmt(avgT):'—'}</b>平均逃脫時間</div>`;
+  $('#tb').innerHTML = '<tr><th>班級</th><th>座號</th><th>進度</th><th>逃脫</th><th>總分</th><th>通關</th><th>時間</th><th>精準</th><th>用時</th><th>提示</th><th>錯誤</th><th>更新時間</th></tr>'+
+    view.map(r=>`<tr class="${r.done?'done':'ing'}"><td>${r.cls}</td><td>${r.seat}</td><td>${r.solved}/${r.total}</td><td>${r.done?'✅':'第 '+r.room+' 關'}</td><td><b>${r.score}</b></td><td>${r.pass}</td><td>${r.time}</td><td>${r.acc}</td><td>${fmt(r.secs)}</td><td>${r.hints}</td><td>${r.errors}</td><td>${new Date(r.ts).toLocaleString('zh-TW',{hour12:false})}</td></tr>`).join('');
+  const miss = {};
+  view.forEach(r=>Object.entries(r.wrongBy||{}).forEach(([k,v])=>miss[k]=(miss[k]||0)+v));
+  const list = Object.entries(miss).sort((a,b)=>b[1]-a[1]).slice(0,10), max = list.length?list[0][1]:1;
+  $('#miss').innerHTML = list.length ? list.map(([k,v])=>`<div><span>${NAMES[k]||k}</span><i style="width:${Math.round(220*v/max)}px"></i><b>${v}</b></div>`).join('') : '<div>還沒有錯誤紀錄。</div>';
+}
+$('#csv').onclick = ()=>{
+  if(!view.length){ $('#msg').textContent='請先讀取成績。'; return; }
+  const head = ['班級','座號','解開機關','逃脫','總分','通關分','時間分','精準分','用時秒','提示','錯誤'];
+  const body = view.map(r=>[r.cls,r.seat,r.solved+'/'+r.total,r.done?'Y':'',r.score,r.pass,r.time,r.acc,r.secs,r.hints,r.errors].join(','));
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['﻿'+head.join(',')+'\n'+body.join('\n')],{type:'text/csv'}));
+  a.download = 'qing-escape-第'+$('#ch').value+'課成績.csv'; a.click();
+};
+</script>
+</body>
+</html>
