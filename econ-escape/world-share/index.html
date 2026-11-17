@@ -158,6 +158,38 @@ html,body{overflow:hidden;height:100%;overscroll-behavior:none;-webkit-user-sele
 .mates small{font-weight:400}
 .mates input{margin-top:6px}
 .matehint{color:var(--muted);font-size:15px;margin-top:8px;line-height:1.5}
+/* 小遊戲 */
+.mgstat{font-size:19px;text-align:center;margin:6px 0 10px;min-height:26px}
+.mgfield{position:relative;height:340px;background:linear-gradient(#20364a,#13212c);border:2px solid var(--line);border-radius:14px;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+.basket{position:absolute;bottom:6px;width:60px;text-align:center;font-size:48px;line-height:1}
+.drop{position:absolute;left:0;top:0;font-size:34px;text-align:center;width:40px;line-height:1}
+.drop small{display:block;font-size:12px;color:var(--text);background:#0008;border-radius:6px;margin-top:2px;white-space:nowrap}
+.drop.bad small{background:#7a2328}
+.mgarrow{min-width:110px;font-size:26px;touch-action:none}
+.belt{position:relative;height:110px;border-radius:14px;overflow:hidden;border:2px solid var(--line);
+  background:repeating-linear-gradient(90deg,#2b4558 0 30px,#243b4d 30px 60px)}
+.prod{position:absolute;left:0;top:14px;width:86px;text-align:center;font-size:44px;line-height:1}
+.prod small{display:block;font-size:15px;background:#000a;border-radius:8px;padding:2px 0;margin-top:4px}
+.bins{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.bin{text-align:center;font-size:20px;padding:14px 6px;line-height:1.5}
+.bin br+*{font-size:16px}
+.roadgrid{display:grid;gap:4px;max-width:300px;margin:6px auto}
+.tile{aspect-ratio:1;padding:0;border-radius:10px;background:#3c5a3a;border:2px solid #2c432b;color:#9aa7ad}
+.tile.end{border-color:var(--amber);border-width:3px}
+.tile.on{color:var(--amber);background:#4a6a3f}
+.tile svg{width:100%;height:100%;display:block;transition:transform .15s}
+.city{max-width:300px;margin:0 auto;font-weight:800;color:var(--amber);font-size:17px}
+.tunnel{position:relative;height:44px;border-radius:22px;background:#3a2e22;border:2px solid var(--line);overflow:hidden;margin-bottom:14px}
+.tfill{position:absolute;inset:0 auto 0 0;width:0;background:linear-gradient(90deg,#f2b544,#ffd27a);transition:width .3s}
+.tunnel span{position:relative;display:block;text-align:center;line-height:40px;font-weight:800;color:#fff;text-shadow:0 1px 3px #000}
+.meter{position:relative;height:54px;border-radius:12px;background:#13212c;border:2px solid var(--line)}
+.meter .zone{position:absolute;top:0;bottom:0;background:#2f7d52;border-radius:8px}
+.meter.wet .zone{background:#29516e}
+.meter .needle{position:absolute;top:-6px;bottom:-6px;width:6px;margin-left:-3px;background:#fff;border-radius:3px;box-shadow:0 0 8px #fff}
+.warn{text-align:center;font-size:20px;font-weight:800;margin:10px 0;min-height:30px}
+.warn.on{color:#7cc8ff;animation:wb .5s infinite alternate}
+@keyframes wb{to{opacity:.4}}
+.drillbtn{min-width:200px;min-height:70px;font-size:26px;touch-action:manipulation}
 </style>
 </head>
 <body>
@@ -1290,6 +1322,7 @@ function renderIntro(){
     💡 卡關可以按「提示」，但會記錄次數<br>
     ❌ 答錯會記錄次數，並冷卻 ${COOLDOWN} 秒<br>
     📤 下課前沒完成，可以按右上角「交卷」<br>
+    🎮 有 4 間房最後有小遊戲，失敗<b>不扣分</b>，可以重玩到過關<br>
     📖 準備好課本 P.62–73！</div>
     <div class="row" style="margin-top:18px"><button class="btn amber" id="go">出發！⏱ 開始計時</button></div>
   </div>`;
@@ -1440,6 +1473,230 @@ function renderResult(){
     $('#no').onclick=closeModal;
     $('#yes').onclick=()=>{const c=S.cls,s=S.seat,m=S.mates;S=fresh();S.cls=c;S.seat=s;S.mates=m;S.stage='intro';closeModal();render();};
   };
+}
+
+
+/* ===== 小遊戲：房間最後一關前的挑戰（不扣分、可重玩） ===== */
+const MINI={2:'catch',3:'line',5:'road',8:'drill'};
+const MINI_INFO={
+  catch:{t:'🎮 小遊戲：接住美援物資',d:'美國的援助物資從天上掉下來！左右拖曳籃子，<b>接住 10 個美援物資</b>（麵粉、奶粉、棉花、黃豆）。<br>小心：手機、電玩、電腦是<b>後來才有的東西</b>，接到會被扣 1 個喔！限時 35 秒。'},
+  line:{t:'🎮 小遊戲：生產線分類',d:'加工出口區的輸送帶送來各種產品，趕快按下正確的箱子把它裝進去！<br><b>正確裝箱 12 個</b>就能啟動生產線；裝錯或讓產品掉出輸送帶 3 次就要重來。'},
+  road:{t:'🎮 小遊戲：鋪好中山高速公路',d:'點一下路塊就會轉 90°。把路接起來，讓車子從<b>北邊的基隆</b>一路開到<b>南邊的高雄</b>！<br>接通的路會變成黃色。'},
+  drill:{t:'🎮 小遊戲：打通雪山隧道',d:'指針跑到<b>綠色區域</b>時按「鑽！」，鑽 7 次就能打通 12.9 公里的隧道。<br>⚠️ 出現「湧水」警告時<b>不要按</b>，等它過去！失誤 3 次鑽頭會過熱，要重來。'}
+};
+let MG=null;
+function mgStop(){if(MG){MG.stop&&MG.stop();MG=null;}}
+function miniPending(){return S.miniPending===S.room&&!S.done.includes(S.room)&&MINI[S.room];}
+
+const _next0=next;
+next=function(){
+  const i=S.room,r=ROOMS[i];
+  S.miniDone=S.miniDone||{};
+  if(S.pz===r.puzzles.length-1&&MINI[i]&&!S.miniDone[i]&&S.miniPending!==i){
+    S.miniPending=i;S.open=true;save();render();return;
+  }
+  _next0();
+};
+const _renderPuzzle0=renderPuzzle;
+renderPuzzle=function(){
+  if(miniPending()){renderMini(MINI[S.room]);return;}
+  _renderPuzzle0();
+};
+const _closePuzzle0=closePuzzle;
+closePuzzle=function(){mgStop();_closePuzzle0();};
+const _enterRoom0=enterRoom;
+enterRoom=function(i){_enterRoom0(i);
+  if(MINI[i]){const s=$('#modal .sub');if(s)s.insertAdjacentHTML('beforeend','<br>🎮 全部調查完，還有一個<b>小遊戲</b>等著你！');}
+};
+
+function renderMini(kind){
+  mgStop();
+  const r=ROOMS[S.room],info=MINI_INFO[kind],st=STATIONS[S.room][S.pz];
+  app().innerHTML=`
+  <div class="card mg">
+    <div class="row spread"><span class="era">${r.icon} ${r.name}</span><button class="leave" id="leave">↩ 先離開</button></div>
+    <div class="say"><div class="who" style="background:#${st.c.toString(16).padStart(6,'0')}">${st.e}</div>
+      <div><b>${st.n}</b><p>題目全部解開了！最後完成這個挑戰，就能拿到「${r.reward.name}」。</p></div></div>
+    <h3 style="margin:12px 0 6px">${info.t}</h3>
+    <div class="sub">${info.d}<br>🙂 小遊戲<b>不會扣分</b>，失敗了可以一直重玩。</div>
+    <div id="mgStat" class="mgstat"></div>
+    <div id="mgArea"></div>
+    <div class="row" style="margin-top:12px;justify-content:center" id="mgBtns"><button class="btn amber" id="mgGo">開始 ▶</button></div>
+  </div>`;
+  $('#leave').onclick=closePuzzle;
+  const go=()=>{$('#mgBtns').innerHTML='';({catch:mgCatch,line:mgLine,road:mgRoad,drill:mgDrill})[kind]();};
+  $('#mgGo').onclick=go;
+  if(kind==='road')go();
+}
+function mgEnd(win,msg){
+  mgStop();
+  const b=$('#mgBtns');if(!b)return;
+  if(win){
+    S.miniDone=S.miniDone||{};S.miniDone[S.room]=true;S.miniPending=null;save();
+    b.innerHTML=`<div style="width:100%;text-align:center"><div class="feedback ok" style="display:block">🎉 ${msg}</div>
+      <button class="btn amber" id="mgOk" style="margin-top:10px">領取零件 ➜</button></div>`;
+    $('#mgOk').onclick=()=>{_next0();};
+  }else{
+    b.innerHTML=`<div style="width:100%;text-align:center"><div class="feedback bad" style="display:block">${msg}</div>
+      <button class="btn amber" id="mgRe" style="margin-top:10px">再玩一次 🔄</button></div>`;
+    $('#mgRe').onclick=()=>renderMini(MINI[S.room]);
+  }
+}
+const mgStat=h=>{const e=$('#mgStat');if(e)e.innerHTML=h;};
+
+/* --- 美援倉庫：接物資 --- */
+function mgCatch(){
+  const A=$('#mgArea');
+  A.innerHTML=`<div class="mgfield" id="fld"><div class="basket" id="bk">🧺</div></div>
+    <div class="row" style="justify-content:center;margin-top:8px"><button class="btn ghost mgarrow" id="mgL">◀</button><button class="btn ghost mgarrow" id="mgR">▶</button></div>`;
+  const F=$('#fld'),B=$('#bk');
+  const GOOD=[['🌾','麵粉'],['🥛','奶粉'],['☁️','棉花'],['🫘','黃豆']],BAD=[['📱','手機'],['🎮','電玩'],['💻','電腦']];
+  let W0=F.clientWidth,H0=F.clientHeight,bx=W0/2,got=0,left=35,items=[],last=performance.now(),spawn=0,raf=0,hold=0,alive=true;
+  const T0=performance.now();
+  const setB=()=>{bx=Math.max(30,Math.min(W0-30,bx));B.style.left=(bx-30)+'px';};setB();
+  const move=e=>{const rc=F.getBoundingClientRect();bx=e.clientX-rc.left;setB();};
+  F.onpointerdown=e=>{F.setPointerCapture&&F.setPointerCapture(e.pointerId);move(e);};
+  F.onpointermove=e=>{if(e.buttons||e.pointerType==='touch')move(e);};
+  const hb=(el,d)=>{el.onpointerdown=e=>{e.preventDefault();hold=d;};el.onpointerup=el.onpointerleave=el.onpointercancel=()=>{hold=0;};};
+  hb($('#mgL'),-1);hb($('#mgR'),1);
+  const draw=()=>mgStat(`🧺 接到 <b>${got}</b> / 10　⏱ ${Math.ceil(left)} 秒`);
+  function loop(now){
+    if(!alive)return;
+    const dt=Math.min(.05,(now-last)/1000);last=now;
+    W0=F.clientWidth;H0=F.clientHeight;
+    if(hold){bx+=hold*420*dt;setB();}
+    left=35-(now-T0)/1000;
+    spawn-=dt;
+    if(spawn<=0){spawn=.55+Math.random()*.45;
+      const bad=Math.random()<.32,k=bad?BAD[Math.random()*3|0]:GOOD[Math.random()*4|0];
+      const el=document.createElement('div');el.className='drop'+(bad?' bad':'');el.innerHTML=`${k[0]}<small>${k[1]}</small>`;F.appendChild(el);
+      items.push({el,x:20+Math.random()*(W0-60),y:-40,v:110+Math.random()*80+(35-left)*3,bad});}
+    items=items.filter(it=>{
+      it.y+=it.v*dt;it.el.style.transform=`translate(${it.x}px,${it.y}px)`;
+      if(it.y>H0-70&&it.y<H0-20&&Math.abs(it.x+18-bx)<44){
+        if(it.bad){got=Math.max(0,got-1);toast('😵 這個是後來才有的東西，不是美援！');}else got++;
+        it.el.remove();return false;}
+      if(it.y>H0){it.el.remove();return false;}
+      return true;});
+    draw();
+    if(got>=10){alive=false;mgEnd(true,'物資全部接到了！美援的麵粉、棉花幫助臺灣度過困難的時期。');return;}
+    if(left<=0){alive=false;mgEnd(false,`⏰ 時間到！接到 ${got} 個，再試一次吧！`);return;}
+    raf=requestAnimationFrame(loop);
+  }
+  draw();raf=requestAnimationFrame(loop);
+  MG={stop(){alive=false;cancelAnimationFrame(raf);}};
+}
+
+/* --- 加工出口區：生產線分類 --- */
+function mgLine(){
+  const BINS=[['👕','紡織成衣'],['🧸','塑膠製品'],['📻','電子產品']];
+  const ITEMS=[['👔','襯衫',0],['👖','牛仔褲',0],['🧥','毛衣',0],['🧦','襪子',0],
+    ['🧸','塑膠玩具',1],['🌸','塑膠花',1],['🩴','塑膠拖鞋',1],['🪣','塑膠水桶',1],
+    ['📻','收音機',2],['📺','電視機',2],['⌚','電子錶',2],['🧮','電子計算機',2]];
+  const A=$('#mgArea');
+  A.innerHTML=`<div class="belt" id="belt"><div class="prod" id="prod"></div></div>
+    <div class="bins">${BINS.map((b,k)=>`<button class="opt bin" data-b="${k}">${b[0]}<br>${b[1]}</button>`).join('')}</div>`;
+  const BE=$('#belt'),P=$('#prod');
+  let ok=0,miss=0,cur=null,x=0,speed=90,raf=0,last=performance.now(),alive=true,bag=[];
+  const pick=()=>{if(!bag.length)bag=ITEMS.slice().sort(()=>Math.random()-.5);cur=bag.pop();x=-90;
+    P.innerHTML=`${cur[0]}<small>${cur[1]}</small>`;P.className='prod';};
+  const draw=()=>mgStat(`📦 裝箱 <b>${ok}</b> / 12　❌ 失誤 ${'●'.repeat(miss)}${'○'.repeat(3-miss)}`);
+  const strike=m=>{miss++;toast(m);if(miss>=3){alive=false;draw();mgEnd(false,'💥 生產線停下來了！失誤 3 次，再試一次吧！');return true;}return false;};
+  A.querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>{
+    if(!alive||!cur)return;
+    const k=+b.dataset.b;
+    b.classList.add(k===cur[2]?'ok':'bad');setTimeout(()=>b.classList.remove('ok','bad'),250);
+    if(k===cur[2]){ok++;speed+=9;if(ok>=12){alive=false;draw();mgEnd(true,'生產線順利運轉！加工出口區的產品賣到世界各地，賺進外匯。');return;}pick();}
+    else{if(strike(`「${cur[1]}」應該放進「${BINS[cur[2]][1]}」`))return;pick();}
+    draw();});
+  function loop(now){
+    if(!alive)return;
+    const dt=Math.min(.05,(now-last)/1000);last=now;
+    x+=speed*dt;P.style.transform=`translateX(${x}px)`;
+    if(x>BE.clientWidth){if(strike(`「${cur[1]}」掉出輸送帶了！`))return;pick();draw();}
+    raf=requestAnimationFrame(loop);
+  }
+  pick();draw();raf=requestAnimationFrame(loop);
+  MG={stop(){alive=false;cancelAnimationFrame(raf);}};
+}
+
+/* --- 十大建設：鋪路連線 --- */
+function mgRoad(){
+  // 方向位元：上1 右2 下4 左8
+  const C=4,R=6,PATH=[[0,1],[1,1],[1,2],[2,2],[2,1],[3,1],[3,0],[4,0],[4,1],[4,2],[5,2]];
+  const ROT=m=>((m<<1)|(m>>3))&15;
+  const grid=[];
+  for(let y=0;y<R;y++){grid.push([]);for(let x=0;x<C;x++)grid[y].push(Math.random()<.5?5:3);}
+  PATH.forEach(([y,x],k)=>{
+    const dir=(a,b)=>!a?0:a[0]<y?1:a[1]>x?2:a[0]>y?4:8;
+    let m=dir(PATH[k-1]||(k===0?[y-1,x]:null),0)|dir(PATH[k+1]||(k===PATH.length-1?[y+1,x]:null),0);
+    grid[y][x]=m;});
+  // 打亂
+  const sol=grid.map(r=>r.slice());
+  for(let y=0;y<R;y++)for(let x=0;x<C;x++){let n=1+(Math.random()*3|0);while(n--)grid[y][x]=ROT(grid[y][x]);}
+  const A=$('#mgArea');
+  const conn=()=>{ // BFS 從基隆（上方進入第0列第1格）
+    const seen=new Set(),q=[];
+    if(grid[0][1]&1){q.push([0,1]);seen.add('0,1');}
+    let done=false;
+    while(q.length){const [y,x]=q.shift(),m=grid[y][x];
+      if(y===R-1&&x===2&&(m&4))done=true;
+      [[1,-1,0,4],[2,0,1,8],[4,1,0,1],[8,0,-1,2]].forEach(([b,dy,dx,ob])=>{
+        const ny=y+dy,nx=x+dx;if(!(m&b)||ny<0||nx<0||ny>=R||nx>=C)return;
+        if(!(grid[ny][nx]&ob)||seen.has(ny+','+nx))return;seen.add(ny+','+nx);q.push([ny,nx]);});}
+    return {seen,done};};
+  let moves=0,alive=true;
+  const svg=m=>{const s=[];const c='currentColor';
+    if(m&1)s.push('<rect x="38" y="0" width="24" height="62"/>');if(m&2)s.push('<rect x="38" y="38" width="62" height="24"/>');
+    if(m&4)s.push('<rect x="38" y="38" width="24" height="62"/>');if(m&8)s.push('<rect x="0" y="38" width="62" height="24"/>');
+    return `<svg viewBox="0 0 100 100"><g fill="${c}">${s.join('')}</g></svg>`;};
+  const draw=()=>{const {seen,done}=conn();
+    A.innerHTML=`<div class="city">🚢 基隆（起點：黃框那格）↓</div><div class="roadgrid" style="grid-template-columns:repeat(${C},1fr)">${
+      grid.map((row,y)=>row.map((m,x)=>`<button class="tile ${seen.has(y+','+x)?'on':''} ${(y===0&&x===1)||(y===R-1&&x===2)?'end':''}" data-y="${y}" data-x="${x}">${svg(m)}</button>`).join('')).join('')}</div>
+      <div class="city" style="text-align:right">↓ 高雄（終點：黃框那格）🏭</div>`;
+    mgStat(`🛣️ 轉動次數 ${moves}　${done?'<b style="color:var(--green)">全線通車！</b>':'還沒接通…'}`);
+    A.querySelectorAll('.tile').forEach(t=>t.onclick=()=>{if(!alive)return;const y=+t.dataset.y,x=+t.dataset.x;grid[y][x]=ROT(grid[y][x]);moves++;draw();});
+    if(done){alive=false;setTimeout(()=>mgEnd(true,'中山高速公路全線通車！從基隆到高雄，南北交通變得更快了。'),400);}
+  };
+  if(conn().done){grid[0][1]=ROT(grid[0][1]);}
+  draw();
+  $('#mgBtns').innerHTML=`<button class="btn ghost" id="mgShuf">🔀 重新打亂</button>`;
+  $('#mgShuf').onclick=()=>renderMini('road');
+  MG={stop(){alive=false;},solve(){for(let y=0;y<R;y++)for(let x=0;x<C;x++)grid[y][x]=sol[y][x];draw();}};
+}
+
+/* --- 雪山隧道：鑽隧道 --- */
+function mgDrill(){
+  const GOAL=7,A=$('#mgArea');
+  A.innerHTML=`<div class="tunnel"><div class="tfill" id="tf"></div><span>🚇 0 / 12.9 公里</span></div>
+    <div class="meter" id="mt"><div class="zone" id="zn"></div><div class="needle" id="nd"></div></div>
+    <div class="warn" id="wn">　</div>
+    <div class="row" style="justify-content:center"><button class="btn amber drillbtn" id="dr">⛏️ 鑽！</button></div>`;
+  let hit=0,miss=0,t=0,raf=0,last=performance.now(),alive=true,zone=[.4,.62],water=0,nextWater=2.5+Math.random()*2,lock=0;
+  const Z=$('#zn'),N=$('#nd'),WN=$('#wn');
+  const setZone=()=>{const w=Math.max(.12,.24-hit*.016),s=.08+Math.random()*(.84-w);zone=[s,s+w];Z.style.left=s*100+'%';Z.style.width=w*100+'%';};
+  const draw=()=>{mgStat(`⛏️ 進度 <b>${hit}</b> / ${GOAL}　❌ 失誤 ${'●'.repeat(miss)}${'○'.repeat(3-miss)}`);
+    $('#tf').style.width=hit/GOAL*100+'%';$('#tf').nextElementSibling.textContent=`🚇 ${(12.9*hit/GOAL).toFixed(1)} / 12.9 公里`;};
+  const fail=m=>{miss++;toast(m);draw();if(miss>=3){alive=false;mgEnd(false,'🔥 鑽頭過熱了！失誤 3 次，再試一次吧！');}};
+  $('#dr').onclick=()=>{
+    if(!alive||lock>0)return;
+    lock=.25;
+    const p=(Math.sin(t*2.2)+1)/2;
+    if(water>0){fail('💦 湧水的時候不能鑽！');return;}
+    if(p>=zone[0]&&p<=zone[1]){hit++;draw();setZone();
+      if(hit>=GOAL){alive=false;mgEnd(true,'隧道打通了！雪山隧道全長約 12.9 公里，從臺北到宜蘭變得好近。');}}
+    else fail('沒對準綠色區域！');
+  };
+  function loop(now){
+    if(!alive)return;
+    const dt=Math.min(.05,(now-last)/1000);last=now;t+=dt*(1+hit*.08);lock-=dt;
+    if(water>0){water-=dt;if(water<=0){WN.textContent='　';WN.className='warn';$('#mt').classList.remove('wet');nextWater=2.5+Math.random()*2.5;}}
+    else{nextWater-=dt;if(nextWater<=0&&hit>0){water=1.8+Math.random()*.8;WN.textContent='⚠️ 湧水！先不要鑽！';WN.className='warn on';$('#mt').classList.add('wet');}}
+    N.style.left=((Math.sin(t*2.2)+1)/2*100)+'%';
+    raf=requestAnimationFrame(loop);
+  }
+  setZone();draw();raf=requestAnimationFrame(loop);
+  MG={stop(){alive=false;cancelAnimationFrame(raf);}};
 }
 
 render();
