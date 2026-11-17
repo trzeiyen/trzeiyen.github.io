@@ -29,6 +29,9 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;paddin
 .fields{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:8px}
 .fields label{display:block;font-weight:700;text-align:left}
 .fields input{display:block;width:150px;height:54px;font-size:26px;text-align:center;border:2px solid var(--ink2);border-radius:10px;background:#fff;margin-top:4px;-webkit-user-select:text;user-select:text}
+.fields.mates{margin-top:4px}.fields.mates label{font-size:15px;color:var(--ink2)}.fields.mates small{font-weight:400}
+.fields.mates input{width:120px;height:44px;font-size:21px;border-color:var(--line)}
+.matehint{font-size:14px;color:var(--ink2);margin-bottom:6px}
 #loginMsg{color:var(--red);min-height:1.6em;font-weight:700}
 .chs{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:680px;margin:6px auto 0}
 .ch{background:#fff;border:3px solid var(--red);border-radius:14px;padding:14px 10px;min-height:150px;box-shadow:0 4px 0 #7d1a15}
@@ -177,6 +180,11 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;paddin
       <label>班級（三位數）<input id="inCls" inputmode="numeric" pattern="[0-9]*" maxlength="3" placeholder="501" autocomplete="off"></label>
       <label>座號<input id="inSeat" inputmode="numeric" pattern="[0-9]*" maxlength="2" placeholder="1" autocomplete="off"></label>
     </div>
+    <div class="fields mates">
+      <label>第 2 位座號<small>（選填）</small><input id="inSeat2" inputmode="numeric" pattern="[0-9]*" maxlength="2" placeholder="—" autocomplete="off"></label>
+      <label>第 3 位座號<small>（選填）</small><input id="inSeat3" inputmode="numeric" pattern="[0-9]*" maxlength="2" placeholder="—" autocomplete="off"></label>
+    </div>
+    <div class="matehint">多人共用一台平板時，再填第 2、3 位同學的座號；一個人玩就留空。</div>
     <div style="font-weight:700;margin-top:6px">選一個清帝國人物來化身：</div>
     <div class="avs" id="avs">
       <button class="av" data-av="farmer"><i>👨‍🌾</i>農夫</button>
@@ -389,8 +397,9 @@ let S = null, P = null, tick = null;
 function skey(ch){ return KEY+'-L'+ch; }
 function load(ch){ try{ return JSON.parse(localStorage.getItem(skey(ch))); }catch(e){ return null; } }
 function who(){ try{ return JSON.parse(localStorage.getItem(KEY+'-who')); }catch(e){ return null; } }
-function save(){ try{ localStorage.setItem(skey(S.ch), JSON.stringify(S)); localStorage.setItem(KEY+'-who', JSON.stringify({cls:S.cls,seat:S.seat,av:S.av})); }catch(e){} }
+function save(){ try{ localStorage.setItem(skey(S.ch), JSON.stringify(S)); localStorage.setItem(KEY+'-who', JSON.stringify({cls:S.cls,seat:S.seat,av:S.av,mates:S.mates||[]})); }catch(e){} }
 function fresh(cls,seat,ch){ return {ch,cls,seat,sid:Date.now().toString(36)+Math.random().toString(36).slice(2,6),start:Date.now(),end:0,ri:0,solved:{},seen:{},hinted:{},wrongBy:{},errors:0,hints:0,done:false,introSeen:-1}; }
+function seats(){ return [S.seat].concat(S.mates||[]).join('、'); }
 function nSolved(){ return Object.keys(S.solved).length; }
 function secs(){ return Math.floor(((S.end||Date.now())-S.start)/1000); }
 function fmt(s){ return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); }
@@ -404,7 +413,7 @@ function score(){
 function report(){
   if(!GAS_URL) return;
   const sc = score();
-  const body = {game:GAME_ID,ch:S.ch,sid:S.sid,cls:S.cls,seat:S.seat,solved:nSolved(),total:TOTAL(),room:Math.min(S.ri+1,RS().length),
+  const body = {game:GAME_ID,ch:S.ch,sid:S.sid,cls:S.cls,seat:S.seat,mates:S.mates||[],solved:nSolved(),total:TOTAL(),room:Math.min(S.ri+1,RS().length),
     done:S.done,score:sc.total,pass:sc.pass,time:sc.time,acc:sc.acc,secs:secs(),hints:S.hints,errors:S.errors,wrongBy:S.wrongBy};
   try{ fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body),keepalive:true}).catch(()=>{}); }catch(e){}
 }
@@ -414,12 +423,13 @@ function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.flo
 /* ========== 登入 ========== */
 function initLogin(){
   const w = who();
-  if(w){ $('#inCls').value = w.cls; $('#inSeat').value = w.seat; }
+  if(w){ $('#inCls').value = w.cls; $('#inSeat').value = w.seat; $('#inSeat2').value = (w.mates||[])[0]||''; $('#inSeat3').value = (w.mates||[])[1]||''; }
   let av = (w && w.av) || 'farmer';
   const pickAv = a=>{ av = a; document.querySelectorAll('.av').forEach(b=>b.classList.toggle('sel', b.dataset.av===a)); $('#avs').dataset.av = a; };
   document.querySelectorAll('.av').forEach(b=>b.onclick=()=>pickAv(b.dataset.av)); pickAv(av);
   drawChapters();
   $('#inCls').oninput = $('#inSeat').oninput = drawChapters;
+  $('#inSeat2').oninput = $('#inSeat3').oninput = ()=>{ $('#loginMsg').textContent = ''; };
 }
 function drawChapters(){
   $('#loginMsg').textContent='';
@@ -437,14 +447,21 @@ function enter(ch){
   const cls = $('#inCls').value.trim(), seat = parseInt($('#inSeat').value,10);
   if(!/^[1-6]\d{2}$/.test(cls)){ $('#loginMsg').textContent='班級請輸入三位數，例如 501'; return; }
   if(!(seat>=1 && seat<=45)){ $('#loginMsg').textContent='座號請輸入 1～45 的數字'; return; }
+  const mates = [];
+  for(const id of ['#inSeat2','#inSeat3']){
+    const v = $(id).value.trim(); if(!v) continue; const n = parseInt(v,10);
+    if(!(n>=1 && n<=45)){ $('#loginMsg').textContent='第 2、3 位座號請輸入 1～45 的數字，或留空'; return; }
+    if(n===seat || mates.includes(n)){ $('#loginMsg').textContent='座號重複了，請再檢查一次'; return; }
+    mates.push(n);
+  }
   $('#loginMsg').textContent='';
   const o = load(ch);
-  if(o && o.cls===cls && o.seat===seat){ S = o; S.av = $('#avs').dataset.av; save(); S.done ? showEnd() : startGame(); }
-  else { S = fresh(cls, seat, ch); S.av = $('#avs').dataset.av; save(); startGame(); }
+  if(o && o.cls===cls && o.seat===seat){ S = o; S.av = $('#avs').dataset.av; S.mates = mates; save(); S.done ? showEnd() : startGame(); }
+  else { S = fresh(cls, seat, ch); S.av = $('#avs').dataset.av; S.mates = mates; save(); startGame(); }
 }
 function startGame(){
   show('game');
-  $('#who').textContent = S.cls+' 班 '+S.seat+' 號・'+CHAPTERS[S.ch-1].name;
+  $('#who').textContent = S.cls+' 班 '+seats()+' 號・'+CHAPTERS[S.ch-1].name;
   clearInterval(tick); tick = setInterval(()=>{ $('#clock').textContent = fmt(secs()); },1000);
   try{ buildWorld(); }catch(e){ console.error(e); alert('這台裝置無法顯示 3D 畫面，請換一台或更新瀏覽器再試一次。'); return; }
   renderRoom();
@@ -923,7 +940,7 @@ function showEnd(){
   const c = CHAPTERS[S.ch-1], other = CHAPTERS[2-S.ch], T = TOTAL();
   $('#endCard').innerHTML = `
     <h1>${c.name}・逃脫成功！</h1>
-    <p>${S.cls} 班 ${S.seat} 號　${S.ch===1?'陳家在臺灣建立家園的旅程，你都走過了。':'從開港通商到臺灣建省，你都走過了。'}</p>
+    <p>${S.cls} 班 ${seats()} 號　${S.ch===1?'陳家在臺灣建立家園的旅程，你都走過了。':'從開港通商到臺灣建省，你都走過了。'}</p>
     <div class="sealrow">${RS().map(r=>`<span class="seal got">${r.seal}</span>`).join('')}</div>
     <div class="total">${sc.total}<span style="font-size:28px"> 分</span></div>
     <div class="rank">${rank}</div>

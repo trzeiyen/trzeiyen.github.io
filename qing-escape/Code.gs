@@ -8,7 +8,7 @@
  */
 const TEACHER_KEY = '請改成自己的密碼';
 const SHEET = 'records';
-const HEAD = ['時間','sid','班級','座號','解開機關','機關總數','所在關卡','逃脫','總分','通關分','時間分','精準分','用時秒','提示','錯誤','各題錯誤(JSON)','課別'];
+const HEAD = ['時間','sid','班級','座號','解開機關','機關總數','所在關卡','逃脫','總分','通關分','時間分','精準分','用時秒','提示','錯誤','各題錯誤(JSON)','課別','同組座號'];
 
 function sheet_() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -31,7 +31,8 @@ function doPost(e) {
       Number(d.solved) || 0, Number(d.total) || 0, Number(d.room) || 0, d.done ? 'Y' : '',
       Number(d.score) || 0, Number(d.pass) || 0, Number(d.time) || 0, Number(d.acc) || 0,
       Number(d.secs) || 0, Number(d.hints) || 0, Number(d.errors) || 0,
-      JSON.stringify(d.wrongBy || {}).slice(0, 2000), Number(d.ch) === 2 ? 2 : 1]);
+      JSON.stringify(d.wrongBy || {}).slice(0, 2000), Number(d.ch) === 2 ? 2 : 1,
+      (Array.isArray(d.mates) ? d.mates : []).slice(0, 2).map(n => Math.max(0, Math.min(99, parseInt(n, 10) || 0))).filter(n => n).join(',')]);
     return json_({ ok: true });
   } catch (err) {
     return json_({ ok: false });
@@ -47,7 +48,8 @@ function doGet(e) {
     .filter(r => (!q.cls || String(r[2]) === String(q.cls)) && (!q.ch || String(r[16]) === String(q.ch)))
     .map(r => ({ ts: new Date(r[0]).getTime(), sid: r[1], cls: String(r[2]), seat: Number(r[3]),
       solved: r[4], total: r[5], room: r[6], done: r[7] === 'Y', score: r[8], pass: r[9], time: r[10],
-      acc: r[11], secs: r[12], hints: r[13], errors: r[14], wrongBy: safe_(r[15]), ch: Number(r[16]) || 1 }));
+      acc: r[11], secs: r[12], hints: r[13], errors: r[14], wrongBy: safe_(r[15]), ch: Number(r[16]) || 1,
+      mates: String(r[17] || '').split(',').map(Number).filter(n => n) }));
   return json_({ ok: true, rows: out });
 }
 function safe_(s) { try { return JSON.parse(s); } catch (e) { return {}; } }

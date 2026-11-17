@@ -69,6 +69,8 @@ $('#mode').onchange = $('#ch').onchange = ()=>$('#go').click();
 
 function render(rows){
   const by = {}, mode = $('#mode').value;
+  // 多人共用一台：同組每位同學各列一筆，成績相同
+  rows = rows.flatMap(r=>{ const all = [r.seat].concat(r.mates||[]); return all.map(n=>Object.assign({}, r, {seat:n, group:all.length>1?all.join('、'):''})); });
   rows.forEach(r=>{
     const k = r.cls+'-'+r.seat, o = by[k];
     if(!o || (mode==='best' ? (r.score>o.score || (r.score===o.score && r.ts>o.ts)) : r.ts>o.ts)) by[k]=r;
@@ -78,17 +80,18 @@ function render(rows){
   const avg = n ? Math.round(view.reduce((s,r)=>s+r.score,0)/n) : 0;
   const dn = view.filter(r=>r.done), avgT = dn.length ? Math.round(dn.reduce((s,r)=>s+r.secs,0)/dn.length) : 0;
   $('#cards').innerHTML = `<div><b>${n}</b>參與人數</div><div><b>${done}</b>逃脫成功</div><div><b>${avg}</b>平均分數</div><div><b>${dn.length?fmt(avgT):'—'}</b>平均逃脫時間</div>`;
-  $('#tb').innerHTML = '<tr><th>班級</th><th>座號</th><th>進度</th><th>逃脫</th><th>總分</th><th>通關</th><th>時間</th><th>精準</th><th>用時</th><th>提示</th><th>錯誤</th><th>更新時間</th></tr>'+
-    view.map(r=>`<tr class="${r.done?'done':'ing'}"><td>${r.cls}</td><td>${r.seat}</td><td>${r.solved}/${r.total}</td><td>${r.done?'✅':'第 '+r.room+' 關'}</td><td><b>${r.score}</b></td><td>${r.pass}</td><td>${r.time}</td><td>${r.acc}</td><td>${fmt(r.secs)}</td><td>${r.hints}</td><td>${r.errors}</td><td>${new Date(r.ts).toLocaleString('zh-TW',{hour12:false})}</td></tr>`).join('');
+  $('#tb').innerHTML = '<tr><th>班級</th><th>座號</th><th>同組</th><th>進度</th><th>逃脫</th><th>總分</th><th>通關</th><th>時間</th><th>精準</th><th>用時</th><th>提示</th><th>錯誤</th><th>更新時間</th></tr>'+
+    view.map(r=>`<tr class="${r.done?'done':'ing'}"><td>${r.cls}</td><td>${r.seat}</td><td>${r.group||'—'}</td><td>${r.solved}/${r.total}</td><td>${r.done?'✅':'第 '+r.room+' 關'}</td><td><b>${r.score}</b></td><td>${r.pass}</td><td>${r.time}</td><td>${r.acc}</td><td>${fmt(r.secs)}</td><td>${r.hints}</td><td>${r.errors}</td><td>${new Date(r.ts).toLocaleString('zh-TW',{hour12:false})}</td></tr>`).join('');
   const miss = {};
-  view.forEach(r=>Object.entries(r.wrongBy||{}).forEach(([k,v])=>miss[k]=(miss[k]||0)+v));
+  const seen = new Set();
+  view.forEach(r=>{ if(seen.has(r.sid)) return; seen.add(r.sid); Object.entries(r.wrongBy||{}).forEach(([k,v])=>miss[k]=(miss[k]||0)+v); });
   const list = Object.entries(miss).sort((a,b)=>b[1]-a[1]).slice(0,10), max = list.length?list[0][1]:1;
   $('#miss').innerHTML = list.length ? list.map(([k,v])=>`<div><span>${NAMES[k]||k}</span><i style="width:${Math.round(220*v/max)}px"></i><b>${v}</b></div>`).join('') : '<div>還沒有錯誤紀錄。</div>';
 }
 $('#csv').onclick = ()=>{
   if(!view.length){ $('#msg').textContent='請先讀取成績。'; return; }
-  const head = ['班級','座號','解開機關','逃脫','總分','通關分','時間分','精準分','用時秒','提示','錯誤'];
-  const body = view.map(r=>[r.cls,r.seat,r.solved+'/'+r.total,r.done?'Y':'',r.score,r.pass,r.time,r.acc,r.secs,r.hints,r.errors].join(','));
+  const head = ['班級','座號','同組','解開機關','逃脫','總分','通關分','時間分','精準分','用時秒','提示','錯誤'];
+  const body = view.map(r=>[r.cls,r.seat,'"'+(r.group||'')+'"',r.solved+'/'+r.total,r.done?'Y':'',r.score,r.pass,r.time,r.acc,r.secs,r.hints,r.errors].join(','));
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob(['﻿'+head.join(',')+'\n'+body.join('\n')],{type:'text/csv'}));
   a.download = 'qing-escape-第'+$('#ch').value+'課成績.csv'; a.click();
