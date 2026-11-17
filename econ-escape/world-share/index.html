@@ -672,7 +672,7 @@ function pReflect(r,p){
 
 function payload(){
   const per=k=>ROOMS.map((_,i)=>S[k][i]||0).join(',');
-  return {cls:S.cls,seat:S.seat,mates:S.mates||[],attempt:S.attempt||1,seconds:Math.round(elapsed()/1000),
+  return {cls:S.cls,seat:S.seat,mates:S.mates||[],sid:S.sid||'',attempt:S.attempt||1,seconds:Math.round(elapsed()/1000),
     hints:S.hints,errors:S.errors,title:escaped()?title().replace(/^\S+\s/,''):'',
     status:S.status||'逃脫成功',reached:S.reached!=null?S.reached:ROOMS.length,solved:S.solved!=null?S.solved:totalPz,
     stance:S.reflect?S.reflect.choice:'',reason:S.reflect?S.reflect.text:'',
@@ -693,6 +693,18 @@ function submitResult(force){
     .then(()=>{S.submit='ok';save();showSend();})
     .catch(()=>{S.submit='fail';save();showSend();});
 }
+/* ===== 即時回報：學生一按「出發」，老師後台就看得到 ===== */
+let liveSig='',liveAt=0;
+function liveTick(force){
+  if(!GAS_URL||!S.start||S.end||S.stage==='login')return;
+  if(!S.sid){S.sid='s'+Math.random().toString(36).slice(2,10)+Date.now().toString(36);save();}
+  const pg=progress(), sig=S.sid+'|'+pg.solved+'|'+S.room, now=Date.now();
+  if(!force&&sig===liveSig&&now-liveAt<90000)return;   // 有進度就回報，沒進度每 90 秒報一次
+  liveSig=sig;liveAt=now;
+  fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify({type:'live',sid:S.sid,cls:S.cls,seat:S.seat,mates:S.mates||[],solved:pg.solved,room:S.room+1})}).catch(()=>{});
+}
+setInterval(liveTick,4000);
 function escaped(){return !S.status||S.status==='逃脫成功';}
 function title(){
   const m=elapsed()/60000;

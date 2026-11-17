@@ -16,6 +16,26 @@ const HEADER = ['時間', '班級', '座號', '第幾次挑戰', '用時(秒)', 
   '稱號', '立場', '理由', '各關答錯', '各關提示', '各關用時(秒)', '狀態', '完成關數', '完成題數', '同組座號'];
 const STATUS = ['逃脫成功', '提早交卷', '老師收卷'];
 const COLLECT_TTL = 15 * 60 * 1000; // 收卷指令 15 分鐘內有效
+const LIVE_SHEET = '即時';           // 學生一開始作答就會出現在這裡
+const LIVE_HEADER = ['sid', '最後更新', '班級', '座號', '同組座號', '完成題數', '目前關卡', '狀態'];
+
+function liveSheet_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sh = ss.getSheetByName(LIVE_SHEET);
+  if (!sh) { sh = ss.insertSheet(LIVE_SHEET); sh.appendRow(LIVE_HEADER); sh.setFrozenRows(1); }
+  return sh;
+}
+// 依 sid（每次挑戰一個）更新或新增一列
+function liveUpsert_(d, cls, seat, mates, status) {
+  const sid = String(d.sid || '').replace(/[^a-z0-9]/gi, '').slice(0, 24);
+  if (!sid) return;
+  const sh = liveSheet_(), n = sh.getLastRow();
+  const ids = n > 1 ? sh.getRange(2, 1, n - 1, 1).getValues() : [];
+  let row = -1;
+  for (let i = ids.length - 1; i >= 0; i--) if (String(ids[i][0]) === sid) { row = i + 2; break; }
+  const vals = [sid, new Date(), cls, seat, mates, int_(d.solved, 0, 999) || 0, int_(d.room, 1, ROOM_COUNT) || 1, status];
+  if (row > 0) sh.getRange(row, 1, 1, vals.length).setValues([vals]); else sh.appendRow(vals);
+}
 
 function getSheet_() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -65,6 +85,15 @@ function doPost(e) {
     const d = JSON.parse((e.postData && e.postData.contents) || '{}');
     const cls = String(d.cls || '');
     const seat = int_(d.seat, 1, 40);
+    // 多人共用一台平板：第 2、3 位座號（用 | 分隔，避免被當成數字）
+    const mates = (Array.isArray(d.mates) ? d.mates : []).slice(0, 2).map(n => int_(n, 1, 40))
+      .filter((n, i, a) => n !== null && n !== seat && a.indexOf(n) === i).join('|');
+    // 即時回報：學生按「出發」後每解一題、或每隔一段時間送一次
+    if (d.type === 'live') {
+      if (!/^[1-6]\d{2}$/.test(cls) || seat === null) return json_({ ok: false, error: 'invalid' });
+      liveUpsert_(d, cls, seat, mates, '作答中');
+      return json_({ ok: true });
+    }
     const sec = int_(d.seconds, 0, 6 * 3600);
     if (!/^[1-6]\d{2}$/.test(cls) || seat === null || sec === null) {
       return json_({ ok: false, error: 'invalid' });
@@ -77,10 +106,9 @@ function doPost(e) {
       STATUS.indexOf(d.status) >= 0 ? d.status : '逃脫成功',
       int_(d.reached, 0, ROOM_COUNT) === null ? ROOM_COUNT : int_(d.reached, 0, ROOM_COUNT),
       int_(d.solved, 0, 999) === null ? '' : int_(d.solved, 0, 999),
-      // 多人共用一台平板：第 2、3 位座號（用 | 分隔，避免被當成數字）
-      (Array.isArray(d.mates) ? d.mates : []).slice(0, 2).map(n => int_(n, 1, 40))
-        .filter((n, i, a) => n !== null && n !== seat && a.indexOf(n) === i).join('|')
+      mates
     ]);
+    liveUpsert_(d, cls, seat, mates, STATUS.indexOf(d.status) >= 0 ? d.status : '逃脫成功');
     return json_({ ok: true });
   } catch (err) {
     return json_({ ok: false, error: String(err) });
@@ -122,5 +150,13 @@ function doGet(e) {
     solved: r[16] === '' || r[16] == null ? null : Number(r[16]),
     mates: String(r[17] == null ? '' : r[17]).split('|').map(Number).filter(n => n)
   }));
-  return json_({ ok: true, rows: rows });
+  // 即時作答名單（只回傳 12 小時內有更新的）
+  const lsh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(LIVE_SHEET);
+  const since = Date.now() - 12 * 3600 * 1000;
+  const live = (lsh && lsh.getLastRow() > 1 ? lsh.getRange(2, 1, lsh.getLastRow() - 1, 8).getValues() : [])
+    .filter(r => r[1] instanceof Date && r[1].getTime() > since)
+    .map(r => ({ sid: String(r[0]), t: r[1].getTime(), cls: String(r[2]), seat: Number(r[3]),
+      mates: String(r[4] == null ? '' : r[4]).split('|').map(Number).filter(n => n),
+      solved: Number(r[5]) || 0, room: Number(r[6]) || 1, status: String(r[7]) }));
+  return json_({ ok: true, rows: rows, live: live });
 }
