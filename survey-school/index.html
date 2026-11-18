@@ -63,6 +63,20 @@ button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
 .tips{display:flex;flex-direction:column;gap:8px;margin-bottom:18px}
 .tip{background:var(--peach);border-left:6px solid var(--orange);border-radius:12px;padding:12px 14px;font-size:16px;line-height:1.6}
 .tip.ok{background:#E8F4F6;border-left-color:var(--teal)}
+.links{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:18px}
+.links h3{font-size:18px;margin-bottom:4px}
+.links .sub{font-size:14px;color:var(--muted);margin-bottom:10px}
+.lk{display:flex;align-items:center;gap:12px;padding:12px 14px;border:2px solid var(--line);border-radius:14px;margin-top:8px;text-decoration:none;color:inherit;min-height:60px}
+.lk:active{transform:scale(.99)}
+.lk.main{border-color:var(--orange);background:var(--peach)}
+.lk .ic{font-size:24px;line-height:1;flex:none}
+.lk .tx{flex:1;display:flex;flex-direction:column;gap:2px;font-size:17px;font-weight:700}
+.lk .tx small{font-size:13px;font-weight:400;color:var(--muted)}
+.lk .go{color:var(--orange-d);font-weight:700}
+.links details{margin-top:12px}
+.links summary{font-size:16px;font-weight:700;color:var(--teal);cursor:pointer;padding:6px 2px}
+.links details .lk{min-height:52px;padding:10px 12px}
+.links details .lk .tx{font-size:16px}
 .res-title{display:flex;justify-content:space-between;align-items:baseline;margin:6px 2px 10px}
 .res-title b{font-size:20px}
 .res-title span{font-size:14px;color:var(--muted)}
@@ -132,6 +146,25 @@ body.screen{background:var(--navy);color:var(--cream);overflow:hidden}
       <p>這個調查網頁，也是不寫程式、請 AI 幫忙做出來的。</p>
     </div>
     <div class="tips" id="tips"></div>
+    <div class="links">
+      <h3>今天簡報裡的連結，點了就到</h3>
+      <p class="sub">不用再抬頭掃 QR code，等一下照順序點開就好。</p>
+      <a class="lk main" href="../teacher24hr/" target="_blank" rel="noopener"><span class="ic">🎮</span><span class="tx">teacher24hr 老師的一天<small>最後 2 分鐘一起玩</small></span><span class="go">→</span></a>
+      <a class="lk main" href="../" target="_blank" rel="noopener"><span class="ic">🧰</span><span class="tx">教學工具箱<small>今天看到的教材都在這裡</small></span><span class="go">→</span></a>
+      <a class="lk main" href="../signup-1202/" target="_blank" rel="noopener"><span class="ic">📝</span><span class="tx">12/02 校內研習報名<small>用 AI 快速生成客製化數位互動教材｜B304｜限額 30 人</small></span><span class="go">→</span></a>
+      <details>
+        <summary>簡報中示範的互動網頁（9 個）</summary>
+        <a class="lk" href="https://claude.ai/public/artifacts/e5f60528-aebd-4274-90ac-c183b38f4baa" target="_blank" rel="noopener"><span class="ic">🗂️</span><span class="tx">日治時期時序排列<small>分類拖曳</small></span><span class="go">→</span></a>
+        <a class="lk" href="https://claude.ai/public/artifacts/c90176d7-56c1-467d-b8a2-cc539737950f" target="_blank" rel="noopener"><span class="ic">🗂️</span><span class="tx">聚落類型分類<small>分類拖曳</small></span><span class="go">→</span></a>
+        <a class="lk" href="../tools/taiwan-regimes-battle.html" target="_blank" rel="noopener"><span class="ic">⚔️</span><span class="tx">三大政權對對碰<small>雙邊搶答</small></span><span class="go">→</span></a>
+        <a class="lk" href="../tools/modern-taiwan-rpg.html" target="_blank" rel="noopener"><span class="ic">🚉</span><span class="tx">近代臺灣的便利與代價<small>歷史｜角色情境</small></span><span class="go">→</span></a>
+        <a class="lk" href="https://claude.ai/public/artifacts/0bd32fa2-b0cd-4c59-b35f-d4075896771a" target="_blank" rel="noopener"><span class="ic">⚖️</span><span class="tx">殖民統治下的選擇<small>歷史｜兩難情境</small></span><span class="go">→</span></a>
+        <a class="lk" href="../tools/world-geography-challenge.html" target="_blank" rel="noopener"><span class="ic">🌏</span><span class="tx">世界地理三關挑戰<small>地理｜闖關挑戰</small></span><span class="go">→</span></a>
+        <a class="lk" href="https://claude.ai/public/artifacts/08d858b8-1385-4aa6-b2dd-6dbe29b74f2c" target="_blank" rel="noopener"><span class="ic">🏖️</span><span class="tx">退休人生規劃<small>公民｜決策模擬</small></span><span class="go">→</span></a>
+        <a class="lk" href="../tools/investment-challenge.html" target="_blank" rel="noopener"><span class="ic">💰</span><span class="tx">點數大作戰・投資小達人<small>公民｜決策模擬</small></span><span class="go">→</span></a>
+        <a class="lk" href="../econ-escape/world-share/" target="_blank" rel="noopener"><span class="ic">🔐</span><span class="tx">經濟時光機大逃脫｜3D 時光走廊版<small>密室逃脫</small></span><span class="go">→</span></a>
+      </details>
+    </div>
     <div class="res-title"><b>全場統計</b><span id="resTotal"></span></div>
     <p class="legend"><i></i>橘色是你的選擇</p>
     <div id="charts"></div>
