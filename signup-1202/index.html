@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>校內研習報名｜用 AI 快速生成客製化數位互動教材</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#12263A; --navy2:#1B3550; --cream:#F6F2EA; --paper:#FFFDF8;
+  --teal:#1F7A8C; --sky:#8FD3E0; --orange:#E07A3F; --orange-d:#C4612A; --peach:#FDF0E7;
+  --ink:#12263A; --muted:#5A6B78; --line:#E4DCCD; --red:#B03A2E;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans TC',system-ui,sans-serif;background:var(--cream);color:var(--ink);-webkit-tap-highlight-color:transparent;min-height:100vh}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:none;background:none}
+.hidden{display:none!important}
+.wrap{max-width:560px;margin:0 auto;padding:20px 16px calc(28px + env(safe-area-inset-bottom))}
+
+.hero{background:var(--navy);color:var(--cream);border-radius:22px;padding:24px 22px;margin-bottom:16px}
+.hero .tag{font-size:14px;font-weight:700;color:#F0A97A;letter-spacing:2px}
+.hero h1{font-size:27px;line-height:1.35;margin:8px 0 14px}
+.info{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:16px;color:#D7E6EA}
+.info b{color:#F0A97A;font-weight:700}
+
+.seats{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:16px 18px;margin-bottom:16px}
+.seats .row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+.seats .row span{font-size:16px;color:var(--muted)}
+.seats .row b{font-size:30px;color:var(--orange-d);font-variant-numeric:tabular-nums}
+.seats .row b span{color:inherit;font-size:inherit}
+.seats .row b small{font-size:16px;color:var(--muted);font-weight:500}
+.meter{height:12px;background:#EFE9DE;border-radius:99px;overflow:hidden}
+.meter i{display:block;height:100%;width:0;background:var(--teal);border-radius:99px;transition:width .5s}
+
+.card{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:20px 18px;display:flex;flex-direction:column;gap:16px}
+.card h2{font-size:21px}
+.field{display:flex;flex-direction:column;gap:8px}
+.field label{font-size:16px;font-weight:700}
+.field label em{font-style:normal;color:var(--orange-d);margin-left:2px}
+.field small{font-size:14px;color:var(--muted);font-weight:400}
+.field input,.field textarea{width:100%;border:2px solid var(--line);border-radius:12px;background:#fff;padding:13px 14px;font-size:18px;outline:none;transition:border-color .15s}
+.field textarea{min-height:76px;resize:vertical;font-size:16px}
+.field input:focus,.field textarea:focus{border-color:var(--teal)}
+.chips{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.chip{border:2px solid var(--line);border-radius:12px;background:#fff;min-height:50px;font-size:17px;transition:all .15s}
+.chip.on{border-color:var(--teal);background:#E8F4F6;font-weight:700;color:var(--teal)}
+
+.btn{width:100%;min-height:56px;border-radius:14px;font-size:18px;font-weight:700}
+.btn.pri{background:var(--orange-d);color:#fff}
+.btn.pri:disabled{background:#D9CFC0;cursor:not-allowed}
+.btn.sec{border:2px solid var(--line);color:var(--muted);background:transparent}
+.btn.danger{border:2px solid #E6C3BE;color:var(--red);background:#fff}
+
+.msg{border-radius:12px;padding:12px 14px;font-size:16px;line-height:1.6}
+.msg.err{background:#FDE8E4;border-left:6px solid var(--red)}
+.msg.ok{background:#E8F4F6;border-left:6px solid var(--teal)}
+.msg.warn{background:var(--peach);border-left:6px solid var(--orange)}
+
+.done{display:flex;flex-direction:column;gap:14px}
+.done .big{text-align:center;padding:6px 0}
+.done .big .ic{font-size:48px}
+.done .big h2{font-size:24px;margin-top:6px}
+.done .big p{color:var(--muted);margin-top:4px}
+.mine{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;background:var(--cream);border-radius:12px;padding:14px;font-size:16px}
+.mine span{color:var(--muted)}
+.cal{display:block;text-align:center;text-decoration:none;color:var(--teal);font-weight:700;border:2px solid #BFE1E7;border-radius:14px;padding:14px;background:#fff}
+
+.foot{font-size:13px;color:var(--muted);text-align:center;margin-top:16px;line-height:1.7}
+.demo-badge{position:fixed;top:10px;right:10px;background:var(--orange-d);color:#fff;font-size:12px;font-weight:700;padding:4px 10px;border-radius:99px;z-index:10}
+
+/* 取消確認 */
+.mask{position:fixed;inset:0;background:rgba(18,38,58,.55);display:grid;place-items:center;padding:20px;z-index:20}
+.dialog{background:var(--paper);border-radius:20px;padding:22px 20px;max-width:380px;width:100%;display:flex;flex-direction:column;gap:14px}
+.dialog h3{font-size:20px}
+.dialog p{color:var(--muted);line-height:1.6}
+.dialog .acts{display:flex;gap:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="tag">校內研習報名</div>
+    <h1>用 AI 快速生成<br>客製化數位互動教材</h1>
+    <div class="info">
+      <b>日期</b><span>12/02（三）</span>
+      <b>時間</b><span>14:25～16:00</span>
+      <b>地點</b><span>B304</span>
+      <b>名額</b><span>限額 30 人，額滿為止</span>
+    </div>
+  </div>
+
+  <div class="seats">
+    <div class="row"><span>目前報名</span><b><span id="cnt">–</span> <small>/ 30 人</small></b></div>
+    <div class="meter"><i id="meter"></i></div>
+    <div class="row" style="margin:10px 0 0"><span id="left">讀取名額中…</span></div>
+  </div>
+
+  <!-- 報名表 -->
+  <form id="form" class="card hidden" autocomplete="on">
+    <h2>填寫基本資料</h2>
+    <div class="field">
+      <label for="name">姓名<em>*</em></label>
+      <input id="name" name="name" maxlength="20" placeholder="例如：王小明" required>
+    </div>
+    <div class="field">
+      <label>身分<em>*</em></label>
+      <div class="chips" id="roles">
+        <button type="button" class="chip" data-v="導師">導師</button>
+        <button type="button" class="chip" data-v="科任">科任</button>
+        <button type="button" class="chip" data-v="行政">行政</button>
+        <button type="button" class="chip" data-v="其他">其他</button>
+      </div>
+    </div>
+    <div class="field">
+      <label for="unit">班級或處室<em>*</em> <small>例如：501、教務處、英語科任</small></label>
+      <input id="unit" name="unit" maxlength="30" required>
+    </div>
+    <div class="field">
+      <label for="note">想對講師說的話 <small>（選填，例如想做的單元或想解決的問題）</small></label>
+      <textarea id="note" name="note" maxlength="100"></textarea>
+    </div>
+    <div id="formMsg"></div>
+    <button type="submit" class="btn pri" id="submit" disabled>送出報名</button>
+  </form>
+
+  <!-- 額滿 -->
+  <div id="full" class="card hidden">
+    <h2>名額已滿 🙏</h2>
+    <p class="msg warn">謝謝你的熱情！目前 30 個名額都報滿了。如果有人取消，名額會再開放，可以晚一點回來看看。</p>
+    <button class="btn sec" id="recheck">重新查看名額</button>
+  </div>
+
+  <!-- 已報名 -->
+  <div id="done" class="card done hidden">
+    <div class="big"><div class="ic">🎉</div><h2>報名成功！</h2><p>12/02（三）14:25，B304 見</p></div>
+    <div class="mine" id="mine"></div>
+    <a class="cal" id="cal" target="_blank" rel="noopener">📅 加入 Google 行事曆</a>
+    <div id="doneMsg"></div>
+    <button class="btn danger" id="cancelBtn">取消報名</button>
+    <p class="foot" style="margin-top:0">取消只能在這台裝置、這個瀏覽器操作。<br>換裝置或清除瀏覽資料後，請直接聯絡 Zeiyen 老師。</p>
+  </div>
+
+  <p class="foot">報名資料只用於本次研習簽到與聯繫｜Zeiyen 老師</p>
+</div>
+
+<div class="mask hidden" id="mask">
+  <div class="dialog">
+    <h3>確定要取消報名嗎？</h3>
+    <p>取消後名額會釋出給其他老師。之後想參加，可以再重新報名（若還有名額）。</p>
+    <div class="acts">
+      <button class="btn sec" id="noBtn">先不要</button>
+      <button class="btn pri" id="yesBtn">確定取消</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===================== 設定 ===================== */
+// 部署 Apps Script 後，把網址貼在這裡（以 https://script.google.com/macros/s/ 開頭、/exec 結尾）
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzq2dCXUI6Vb0CqurnOyWvrU-6qtDh4EpHIPLSpFKnuNhav72Orw_0Eo6Q52KEK7fmXQA/exec';
+const CAP = 30;
+
+const $ = s => document.querySelector(s);
+const params = new URLSearchParams(location.search);
+const DEMO = !GAS_URL || params.has('demo');
+const STORE = 'signup1202_v1';
+const store = {
+  get(){ try{ return JSON.parse(localStorage.getItem(STORE)); }catch(e){ return null; } },
+  set(v){ try{ localStorage.setItem(STORE, JSON.stringify(v)); }catch(e){} },
+  del(){ try{ localStorage.removeItem(STORE); }catch(e){} }
+};
+if (DEMO){ const b=document.createElement('div'); b.className='demo-badge'; b.textContent='示範模式（資料不會送出）'; document.body.appendChild(b); }
+
+/* ===================== 後台 ===================== */
+const demo = { count: 26, tokens: new Set() };
+async function api(method, body, query){
+  if (DEMO){
+    await new Promise(r => setTimeout(r, 300));
+    if (method === 'GET'){
+      const o = {cap:CAP, count:demo.count};
+      if (query && query.token) o.mine = demo.tokens.has(query.token) ? 'active' : 'none';
+      return o;
+    }
+    if (body.action === 'cancel'){
+      if (!demo.tokens.has(body.token)) return {ok:false, error:'notfound', count:demo.count, cap:CAP};
+      demo.tokens.delete(body.token); demo.count--; return {ok:true, count:demo.count, cap:CAP};
+    }
+    if (demo.count >= CAP) return {ok:false, error:'full', count:demo.count, cap:CAP};
+    const t = 'demo-' + Date.now(); demo.tokens.add(t); demo.count++;
+    return {ok:true, token:t, count:demo.count, cap:CAP};
+  }
+  if (method === 'GET'){
+    const qs = new URLSearchParams(Object.assign({t:Date.now()}, query||{}));
+    const r = await fetch(GAS_URL + '?' + qs);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  }
+  const r = await fetch(GAS_URL, {method:'POST', body:JSON.stringify(body)});
+  return r.json();
+}
+
+/* ===================== 畫面 ===================== */
+function setSeats(count){
+  const n = Math.max(0, Math.min(CAP, count|0));
+  $('#cnt').textContent = n;
+  $('#meter').style.width = (n/CAP*100) + '%';
+  const left = CAP - n;
+  $('#left').innerHTML = left > 0 ? `還剩 <b style="color:var(--teal)">${left}</b> 個名額` : '<b style="color:var(--red)">已額滿</b>';
+  return left;
+}
+function show(id){ ['#form','#full','#done'].forEach(s => $(s).classList.toggle('hidden', s !== id)); }
+
+function calLink(){
+  const p = new URLSearchParams({
+    action:'TEMPLATE',
+    text:'校內研習：用 AI 快速生成客製化數位互動教材',
+    dates:'20261202T142500/20261202T160000',
+    ctz:'Asia/Taipei',
+    location:'B304',
+    details:'講師：Zeiyen 老師'
+  });
+  return 'https://calendar.google.com/calendar/render?' + p;
+}
+function showDone(me){
+  $('#mine').innerHTML = `<span>姓名</span><b>${esc(me.name)}</b><span>身分</span><b>${esc(me.role)}</b><span>班級／處室</span><b>${esc(me.unit)}</b>`;
+  $('#cal').href = calLink();
+  $('#doneMsg').innerHTML = '';
+  show('#done');
+}
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ===================== 報名表 ===================== */
+let role = '';
+document.querySelectorAll('.chip').forEach(b => b.onclick = () => {
+  role = b.dataset.v;
+  document.querySelectorAll('.chip').forEach(x => x.classList.toggle('on', x === b));
+  check();
+});
+['#name','#unit'].forEach(s => $(s).addEventListener('input', check));
+function check(){ $('#submit').disabled = !($('#name').value.trim() && role && $('#unit').value.trim()); }
+
+$('#form').onsubmit = async ev => {
+  ev.preventDefault();
+  const me = { name:$('#name').value.trim(), role, unit:$('#unit').value.trim(), note:$('#note').value.trim() };
+  const btn = $('#submit'); btn.disabled = true; btn.textContent = '送出中…'; $('#formMsg').innerHTML = '';
+  try{
+    const r = await api('POST', Object.assign({action:'register'}, me));
+    if (r.count != null) setSeats(r.count);
+    if (r.ok){ store.set(Object.assign(me, {token:r.token})); showDone(me); return; }
+    if (r.error === 'full'){ show('#full'); return; }
+    const t = r.error === 'dup' ? '這個名字已經報名過了。如果是同名的另一位老師，請在姓名後加註班級，例如「王小明（501）」。'
+            : r.error === 'missing' ? '請把姓名、身分、班級或處室都填好喔。'
+            : '送出時出了點狀況，請再按一次「送出報名」。';
+    $('#formMsg').innerHTML = `<div class="msg err">${t}</div>`;
+  }catch(e){
+    $('#formMsg').innerHTML = '<div class="msg err">網路好像不穩，沒有送出成功。請再按一次「送出報名」。</div>';
+  }
+  btn.textContent = '送出報名'; check();
+};
+
+/* ===================== 取消 ===================== */
+$('#cancelBtn').onclick = () => $('#mask').classList.remove('hidden');
+$('#noBtn').onclick = () => $('#mask').classList.add('hidden');
+$('#yesBtn').onclick = async () => {
+  const me = store.get(); if (!me) return;
+  const y = $('#yesBtn'); y.disabled = true; y.textContent = '取消中…';
+  try{
+    const r = await api('POST', {action:'cancel', token:me.token});
+    if (r.ok || r.error === 'notfound'){
+      store.del(); $('#mask').classList.add('hidden');
+      const left = setSeats(r.count);
+      if (left > 0){ show('#form'); $('#formMsg').innerHTML = '<div class="msg ok">已經幫你取消報名了，謝謝告知！之後想參加，可以再填一次。</div>'; }
+      else show('#full');
+    } else throw new Error(r.error);
+  }catch(e){
+    $('#mask').classList.add('hidden');
+    $('#doneMsg').innerHTML = '<div class="msg err">網路好像不穩，還沒取消成功，請再試一次。</div>';
+  }
+  y.disabled = false; y.textContent = '確定取消';
+};
+
+/* ===================== 啟動 ===================== */
+async function init(){
+  const me = store.get();
+  try{
+    const r = await api('GET', null, me ? {token:me.token} : null);
+    const left = setSeats(r.count);
+    if (me && r.mine === 'active'){ showDone(me); return; }
+    if (me && r.mine === 'none') store.del();   // 已在後台被取消或清除
+    show(left > 0 ? '#form' : '#full');
+  }catch(e){
+    $('#left').textContent = '名額暫時讀不到，請重新整理頁面';
+    if (me) showDone(me); else show('#form');
+  }
+}
+$('#recheck').onclick = init;
+init();
+</script>
+</body>
+</html>
