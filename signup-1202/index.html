@@ -88,12 +88,12 @@ button{cursor:pointer;border:none;background:none}
       <b>日期</b><span>12/02（三）</span>
       <b>時間</b><span>14:25～16:00</span>
       <b>地點</b><span>L512</span>
-      <b>名額</b><span>限額 20 人，額滿為止</span>
+      <b>名額</b><span>限額 30 人，額滿為止</span>
     </div>
   </div>
 
   <div class="seats">
-    <div class="row"><span>目前報名</span><b><span id="cnt">–</span> <small>/ 20 人</small></b></div>
+    <div class="row"><span>目前報名</span><b><span id="cnt">–</span> <small>/ 30 人</small></b></div>
     <div class="meter"><i id="meter"></i></div>
     <div class="row" style="margin:10px 0 0"><span id="left">讀取名額中…</span></div>
   </div>
@@ -129,7 +129,7 @@ button{cursor:pointer;border:none;background:none}
   <!-- 額滿 -->
   <div id="full" class="card hidden">
     <h2>名額已滿 🙏</h2>
-    <p class="msg warn">謝謝你的熱情！目前 20 個名額都報滿了。如果有人取消，名額會再開放，可以晚一點回來看看。</p>
+    <p class="msg warn">謝謝你的熱情！目前 30 個名額都報滿了。如果有人取消，名額會再開放，可以晚一點回來看看。</p>
     <button class="btn sec" id="recheck">重新查看名額</button>
   </div>
 
@@ -161,7 +161,7 @@ button{cursor:pointer;border:none;background:none}
 /* ===================== 設定 ===================== */
 // 部署 Apps Script 後，把網址貼在這裡（以 https://script.google.com/macros/s/ 開頭、/exec 結尾）
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbzq2dCXUI6Vb0CqurnOyWvrU-6qtDh4EpHIPLSpFKnuNhav72Orw_0Eo6Q52KEK7fmXQA/exec';
-const CAP = 20;
+const CAP = 30;
 
 const $ = s => document.querySelector(s);
 const params = new URLSearchParams(location.search);
@@ -175,7 +175,7 @@ const store = {
 if (DEMO){ const b=document.createElement('div'); b.className='demo-badge'; b.textContent='示範模式（資料不會送出）'; document.body.appendChild(b); }
 
 /* ===================== 後台 ===================== */
-const demo = { count: 16, tokens: new Set() };
+const demo = { count: 26, tokens: new Set() };
 async function api(method, body, query){
   if (DEMO){
     await new Promise(r => setTimeout(r, 300));
