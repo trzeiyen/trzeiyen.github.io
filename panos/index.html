@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>研習用 360 環景圖庫｜Zeiyen 老師</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pannellum/2.5.6/pannellum.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/pannellum/2.5.6/pannellum.js"></script>
+<style>
+:root { color-scheme: dark; font-family: system-ui, sans-serif; color: #fff8e7; background: #192521; }
+* { box-sizing: border-box; }
+body { max-width: 88rem; margin: auto; padding: clamp(.75rem, 2vw, 1.5rem); }
+h1 { font-size: clamp(1.15rem, 3vw, 1.9rem); margin: 0 0 1rem; }
+nav { display: flex; gap: .5rem; padding: 3px 3px .75rem; overflow-x: auto; }
+button { font: inherit; color: inherit; background: #30443b; padding: .55rem .85rem; border: 1px solid #6d8377; border-radius: .55rem; white-space: nowrap; min-height: 44px; cursor: pointer; }
+button[aria-pressed="true"], .marker { background: #f8ce69; color: #241b0c; }
+button:focus-visible { outline: 2px solid #f8ce69; outline-offset: 2px; }
+.frame { position: relative; }
+#panorama { width: 100%; height: 67vh; height: 67dvh; min-height: 18rem; border-radius: .75rem; overflow: hidden; background: #27342c; }
+.toolbar { position: absolute; right: .6rem; bottom: .6rem; z-index: 3; display: flex; gap: .5rem; align-items: center; }
+#angles { padding: .5rem; background: #192521ed; border-radius: .4rem; font-variant-numeric: tabular-nums; }
+.marker { display: flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; border-radius: 50%; border: 2px solid #614717; font-weight: bold; }
+.marker span { position: absolute; left: calc(100% + .35rem); width: max-content; border-radius: .3rem; padding: .2rem .45rem; background: #192521ed; color: #fff8e7; }
+#status { min-height: 1.5em; }
+#manual { width: min(100%, 34rem); font: inherit; }
+</style>
+</head>
+<body>
+<header><h1>研習用 360 環景圖庫｜Zeiyen 老師</h1></header>
+<nav id="scenes" aria-label="切換環景"></nav>
+<main>
+  <div class="frame">
+    <div id="panorama" aria-label="360 度環景預覽"></div>
+    <div class="toolbar">
+      <output id="angles" aria-live="off">Pitch — · Yaw —</output>
+      <button id="copy" type="button" disabled>複製網址</button>
+    </div>
+  </div>
+  <p id="status" role="status"></p>
+  <input id="manual" aria-label="環景圖片網址" readonly hidden>
+</main>
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+  const nav = document.querySelector("#scenes");
+  const angles = document.querySelector("#angles");
+  const copy = document.querySelector("#copy");
+  const status = document.querySelector("#status");
+  const manual = document.querySelector("#manual");
+  const directions = [
+    ["front", "前", 0], ["right", "右", 90], ["back", "後", 180], ["left", "左", -90]
+  ];
+  let viewer;
+  let current;
+
+  function show(scene, button) {
+    if (current === scene) return;
+    viewer?.destroy();
+    viewer = undefined;
+    current = scene;
+    manual.hidden = true;
+    copy.disabled = false;
+    angles.textContent = "Pitch — · Yaw —";
+    status.textContent = `載入${scene.name}…`;
+    for (const item of nav.children) item.setAttribute("aria-pressed", String(item === button));
+
+    const panorama = new URL(new URL(scene.url).pathname.split("/").pop(), document.baseURI);
+    try {
+      viewer = pannellum.viewer("panorama", {
+        type: "equirectangular",
+        panorama: panorama.href,
+        autoLoad: true,
+        hfov: 95,
+        showFullscreenCtrl: false,
+        hotSpots: directions.map(([key, direction, yaw]) => ({
+          yaw, pitch: 0, cssClass: "marker",
+          createTooltipFunc(element) {
+            element.textContent = "？";
+            const label = document.createElement("span");
+            label.textContent = `${direction} · ${scene.landmarks[key]}`;
+            element.append(label);
+          }
+        }))
+      });
+      viewer.on("load", () => { status.textContent = scene.credit; });
+      viewer.on("error", () => {
+        current = undefined;
+        copy.disabled = true;
+        status.textContent = "載入環景失敗，請再點選場景重試。";
+      });
+    } catch {
+      current = undefined;
+      copy.disabled = true;
+      status.textContent = "無法啟動環景預覽。";
+    }
+  }
+
+  setInterval(() => {
+    if (!viewer?.isLoaded()) return;
+    let yaw = viewer.getYaw();
+    yaw = ((yaw + 180) % 360 + 360) % 360 - 180;
+    const coordinates = `Pitch ${viewer.getPitch().toFixed(1)}° · Yaw ${yaw.toFixed(1)}°`;
+    if (angles.textContent !== coordinates) angles.textContent = coordinates;
+  }, 100);
+
+  copy.addEventListener("click", async () => {
+    const scene = current;
+    try {
+      await navigator.clipboard.writeText(scene.url);
+      if (scene === current) status.textContent = `已複製${scene.name}的圖片網址。`;
+    } catch {
+      if (scene !== current) return;
+      manual.value = scene.url;
+      manual.hidden = false;
+      manual.focus();
+      manual.select();
+      status.textContent = "請複製已選取的圖片網址。";
+    }
+  });
+
+  try {
+    const response = await fetch("panos.json");
+    if (!response.ok) throw new Error("Manifest fetch failed");
+    const scenes = await response.json();
+    if (!window.pannellum) throw new Error("Pannellum unavailable");
+    for (const scene of scenes) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = scene.name;
+      button.addEventListener("click", () => show(scene, button));
+      nav.append(button);
+    }
+    show(scenes[0], nav.firstElementChild);
+  } catch {
+    status.textContent = "無法開啟圖庫。請透過網站網址開啟此頁，並確認網路連線。";
+  }
+});
+</script>
+</body>
+</html>
