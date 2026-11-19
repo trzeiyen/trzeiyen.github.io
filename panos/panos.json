@@ -1,0 +1,98 @@
+[
+  {
+    "id": "harbor",
+    "name": "海邊港口",
+    "url": "https://trzeiyen.github.io/panos/harbor.jpg",
+    "landmarks": {
+      "front": "燈塔",
+      "right": "石造碼頭",
+      "back": "帆船",
+      "left": "漁村"
+    },
+    "credit": "AI 生成（Zeiyen 老師教學圖庫）"
+  },
+  {
+    "id": "city-gate",
+    "name": "古城城門",
+    "url": "https://trzeiyen.github.io/panos/city-gate.jpg",
+    "landmarks": {
+      "front": "古城城門",
+      "right": "瞭望塔",
+      "back": "通往遠山的道路",
+      "left": "廟宇"
+    },
+    "credit": "AI 生成（Zeiyen 老師教學圖庫）"
+  },
+  {
+    "id": "market",
+    "name": "傳統市集",
+    "url": "https://trzeiyen.github.io/panos/market.jpg",
+    "landmarks": {
+      "front": "小吃攤",
+      "right": "廟門",
+      "back": "成串的紅燈籠",
+      "left": "老街店屋"
+    },
+    "credit": "AI 生成（Zeiyen 老師教學圖庫）"
+  },
+  {
+    "id": "palace",
+    "name": "宮殿大殿",
+    "url": "https://trzeiyen.github.io/panos/palace.jpg",
+    "landmarks": {
+      "front": "金瓦紅柱大殿",
+      "right": "金瓦側亭",
+      "back": "石階",
+      "left": "青銅香爐"
+    },
+    "credit": "AI 生成（Zeiyen 老師教學圖庫）"
+  },
+  {
+    "id": "indigenous-village",
+    "name": "原住民部落",
+    "url": "https://trzeiyen.github.io/panos/indigenous-village.jpg",
+    "landmarks": {
+      "front": "石板屋",
+      "right": "木造瞭望臺",
+      "back": "林木山峰",
+      "left": "小米田"
+    },
+    "credit": "AI 生成（Zeiyen 老師教學圖庫）"
+  },
+  {
+    "id": "rice-village",
+    "name": "稻田農村",
+    "url": "https://trzeiyen.github.io/panos/rice-village.jpg",
+    "landmarks": {
+      "front": "紅磚三合院",
+      "right": "水牛棚",
+      "back": "遠山",
+      "left": "灌溉水圳"
+    },
+    "credit": "AI 生成（Zeiyen 老師教學圖庫）"
+  },
+  {
+    "id": "forest-valley",
+    "name": "森林溪谷",
+    "url": "https://trzeiyen.github.io/panos/forest-valley.jpg",
+    "landmarks": {
+      "front": "瀑布",
+      "right": "木橋",
+      "back": "清澈溪流",
+      "left": "巨樹"
+    },
+    "credit": "AI 生成（Zeiyen 老師教學圖庫）"
+  },
+  {
+    "id": "city-square",
+    "name": "現代城市廣場",
+    "url": "https://trzeiyen.github.io/panos/city-square.jpg",
+    "landmarks": {
+      "front": "火車站",
+      "right": "圖書館",
+      "back": "公園",
+      "left": "沿街店鋪"
+    },
+    "credit": "AI 生成（Zeiyen 老師教學圖庫）"
+  }
+]
