@@ -118,7 +118,7 @@ body.screen{background:var(--navy);color:var(--cream);overflow:hidden}
   </div>
 
   <div id="intro" class="intro">
-    <h1>不會寫程式，也能做出<br>自己的互動教材</h1>
+    <h1>打造沉浸式課堂：<br>用 AI 快速生成客製化數位互動教材</h1>
     <p>開始前先認識一下彼此：9 題點選題，大約 1 分鐘。<br>完全匿名，送出後馬上看到全場結果。</p>
     <div class="meta"><span>⏱ 約 1 分鐘</span><span>🙈 匿名</span><span>📊 即時統計</span></div>
     <div class="nav"><button class="btn pri" id="start">開始填寫</button></div>
@@ -135,7 +135,7 @@ body.screen{background:var(--navy);color:var(--cream);overflow:hidden}
     <div class="res-title"><b>全場統計</b><span id="resTotal"></span></div>
     <p class="legend"><i></i>橘色是你的選擇</p>
     <div id="charts"></div>
-    <p class="foot">每 10 秒自動更新｜不會寫程式，也能做出自己的互動教材｜Zeiyen 老師</p>
+    <p class="foot">每 10 秒自動更新｜打造沉浸式課堂｜Zeiyen 老師</p>
   </div>
 </div>
 
@@ -168,17 +168,17 @@ const Q = [
       {v:'岸邊觀浪', i:'🏖️', d:'還在觀望，想知道值不值得下水'}]},
   {id:'made',  t:'做過互動網頁或小遊戲嗎？', type:'single', opts:['沒有','試過但沒成功','做過']},
   {id:'device',t:'今天實作會用什麼裝置？', type:'single', opts:['電腦','平板','手機']},
-  {id:'gemini',t:'能用學校帳號登入 Gemini 嗎？', hint:'不確定的話，可以先開新分頁到 gemini.google.com 試試', type:'single', opts:['可以','不確定','不行']},
+  {id:'gemini',t:'能登入 Gemini 嗎？', hint:'學校帳號或個人帳號都可以；不確定的話，先開新分頁到 gemini.google.com 試試', type:'single', opts:['可以','不確定','不行']},
   {id:'want',  t:'今天最想帶走什麼？', type:'single', opts:['做出一份自己的教材','看別人怎麼用','知道怎麼看見學習','了解 AI 怎麼用才對']}
 ];
-const SHORT = {role:'身份',stage:'任教階段',tools:'常用 AI 工具（複選）',paid:'付費訂閱',wave:'AI 浪潮中的位置',made:'做過互動網頁',device:'今天的裝置',gemini:'學校帳號登入 Gemini',want:'最想帶走'};
+const SHORT = {role:'身份',stage:'任教階段',tools:'常用 AI 工具（複選）',paid:'付費訂閱',wave:'AI 浪潮中的位置',made:'做過互動網頁',device:'今天的裝置',gemini:'能登入 Gemini',want:'最想帶走'};
 const val = o => typeof o === 'string' ? o : o.v;
 
 /* ===================== 工具 ===================== */
 const $ = s => document.querySelector(s);
 const params = new URLSearchParams(location.search);
 const DEMO = !GAS_URL || params.has('demo');
-const STORE = 'ws1104_survey_answers';
+const STORE = 'ws1121_survey_answers';
 const store = {
   get(){ try{ return JSON.parse(localStorage.getItem(STORE)); }catch(e){ return null; } },
   set(v){ try{ localStorage.setItem(STORE, JSON.stringify(v)); }catch(e){} }
@@ -289,8 +289,8 @@ function barsHTML(q, counts, total, mine){
 }
 function tipsHTML(a){
   const t = [];
-  if (a.device==='手機') t.push('今天有 25 分鐘實作，手機螢幕會比較辛苦，建議改用<b>電腦或平板</b>。');
-  if (a.gemini==='不確定' || a.gemini==='不行') t.push('請在開場前到 <b>gemini.google.com</b> 用學校帳號登入看看；登不進去就改用<b>個人 Google 帳號</b>。');
+  if (a.device==='手機') t.push('今天有 1 小時以上的實作，手機螢幕會比較辛苦，建議改用<b>電腦或平板</b>。');
+  if (a.gemini==='不確定' || a.gemini==='不行') t.push('請在開場前到 <b>gemini.google.com</b> 登入看看。建議<b>學校帳號和個人帳號都先登入</b>，一個額度用完可以切換另一個。');
   if (!t.length) t.push('裝置和帳號都準備好了，等一下實作可以直接開始！');
   return t.map((x,i) => `<div class="tip ${t.length===1 && x.startsWith('裝置')?'ok':''}">${x}</div>`).join('');
 }

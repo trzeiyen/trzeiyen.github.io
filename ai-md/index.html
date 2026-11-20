@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI 互動教材規劃助手｜下載區</title>
+<meta name="description" content="下載 md 檔，上傳給 AI，一步一步規劃並做出自己的互動教材。">
+<style>
+:root{
+  --navy:#12263A; --navy2:#1B3550; --cream:#F6F2EA; --paper:#FFFDF8;
+  --teal:#1F7A8C; --sky:#8FD3E0; --orange:#E07A3F; --orange-d:#C4612A; --peach:#FDF0E7;
+  --ink:#12263A; --muted:#5A6B78; --line:#E4DCCD; --green:#2E7D5B;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;background:var(--cream);color:var(--ink);font-size:17px;line-height:1.65}
+a{color:var(--teal)}
+.wrap{max-width:1080px;margin:0 auto;padding:28px 20px 56px}
+header{background:var(--navy);color:var(--cream);border-radius:24px;padding:28px 28px 24px;margin-bottom:22px}
+header small{display:block;color:#F0A97A;font-weight:700;letter-spacing:2px;font-size:14px;margin-bottom:6px}
+header h1{font-size:30px;line-height:1.3}
+header p{color:#C9DCE2;margin-top:8px}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:26px}
+.step{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:14px 16px}
+.step b{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--orange);color:#fff;margin-bottom:6px}
+.step p{font-size:15px}
+h2{font-size:22px;margin:4px 2px 12px}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px}
+.card{background:var(--paper);border:2px solid var(--line);border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:10px}
+.card.basic{border-color:var(--orange)}
+.card .ic{font-size:40px;line-height:1}
+.card h3{font-size:21px}
+.tag{display:inline-block;font-size:13px;font-weight:700;padding:2px 10px;border-radius:99px;background:var(--peach);color:var(--orange-d);width:fit-content}
+.tag.adv{background:#E6EEF6;color:var(--navy2)}
+.card ul{padding-left:20px;font-size:15px;color:var(--muted)}
+.say{background:#F1F6F7;border-left:5px solid var(--teal);border-radius:10px;padding:8px 12px;font-size:15px}
+.btns{display:flex;gap:8px;margin-top:auto;padding-top:6px}
+.btn{flex:1;min-height:48px;border-radius:12px;font-size:16px;font-weight:700;border:0;cursor:pointer;display:grid;place-items:center;text-decoration:none;font-family:inherit}
+.btn.pri{background:var(--orange-d);color:#fff}
+.btn.sec{background:transparent;border:2px solid var(--line);color:var(--ink)}
+.btn.sec.ok{border-color:var(--green);color:var(--green)}
+.help{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.box{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:16px 18px}
+.box h3{font-size:18px;margin-bottom:6px}
+.box p,.box li{font-size:15px}
+.box ul{padding-left:20px}
+code{background:#EFE9DE;border-radius:6px;padding:1px 6px;font-size:14px}
+footer{text-align:center;font-size:14px;color:var(--muted);margin-top:28px}
+@media (max-width:860px){.steps{grid-template-columns:repeat(2,1fr)}.cards{grid-template-columns:1fr}.help{grid-template-columns:1fr}header h1{font-size:24px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <small>打造沉浸式課堂｜AI 教學應用研習</small>
+    <h1>和 AI 聊一聊，就做出自己的互動教材</h1>
+    <p>選一條路線，下載 md 檔交給 AI。它會一次問你一個問題，幫你把想法變成可以直接上課用的網頁。</p>
+  </header>
+
+  <div class="steps">
+    <div class="step"><b>1</b><p>選一條路線<br><small>今天選一條就好，免費額度大約夠做一份</small></p></div>
+    <div class="step"><b>2</b><p>按「下載」存檔<br><small>或按「複製全文」</small></p></div>
+    <div class="step"><b>3</b><p>開 Gemini 新對話<br><small>先點開 Canvas，再上傳檔案或貼上</small></p></div>
+    <div class="step"><b>4</b><p>照卡片上的那句話說<br><small>接著回答 AI 的問題就好</small></p></div>
+  </div>
+
+  <h2>選一條路線</h2>
+  <div class="cards">
+    <div class="card basic">
+      <div class="ic">🧩</div>
+      <span class="tag">基本版｜第一次做選這個</span>
+      <h3>互動教材規劃助手</h3>
+      <ul>
+        <li>闖關、配對、分類拖曳、排序、雙邊搶答、角色思考…</li>
+        <li>約 6 個問題整理出規格，確認後做出網頁</li>
+        <li>約 30～40 分鐘完成</li>
+      </ul>
+      <div class="say">跟 AI 說：「我想做一份互動教材」</div>
+      <div class="btns">
+        <a class="btn pri" href="ai-planner-basic.md" download>⬇ 下載</a>
+        <button class="btn sec" data-copy="ai-planner-basic.md">📋 複製全文</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ic">🏰</div>
+      <span class="tag adv">進階｜想挑戰的老師</span>
+      <h3>3D 密室逃脫</h3>
+      <ul>
+        <li>操縱人物走動、找線索、答題、打開密碼門</li>
+        <li>分兩關製作，第 1 關做完就能玩</li>
+        <li>建議先準備好題目再開始</li>
+      </ul>
+      <div class="say">跟 AI 說：「我要做 3D 密室逃脫」，再貼上題目</div>
+      <div class="btns">
+        <a class="btn pri" href="ai-planner-3d-escape.md" download>⬇ 下載</a>
+        <button class="btn sec" data-copy="ai-planner-3d-escape.md">📋 複製全文</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ic">🧭</div>
+      <span class="tag adv">進階｜想挑戰的老師</span>
+      <h3>360 環景解謎</h3>
+      <ul>
+        <li>站在 360 度場景中央，轉身找線索、解密碼</li>
+        <li>8 張研習圖庫場景可以直接用：<a href="../panos/" target="_blank" rel="noopener">先看看場景</a></li>
+        <li>建議先準備好題目再開始</li>
+      </ul>
+      <div class="say">跟 AI 說：「我要做 360 環景解謎」，再貼上題目</div>
+      <div class="btns">
+        <a class="btn pri" href="ai-planner-360-pano.md" download>⬇ 下載</a>
+        <button class="btn sec" data-copy="ai-planner-360-pano.md">📋 複製全文</button>
+      </div>
+    </div>
+  </div>
+
+  <h2>卡住了？先看這裡</h2>
+  <div class="help">
+    <div class="box">
+      <h3>⏳ 額度用完了</h3>
+      <ul>
+        <li>換另一個帳號：學校帳號和個人帳號的額度分開計算。</li>
+        <li>換另一個 AI：ChatGPT、Claude 也可以。把 md 檔重新貼上，再貼上目前的規格或程式碼，說「請從這裡接著做」。</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3>✂️ 程式寫到一半停住</h3>
+      <p>跟 AI 說：<code>程式被截斷了，請從中斷處繼續</code>。一直斷的話，請它減少題數或關卡。</p>
+    </div>
+    <div class="box">
+      <h3>🔗 找不到分享按鈕</h3>
+      <ul>
+        <li>要先點開右側的 Canvas 畫面，用畫面右上角的「分享」。</li>
+        <li>學校帳號有時無法公開分享：改用個人帳號，或改用 Google 協作平台。</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3>🏫 放進 Google 協作平台（用電腦操作）</h3>
+      <p>複製完整程式碼 →「插入」→「嵌入」→「嵌入程式碼」貼上 → 拉大嵌入框 →「發布」，並確認觀看權限設成學生看得到。</p>
+    </div>
+  </div>
+
+  <footer>設計：Zeiyen 老師｜trzeiyen@gmail.com｜<a href="../">教學工具箱</a></footer>
+</div>
+<script>
+document.querySelectorAll('[data-copy]').forEach(b => {
+  b.addEventListener('click', async () => {
+    const old = b.textContent;
+    try {
+      const txt = await fetch(b.dataset.copy, {cache:'no-cache'}).then(r => { if(!r.ok) throw 0; return r.text(); });
+      await navigator.clipboard.writeText(txt);
+      b.textContent = '✅ 已複製'; b.classList.add('ok');
+    } catch (e) {
+      b.textContent = '請改按下載';
+    }
+    setTimeout(() => { b.textContent = old; b.classList.remove('ok'); }, 2200);
+  });
+});
+</script>
+</body>
+</html>
