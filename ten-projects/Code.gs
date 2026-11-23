@@ -26,14 +26,15 @@ function handle_(p) {
 
   if (a === 'open') {
     return withLock_(() => {
-      put_(K, { cls: p.cls || '', teams: JSON.parse(p.teams || '[]'), st: { phase: 'lobby', seq: 0, v: 0 } });
-      remove_(K + '_pick');
+      // gid：每一場遊戲一個新編號，房間號碼重複時也不會讀到上一場的資料
+      put_(K, { gid: Date.now().toString(36), cls: p.cls || '', teams: JSON.parse(p.teams || '[]'), st: { phase: 'lobby', seq: 0, v: 0 } });
       return { ok: true, now: Date.now() };
     });
   }
 
   const room = get_(K);
   if (!room) return { ok: false, err: 'noroom' };
+  const G = K + '_' + (room.gid || '0');
 
   // ---- 大螢幕 ----
   if (a === 'state') {
@@ -46,14 +47,14 @@ function handle_(p) {
       cur.st = st;
       put_(K, cur);
       if (p.reset === '1') {
-        put_(K + '_t0_' + st.seq, now);
-        remove_(K + '_pick');
+        put_(G + '_t0_' + st.seq, now);
+        remove_(G + '_pick');
       }
       return { ok: true, now: now };
     });
   }
   if (a === 'hpoll') {
-    return { ok: true, now: Date.now(), ans: answers_(K, room), join: joins_(K, room), pick: get_(K + '_pick') };
+    return { ok: true, now: Date.now(), ans: answers_(G, room), join: joins_(G, room), pick: get_(G + '_pick') };
   }
   if (a === 'log') {
     log_(p.kind, JSON.parse(p.d || '{}'));
@@ -68,15 +69,15 @@ function handle_(p) {
 
   if (a === 'join' || a === 'tpoll') {
     const now = Date.now();
-    put_(K + '_j_' + tm, now); // 每組一個 key，不用排隊上鎖
+    put_(G + '_j_' + tm, now); // 每組一個 key，不用排隊上鎖
     const seq = room.st.seq || 0;
-    return { ok: true, now: now, cls: room.cls, teams: room.teams, st: room.st, t0: get_(K + '_t0_' + seq) || 0, mine: get_(K + '_a_' + seq + '_' + tm) };
+    return { ok: true, now: now, cls: room.cls, teams: room.teams, st: room.st, t0: get_(G + '_t0_' + seq) || 0, mine: get_(G + '_a_' + seq + '_' + tm) };
   }
   if (a === 'ans') {
     const st = room.st, seq = parseInt(p.seq, 10), c = parseInt(p.c, 10);
     if (st.phase !== 'q' || st.seq !== seq) return { ok: false, err: 'closed' };
     if (st.only !== null && st.only !== undefined && st.only !== tm) return { ok: false, err: 'notyou' };
-    const key = K + '_a_' + seq + '_' + tm;
+    const key = G + '_a_' + seq + '_' + tm;
     const old = get_(key);
     if (old) return { ok: true, dup: true, mine: old };
     const mine = { c: c, t: Date.now() };
@@ -86,7 +87,7 @@ function handle_(p) {
   if (a === 'pick') {
     const st = room.st;
     if (st.phase !== 'pick' || st.turn !== tm) return { ok: false, err: 'notyou' };
-    put_(K + '_pick', { seq: st.seq, site: String(p.site || '') });
+    put_(G + '_pick', { seq: st.seq, site: String(p.site || '') });
     return { ok: true };
   }
   return { ok: false, err: 'action' };

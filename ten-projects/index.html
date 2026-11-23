@@ -526,7 +526,7 @@ const online=i=>!!(PAD.joined[i]&&PAD.now-PAD.joined[i]<12000);
 function api(params){
   const u=GAS_URL+'?'+new URLSearchParams(Object.assign({},params,{_:Date.now()}));
   const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),9000);
-  return fetch(u,{signal:ctl.signal}).then(r=>r.json()).then(j=>{clearTimeout(to);PAD.fails=0;netBar(false);return j;})
+  return fetch(u,{signal:ctl.signal,credentials:'omit',cache:'no-store'}).then(r=>r.json()).then(j=>{clearTimeout(to);PAD.fails=0;netBar(false);return j;})
     .catch(e=>{clearTimeout(to);PAD.fails++;if(PAD.fails>=4&&isPad())netBar(true);throw e;});
 }
 function netBar(on){const b=$('#netbar');if(!b)return;if(on&&PAD.netHidden)return;b.hidden=!on;}

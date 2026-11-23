@@ -59,7 +59,7 @@ function save(){try{localStorage.setItem(KEY,JSON.stringify(P));}catch(e){}}
 function api(params){
   const u=GAS_URL+'?'+new URLSearchParams(Object.assign({},params,{_:Date.now()}));
   const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),8000);
-  return fetch(u,{signal:ctl.signal}).then(r=>r.json()).finally(()=>clearTimeout(to));
+  return fetch(u,{signal:ctl.signal,credentials:'omit',cache:'no-store'}).then(r=>r.json()).finally(()=>clearTimeout(to));
 }
 const esc=t=>String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;');
 function drawTop(){
