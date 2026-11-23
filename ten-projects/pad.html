@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>十大建設｜小組平板</title>
+<style>
+:root{--bg:#0e1a26;--panel:#172838;--panel2:#203a50;--line:#2f4c63;--amber:#f2b544;--text:#eef4f8;--muted:#9fb3c4;--green:#4fd18b;--red:#ff6b6b;--tc:#f2b544}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;background:radial-gradient(circle at 25% 0%,#1b3248 0%,var(--bg) 60%) fixed;color:var(--text);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+button{font-family:inherit;border:0;color:inherit;cursor:pointer}
+.top{position:sticky;top:0;display:flex;align-items:center;gap:12px;padding:12px 18px;background:#0b1520ee;border-bottom:4px solid var(--tc);font-size:22px;font-weight:800;z-index:5}
+.top .dot{width:30px;height:30px;border-radius:9px;background:var(--tc)}
+.top .sp{flex:1}
+.top .net{font-size:18px;color:var(--muted);font-weight:600}
+.wrap{max-width:900px;margin:0 auto;padding:22px}
+.card{background:var(--panel);border:3px solid var(--line);border-radius:26px;padding:26px;margin:14px 0;text-align:center}
+h1{font-size:40px;margin:6px 0 4px}
+.sub{color:var(--muted);font-size:22px;line-height:1.5}
+.code{font-size:64px;letter-spacing:.3em;text-align:center;width:100%;max-width:420px;padding:12px;border-radius:20px;border:4px solid var(--line);background:#0d1822;color:#fff;font-family:inherit;font-weight:900;margin:18px auto;display:block}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:76px;padding:12px 34px;border-radius:20px;font-size:30px;font-weight:900;background:var(--amber);color:#2a1c00}
+.btn:active,.opt:active,.tbtn:active,.sbtn:active{transform:scale(.97)}
+.btn.ghost{background:transparent;border:3px solid var(--line);color:var(--text);font-size:22px;min-height:56px}
+.tgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.tbtn{min-height:110px;border-radius:22px;font-size:34px;font-weight:900;color:#fff}
+.big{font-size:44px;font-weight:900;margin:10px 0}
+.q{font-size:34px;font-weight:800;line-height:1.45;text-align:left;margin:6px 0 18px}
+.opts{display:grid;gap:14px}
+.opt{display:flex;align-items:center;gap:16px;min-height:96px;border-radius:22px;background:var(--panel2);border:4px solid var(--line);font-size:30px;font-weight:800;text-align:left;padding:12px 20px;line-height:1.3}
+.opt .k{flex:none;width:58px;height:58px;border-radius:15px;background:#0d1822;color:var(--amber);display:flex;align-items:center;justify-content:center;font-size:32px}
+.opts.ox{grid-template-columns:1fr 1fr}
+.opts.ox .opt{justify-content:center;font-size:52px;min-height:160px}
+.opt.sel{border-color:var(--amber);background:#3a3420}
+.opt.ok{border-color:var(--green);background:#1d4430}
+.opt.bad{border-color:var(--red);background:#4a2126}
+.opt.dim{opacity:.4}
+.cd{font-size:30px;font-weight:900;color:var(--amber)}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px}
+.sbtn{min-height:110px;border-radius:20px;background:var(--panel2);border:4px solid var(--line);font-size:26px;font-weight:800;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.sbtn .i{font-size:44px}
+.res{font-size:60px;margin:6px 0}
+.rank div{display:flex;justify-content:space-between;font-size:28px;font-weight:800;padding:12px 18px;border-radius:14px;background:var(--panel2);margin:8px 0}
+.hint{font-size:20px;color:var(--muted);margin-top:16px}
+.err{color:var(--red);font-size:22px;min-height:30px;margin-top:8px}
+</style>
+</head>
+<body>
+<div id="top"></div>
+<div class="wrap" id="app"></div>
+<script>
+const GAS_URL='';
+const KEY='ten_projects_pad_v1';
+const $=s=>document.querySelector(s);
+let P={r:'',tm:-1};try{P=Object.assign(P,JSON.parse(localStorage.getItem(KEY))||{});}catch(e){}
+const qs=new URLSearchParams(location.search);if(qs.get('r'))P.r=qs.get('r').replace(/\D/g,'').slice(0,4);
+let ROOM=null,ST=null,MINE=null,OFF=0,T0=0,pollT=null,lastKey='',fails=0,sending=false,localPick=null;
+function save(){try{localStorage.setItem(KEY,JSON.stringify(P));}catch(e){}}
+function api(params){
+  const u=GAS_URL+'?'+new URLSearchParams(Object.assign({},params,{_:Date.now()}));
+  const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),8000);
+  return fetch(u,{signal:ctl.signal}).then(r=>r.json()).finally(()=>clearTimeout(to));
+}
+const esc=t=>String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+function drawTop(){
+  if(!ROOM||P.tm<0){$('#top').innerHTML='';document.documentElement.style.setProperty('--tc','#f2b544');return;}
+  const t=ROOM.teams[P.tm];document.documentElement.style.setProperty('--tc',t.color);
+  $('#top').innerHTML=`<div class="top"><div class="dot"></div><div>${esc(t.name)}</div><div class="sp"></div><div class="net">${ROOM.cls?esc(ROOM.cls)+' 班｜':''}房間 ${P.r}｜${fails?'⚠️ 連線中…':'📶 已連線'}</div></div>`;
+}
+
+/* ---------- 加入 ---------- */
+function renderJoin(msg){
+  ROOM=null;drawTop();clearInterval(pollT);
+  $('#app').innerHTML=`<div class="card"><div style="font-size:70px">🏗️</div><h1>十大建設：蓋出臺灣地圖</h1>
+    <div class="sub">請輸入大螢幕上的 <b>4 位數房間號碼</b></div>
+    <input class="code" id="code" inputmode="numeric" pattern="[0-9]*" maxlength="4" value="${P.r||''}" placeholder="0000">
+    <button class="btn" id="go">下一步 ➜</button><div class="err" id="err">${msg||''}</div></div>`;
+  $('#go').onclick=()=>{const r=$('#code').value.replace(/\D/g,'');if(r.length!==4){$('#err').textContent='房間號碼是 4 位數字喔';return;}P.r=r;save();loadRoom();};
+}
+function loadRoom(){
+  $('#app').innerHTML=`<div class="card"><div class="big">連線中…</div></div>`;
+  api({a:'info',r:P.r}).then(j=>{
+    if(!j.ok){renderJoin(j.err==='noroom'?'找不到這個房間，請確認號碼（或請老師先開好遊戲）':'連線失敗，請再試一次');return;}
+    ROOM={cls:j.cls,teams:j.teams};
+    if(P.tm>=0&&P.tm<ROOM.teams.length&&qs.get('r')===null){startPoll();return;}
+    renderTeams();
+  }).catch(()=>renderJoin('連線失敗，請確認網路後再試一次'));
+}
+function renderTeams(){
+  drawTop();
+  $('#app').innerHTML=`<div class="card"><h1>你們是第幾組？</h1><div class="sub">${ROOM.cls?esc(ROOM.cls)+' 班｜':''}房間 ${P.r}　一組只要一台平板</div>
+    <div class="tgrid">${ROOM.teams.map((t,i)=>`<button class="tbtn" data-t="${i}" style="background:${t.color}">${esc(t.name)}</button>`).join('')}</div>
+    <button class="btn ghost" id="back" style="margin-top:18px">↩ 換房間號碼</button></div>`;
+  document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{P.tm=+b.dataset.t;save();
+    api({a:'join',r:P.r,tm:P.tm}).catch(()=>{});startPoll();});
+  $('#back').onclick=()=>renderJoin();
+}
+
+/* ---------- 遊戲中 ---------- */
+function startPoll(){drawTop();lastKey='';poll();clearInterval(pollT);pollT=setInterval(poll,1300);setInterval(tickCd,250);}
+let busy=false;
+function poll(){
+  if(busy)return;busy=true;
+  api({a:'tpoll',r:P.r,tm:P.tm}).then(j=>{
+    busy=false;
+    if(!j.ok){if(j.err==='noroom'){clearInterval(pollT);renderJoin('這個房間已經關閉了');}return;}
+    fails=0;ROOM={cls:j.cls,teams:j.teams};ST=j.st;MINE=j.mine;T0=j.t0;OFF=j.now-Date.now();
+    const key=JSON.stringify([ST.phase,ST.seq,!!MINE,ST.turn,ST.res?1:0]);
+    drawTop();
+    if(key!==lastKey){lastKey=key;render();}
+  }).catch(()=>{busy=false;fails++;drawTop();});
+}
+function render(){
+  const st=ST,me=P.tm,T=ROOM.teams;
+  const turnName=st.turn!=null&&T[st.turn]?`<b style="color:${T[st.turn].color}">${esc(T[st.turn].name)}</b>`:'';
+  let h='';
+  if(st.phase==='lobby'||st.phase==='wait'){
+    h=`<div class="card"><div style="font-size:80px">✅</div><div class="big">已加入！</div><div class="sub">${esc(st.msg||'等老師按「開始」，題目會出現在這裡。')}<br>平板放在組員都看得到的地方。</div></div>`;
+  }else if(st.phase==='pick'){
+    if(st.turn===me){
+      h=`<div class="card"><div class="big">輪到你們選建設！</div><div class="sub">${st.steal?'⚔️ 搶建設回合：選一項<b>別組</b>的建設，答對挑戰題就搶過來':'選一項還沒蓋好的建設，選完全部組一起搶答'}</div>
+        <div class="sgrid">${(st.avail||[]).map(s=>`<button class="sbtn" data-s="${s.id}"><span class="i">${s.icon}</span>${esc(s.name)}${s.owner!=null&&T[s.owner]?`<small style="color:${T[s.owner].color}">屬於 ${esc(T[s.owner].name)}</small>`:''}</button>`).join('')}</div></div>`;
+    }else h=`<div class="card"><div style="font-size:70px">🗺️</div><div class="big">${turnName} 正在選建設…</div><div class="sub">看大螢幕，準備搶答！</div></div>`;
+  }else if(st.phase==='q'){
+    const only=st.only!=null;
+    if(only&&st.only!==me){
+      h=`<div class="card"><div style="font-size:70px">⚔️</div><div class="big">${turnName} 挑戰中</div><div class="sub">這題只有挑戰的組可以作答，看大螢幕吧！</div></div>`;
+    }else{
+      h=`<div class="card" style="text-align:left">
+        <div style="display:flex;justify-content:space-between;align-items:center"><div class="sub">${st.kind==='event'?'📰 時事快報：全班搶答':st.site?`${st.site.icon} ${esc(st.site.name)}`:''}${only?'｜⚔️ 挑戰題':''}</div><div class="cd" id="cd"></div></div>
+        <div class="q">${esc(st.q)}</div>
+        <div class="opts ${st.ox?'ox':''}">${st.opts.map((o,k)=>`<button class="opt ${MINE?(MINE.c===k?'sel':'dim'):''}" data-c="${k}">${st.ox?'':`<span class="k">${'ABCD'[k]}</span>`}<span>${esc(o)}</span></button>`).join('')}</div>
+        <div class="sub" id="state" style="text-align:center;margin-top:16px;font-size:26px">${MINE?'✅ 已送出，等待揭曉…（不能更改）':'組員討論好再按，<b>只能按一次</b>！'}</div></div>`;
+    }
+  }else if(st.phase==='reveal'){
+    const r=(st.res||{})[me];
+    let big,sub='';
+    if(st.only!=null&&st.only!==me){big='👀';sub=`${turnName} ${st.res&&st.res[st.only]&&st.res[st.only].ok?'挑戰成功！':'挑戰失敗！'}`;}
+    else if(!r){big='⌛';sub='這題你們沒有作答';}
+    else if(r.ok){big=st.winner===me?'🏆':'👍';sub=st.winner===me?`你們最快答對！${r.pts?`+${r.pts} 分`:''}`:`答對了！${r.pts?`+${r.pts} 分`:'（慢了一點點）'}`;}
+    else{big='😅';sub='答錯了，沒關係，不扣分！';}
+    h=`<div class="card"><div class="res">${big}</div><div class="big">${sub}</div>
+      <div class="sub" style="font-size:26px">正確答案：<b style="color:var(--green)">${st.ox?'':('ABCD'[st.correct]+'. ')}${esc(st.opts?st.opts[st.correct]:'')}</b></div>
+      ${st.msg?`<div class="sub" style="margin-top:10px">${esc(st.msg)}</div>`:''}${st.ex?`<div class="hint">📘 ${esc(st.ex)}</div>`:''}</div>`;
+  }else if(st.phase==='closing'){
+    h=`<div class="card"><div style="font-size:70px">⏰</div><div class="big">作答時間結束</div><div class="sub">統計中，看大螢幕！</div></div>`;
+  }else if(st.phase==='end'){
+    h=`<div class="card"><div style="font-size:80px">🏁</div><div class="big">遊戲結束！</div>
+      <div class="rank">${(st.rank||[]).map((t,k)=>`<div style="${t.i===me?'outline:4px solid var(--amber)':''}"><span style="color:${t.color}">${['🥇','🥈','🥉'][k]||(k+1)+'.'} ${esc(t.name)}</span><span>${t.score} 分｜🚩${t.n}</span></div>`).join('')}</div>
+      <div class="hint">謝謝參與！請把平板交還給老師。</div></div>`;
+  }else if(st.phase==='off'){
+    h=`<div class="card"><div style="font-size:70px">👆</div><div class="big">老師改成上台觸控了</div><div class="sub">請看大螢幕，輪到你們時派一位同學上台。<br>老師切回平板模式時，這裡會自動恢復。</div></div>`;
+  }
+  $('#app').innerHTML=h+`<div style="text-align:center"><button class="btn ghost" id="leave">換組／換房間</button></div><div style="text-align:center" class="hint">✨ Zeiyen老師製作</div>`;
+  $('#leave').onclick=()=>{if(confirmLeave()){P.tm=-1;save();clearInterval(pollT);renderJoin();}};
+  document.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{
+    if(sending)return;sending=true;b.style.borderColor='var(--amber)';
+    api({a:'pick',r:P.r,tm:me,site:b.dataset.s}).then(j=>{sending=false;
+      $('#app .card').innerHTML=`<div style="font-size:70px">📨</div><div class="big">${j.ok?'已選好，看大螢幕！':'太慢了，已經換人選囉'}</div>`;}).catch(()=>{sending=false;b.style.borderColor='';alert('送出失敗，請再按一次');});});
+  document.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{
+    if(MINE||sending)return;sending=true;const c=+b.dataset.c;
+    document.querySelectorAll('[data-c]').forEach(x=>x.classList.add(x===b?'sel':'dim'));
+    $('#state').textContent='送出中…';
+    api({a:'ans',r:P.r,tm:me,seq:ST.seq,c}).then(j=>{sending=false;
+      if(j.ok){MINE=j.mine;lastKey='';$('#state').textContent='✅ 已送出，等待揭曉…（不能更改）';}
+      else{$('#state').textContent=j.err==='closed'?'⏰ 這題已經結束了':'這題不能作答';}
+    }).catch(()=>{sending=false;document.querySelectorAll('[data-c]').forEach(x=>x.classList.remove('sel','dim'));$('#state').textContent='⚠️ 送出失敗，請再按一次';});
+  });
+  tickCd();
+}
+let leaveAsk=0;function confirmLeave(){const n=Date.now();if(n-leaveAsk<3000)return true;leaveAsk=n;const b=$('#leave');if(b)b.textContent='再按一次確定離開';return false;}
+function tickCd(){const e=$('#cd');if(!e||!ST||ST.phase!=='q'||!T0)return;const left=Math.max(0,Math.ceil((T0+ST.dur*1000-(Date.now()+OFF))/1000));e.textContent='⏳ '+left+' 秒';}
+
+if(P.r&&P.tm>=0&&!qs.get('r'))loadRoom();else if(P.r&&qs.get('r'))loadRoom();else renderJoin();
+</script>
+</body>
+</html>
