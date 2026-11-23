@@ -26,9 +26,7 @@ function handle_(p) {
 
   if (a === 'open') {
     return withLock_(() => {
-      put_(K, { cls: p.cls || '', teams: JSON.parse(p.teams || '[]'), st: { phase: 'lobby', seq: 0 } });
-      put_(K + '_ans', { seq: 0, t0: 0, by: {} });
-      put_(K + '_join', {});
+      put_(K, { cls: p.cls || '', teams: JSON.parse(p.teams || '[]'), st: { phase: 'lobby', seq: 0, v: 0 } });
       remove_(K + '_pick');
       return { ok: true, now: Date.now() };
     });
@@ -42,17 +40,20 @@ function handle_(p) {
     return withLock_(() => {
       const st = JSON.parse(p.st || '{}');
       const now = Date.now();
-      room.st = st;
-      put_(K, room);
+      const cur = get_(K) || room;
+      // 只接受比目前更新的畫面（避免網路先後顛倒，把舊畫面蓋回去）
+      if ((st.v || 0) <= ((cur.st && cur.st.v) || 0)) return { ok: true, stale: true, now: now };
+      cur.st = st;
+      put_(K, cur);
       if (p.reset === '1') {
-        put_(K + '_ans', { seq: st.seq || 0, t0: now, by: {} });
+        put_(K + '_t0_' + st.seq, now);
         remove_(K + '_pick');
       }
       return { ok: true, now: now };
     });
   }
   if (a === 'hpoll') {
-    return { ok: true, now: Date.now(), ans: get_(K + '_ans') || {}, join: get_(K + '_join') || {}, pick: get_(K + '_pick') };
+    return { ok: true, now: Date.now(), ans: answers_(K, room), join: joins_(K, room), pick: get_(K + '_pick') };
   }
   if (a === 'log') {
     log_(p.kind, JSON.parse(p.d || '{}'));
@@ -67,34 +68,26 @@ function handle_(p) {
 
   if (a === 'join' || a === 'tpoll') {
     const now = Date.now();
-    const j = get_(K + '_join') || {};
-    if (a === 'join' || !j[tm] || now - j[tm] > 6000) {
-      withLock_(() => { const jj = get_(K + '_join') || {}; jj[tm] = now; put_(K + '_join', jj); });
-    }
-    const ans = get_(K + '_ans') || {};
-    const mine = ans.seq === room.st.seq && ans.by ? (ans.by[tm] || null) : null;
-    return { ok: true, now: now, cls: room.cls, teams: room.teams, st: room.st, t0: ans.t0 || 0, mine: mine };
+    put_(K + '_j_' + tm, now); // 每組一個 key，不用排隊上鎖
+    const seq = room.st.seq || 0;
+    return { ok: true, now: now, cls: room.cls, teams: room.teams, st: room.st, t0: get_(K + '_t0_' + seq) || 0, mine: get_(K + '_a_' + seq + '_' + tm) };
   }
   if (a === 'ans') {
-    return withLock_(() => {
-      const st = room.st, seq = parseInt(p.seq, 10), c = parseInt(p.c, 10);
-      if (st.phase !== 'q' || st.seq !== seq) return { ok: false, err: 'closed' };
-      if (st.only !== null && st.only !== undefined && st.only !== tm) return { ok: false, err: 'notyou' };
-      const ans = get_(K + '_ans') || { seq: seq, t0: Date.now(), by: {} };
-      if (ans.seq !== seq) return { ok: false, err: 'closed' };
-      if (ans.by[tm]) return { ok: true, dup: true, mine: ans.by[tm] };
-      ans.by[tm] = { c: c, t: Date.now() };
-      put_(K + '_ans', ans);
-      return { ok: true, mine: ans.by[tm] };
-    });
+    const st = room.st, seq = parseInt(p.seq, 10), c = parseInt(p.c, 10);
+    if (st.phase !== 'q' || st.seq !== seq) return { ok: false, err: 'closed' };
+    if (st.only !== null && st.only !== undefined && st.only !== tm) return { ok: false, err: 'notyou' };
+    const key = K + '_a_' + seq + '_' + tm;
+    const old = get_(key);
+    if (old) return { ok: true, dup: true, mine: old };
+    const mine = { c: c, t: Date.now() };
+    put_(key, mine);
+    return { ok: true, mine: mine };
   }
   if (a === 'pick') {
-    return withLock_(() => {
-      const st = room.st;
-      if (st.phase !== 'pick' || st.turn !== tm) return { ok: false, err: 'notyou' };
-      put_(K + '_pick', { seq: st.seq, site: String(p.site || '') });
-      return { ok: true };
-    });
+    const st = room.st;
+    if (st.phase !== 'pick' || st.turn !== tm) return { ok: false, err: 'notyou' };
+    put_(K + '_pick', { seq: st.seq, site: String(p.site || '') });
+    return { ok: true };
   }
   return { ok: false, err: 'action' };
 }
@@ -129,6 +122,21 @@ function log_(kind, d) {
     const sh = sheet_('題目紀錄', HEAD_Q);
     sh.appendRow([now, "'" + (d.cls || ''), d.kind, d.site, d.q, d.correct, d.n, d.ok, d.fast || '', d.sec === undefined ? '' : d.sec, d.detail || '']);
   }
+}
+
+function answers_(K, room) {
+  const seq = (room.st && room.st.seq) || 0, n = room.teams.length, keys = [];
+  for (let i = 0; i < n; i++) keys.push(K + '_a_' + seq + '_' + i);
+  const got = CacheService.getScriptCache().getAll(keys), by = {};
+  for (let i = 0; i < n; i++) { const v = got[keys[i]]; if (v) by[i] = JSON.parse(v); }
+  return { seq: seq, t0: get_(K + '_t0_' + seq) || 0, by: by };
+}
+function joins_(K, room) {
+  const n = room.teams.length, keys = [];
+  for (let i = 0; i < n; i++) keys.push(K + '_j_' + i);
+  const got = CacheService.getScriptCache().getAll(keys), j = {};
+  for (let i = 0; i < n; i++) { const v = got[keys[i]]; if (v) j[i] = JSON.parse(v); }
+  return j;
 }
 
 // ---- 共用 ----

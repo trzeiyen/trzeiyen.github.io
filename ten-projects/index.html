@@ -102,7 +102,8 @@ button{font-family:inherit;cursor:pointer;border:0;color:inherit}
 .pod{width:280px;border-radius:26px 26px 0 0;text-align:center;padding:14px;font-size:36px;font-weight:900;color:#fff}
 .pod .medal{font-size:64px}
 .pod .s{font-size:56px}
-.rlist{font-size:34px;width:1100px}
+.rlist{font-size:30px;width:1500px;display:grid;grid-template-columns:1fr 1fr;column-gap:20px}
+.teams.many .team{padding:8px 20px;font-size:30px}.teams.many .team .sc{font-size:38px}.teams.many .team .dot{width:34px;height:34px}
 .rlist div{display:flex;justify-content:space-between;padding:8px 26px;border-radius:16px;background:var(--panel);margin:8px 0;font-weight:700}
 .sumgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;width:1760px;margin-top:16px}
 .sumgrid>div{background:var(--panel);border-radius:16px;padding:10px 14px;font-size:24px;border-left:12px solid #555;display:flex;align-items:center;gap:12px;text-align:left}
@@ -127,7 +128,12 @@ button{font-family:inherit;cursor:pointer;border:0;color:inherit}
 .achips span{padding:10px 22px;border-radius:999px;font-size:28px;font-weight:800;background:var(--panel2);border:3px solid transparent}
 .achips span.y{border-color:var(--green)}
 .cdown{font-size:64px;font-weight:900;color:var(--amber);font-variant-numeric:tabular-nums}
-.rtab{width:100%;border-collapse:collapse;font-size:32px;margin-top:16px}
+.rtab{width:100%;border-collapse:collapse;font-size:30px;margin-top:12px}
+.opts.compact .opt{min-height:64px;font-size:30px;padding:6px 20px}.opts.compact .opt .k{width:46px;height:46px;font-size:26px}.opts.compact{gap:12px}
+#modal .card .q{margin:10px 0 18px}
+.rgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px 18px;margin-top:12px}
+.rgrid>div{display:grid;grid-template-columns:2.2fr .6fr .8fr 1fr .8fr;align-items:center;font-size:28px;font-weight:800;background:var(--panel2);border-radius:12px;padding:6px 14px;border-left:10px solid}
+.rgrid .pt{color:var(--amber);text-align:right}
 .rtab td{padding:10px 16px;border-bottom:2px solid var(--line)}
 #netbar{position:absolute;left:0;right:0;bottom:0;background:#7a2328;color:#fff;font-size:30px;font-weight:800;padding:14px 30px;display:flex;align-items:center;gap:20px;z-index:25}
 #netbar[hidden]{display:none}
@@ -143,8 +149,8 @@ button{font-family:inherit;cursor:pointer;border:0;color:inherit}
 </div>
 <script>
 /* ================== 資料 ================== */
-const COLORS=['#e5484d','#3e8ef7','#30a46c','#f08c00','#8e4ec6','#e93d82'];
-const EMO=['🟥','🟦','🟩','🟧','🟪','🩷'];
+const COLORS=['#e5484d','#3e8ef7','#30a46c','#f08c00','#8e4ec6','#e93d82','#0f9fa8','#a0703c'];
+const EMO=['🟥','🟦','🟩','🟧','🟪','🩷','🩵','🟫'];
 const CAT={traffic:'🚗 交通建設',heavy:'🏭 重工業',energy:'⚡ 能源'};
 const OX=['⭕ 對','❌ 錯'];
 const SITES=[
@@ -238,7 +244,7 @@ function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 function snap(){HIST.push(JSON.stringify(S));if(HIST.length>40)HIST.shift();}
 function undo(){
   if(!HIST.length){toast('沒有可以復原的步驟');return;}
-  S=JSON.parse(HIST.pop());closeModal();if(typeof PAD!=='undefined'&&PAD.cur){clearPadQ();}save();renderGame();toast('↶ 已回到上一步');
+  const keepSeq=S.padSeq,keepV=S.padV;S=JSON.parse(HIST.pop());if(keepSeq!=null){S.padSeq=keepSeq;S.padV=keepV;}closeModal();if(typeof PAD!=='undefined'&&PAD.cur){clearPadQ();}save();renderGame();toast('↶ 已回到上一步');
 }
 const need=()=>S.mode==='coop'?2:1;
 const built=id=>S.sites[id].prog>=need();
@@ -290,7 +296,7 @@ function renderSetup(){
   document.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{keep();SET.link=b.dataset.k;renderSetup();});
   const keep=()=>{document.querySelectorAll('#teamNames input').forEach(i=>SET.names[+i.dataset.i]=i.value.trim()||`第${+i.dataset.i+1}組`);SET.cls=$('#cls').value.trim();};
   $('#nMinus').onclick=()=>{keep();SET.n=Math.max(2,SET.n-1);renderSetup();};
-  $('#nPlus').onclick=()=>{keep();SET.n=Math.min(6,SET.n+1);renderSetup();};
+  $('#nPlus').onclick=()=>{keep();SET.n=Math.min(8,SET.n+1);renderSetup();};
   $('#startBtn').onclick=()=>{keep();
     const pad=SET.link==='pad'&&SET.mode==='team';
     if(pad&&!GAS_URL){toast('平板連線還沒設定好，先用上台觸控');return;}
@@ -349,7 +355,7 @@ function renderGame(){
       <div class="topbar"><div class="title">🏗️ 十大建設 蓋出臺灣地圖<small>${S.cls?S.cls+' 班｜':''}${coop?'全班合作':'分組對抗'}</small></div><div class="clock" id="clock">00:00</div></div>
       <div class="turn" style="border-color:${T.color}">${msg}</div>
       ${coop?`<div class="coopbar">🤝 全班工程進度：完工 <b>${builtCount()}</b> / 10 項｜答對 ${S.right} / ${S.tries} 題<div class="bar"><i style="width:${SITES.reduce((n,s)=>n+Math.min(S.sites[s.id].prog,2),0)/20*100}%"></i></div></div>`:''}
-      <div class="teams" style="grid-template-columns:${S.teams.length>3?'1fr 1fr':'1fr'}">${S.teams.map((t,i)=>`<div class="team ${i===S.turn?'cur':''}"><div class="dot" style="background:${t.color}"></div><div class="nm">${t.name}${isPad()?`<span class="onl" data-on="${i}">${online(i)?' 📶':' ⚪'}</span>`:''}</div>
+      <div class="teams ${S.teams.length>6?'many':''}" style="grid-template-columns:${S.teams.length>3?'1fr 1fr':'1fr'}">${S.teams.map((t,i)=>`<div class="team ${i===S.turn?'cur':''}"><div class="dot" style="background:${t.color}"></div><div class="nm">${t.name}${isPad()?`<span class="onl" data-on="${i}">${online(i)?' 📶':' ⚪'}</span>`:''}</div>
         ${coop?`<div class="cnt">答對 ${t.right} 題</div>`:`<div class="cnt">🚩${SITES.filter(s=>built(s.id)&&S.sites[s.id].owner===i).length}</div><div class="sc">${t.score}</div>`}</div>`).join('')}</div>
       <div class="legend"><span>🚗 交通建設 6 項</span><span>🏭 重工業 3 項</span><span>⚡ 能源 1 項</span>${coop?'':'<span>答對 +100｜答錯不扣分</span>'}</div>
       <div class="tools">
@@ -526,7 +532,16 @@ function api(params){
 function netBar(on){const b=$('#netbar');if(!b)return;if(on&&PAD.netHidden)return;b.hidden=!on;}
 function logGAS(kind,d){if(!GAS_URL)return;api({a:'log',r:S.room||'0000',kind,d:JSON.stringify(d)}).catch(()=>{});}
 function logQ(d){if(!GAS_URL||!S||!S.cls)return;d.cls=S.cls;logGAS('q',d);}
-function padState(st,reset){if(!isPad())return Promise.resolve();return api({a:'state',r:S.room,st:JSON.stringify(st),reset:reset?1:0}).catch(()=>{});}
+let PADQ=Promise.resolve();
+function padState(st,reset){
+  if(!isPad())return Promise.resolve();
+  S.padV=(S.padV||0)+1;st.v=S.padV;save();
+  const room=S.room,body={a:'state',r:room,st:JSON.stringify(st),reset:reset?1:0};
+  const send=n=>api(body).then(j=>{if(!j||!j.ok)throw 0;return j;}).catch(()=>n>0?new Promise(r=>setTimeout(r,800)).then(()=>send(n-1)):null);
+  // 依序送出、失敗重送，確保平板看到的畫面跟大螢幕一致
+  PADQ=PADQ.then(()=>send(3));
+  return PADQ;
+}
 function padLoop(on){clearInterval(PAD.loop);PAD.loop=null;if(on)PAD.loop=setInterval(hostTick,1200);}
 function openRoom(){
   app().innerHTML=`<div class="screen" id="lobby"><h1>連線中…</h1></div>`;
@@ -655,13 +670,17 @@ function finishPadQ(c){
   const cdn=$('#cdn');if(cdn)cdn.style.visibility='hidden';
   const correctD=c.order.indexOf(c.q.a);
   document.querySelectorAll('[data-d]').forEach(e=>e.classList.add(+e.dataset.d===correctD?'ok':'dim'));
+  const ob=document.querySelector('#modal .opts');if(ob&&S.teams.length>4)ob.classList.add('compact');
   const okN=Object.values(res).filter(r=>r.ok).length;
   (win!==null||(c.kind==='steal'&&res[c.only]&&res[c.only].ok))?((s&&built(s.id))?(sWin(),confetti()):sOk()):sBad();
   const ex=s?s.info:c.q.ex;
   const fb=$('#fb');if(fb){fb.className='fb '+(okN?'ok':'bad');fb.innerHTML=`${head}<span class="info">📘 ${s?s.name+'：':''}${ex}</span>`;}
   const rows=(c.only!=null?[c.only]:S.teams.map((t,i)=>i)).map(i=>{const t=S.teams[i],r=res[i];
     return `<tr><td style="color:${t.color};font-weight:900">${i===win?'🏆 ':''}${t.name}</td><td>${r?(c.q.o===OX?'':'ABCD'[r.c]+'. ')+(c.q.o[c.order[r.c]]):'— 沒作答'}</td><td>${r?(r.ok?'✅':'❌'):''}</td><td>${r&&r.sec!=null?r.sec+' 秒':''}</td><td style="color:var(--amber);font-weight:900">${r&&r.pts?'+'+r.pts:''}</td></tr>`;}).join('');
-  const box=$('#achips');if(box)box.outerHTML=`<table class="rtab">${rows}</table>`;
+  const ids=(c.only!=null?[c.only]:S.teams.map((t,i)=>i));
+  const grid=ids.length>4?`<div class="rgrid">${ids.map(i=>{const t=S.teams[i],r=res[i];
+    return `<div style="border-left-color:${t.color}"><b style="color:${t.color}">${i===win?'🏆 ':''}${t.name}</b><span>${r?(c.q.o===OX?(r.c===0?'⭕':'❌'):'ABCD'[r.c]):'—'}</span><span>${r?(r.ok?'✅':'❌'):'沒作答'}</span><span>${r&&r.sec!=null?r.sec+'秒':''}</span><span class="pt">${r&&r.pts?'+'+r.pts:''}</span></div>`;}).join('')}</div>`:`<table class="rtab">${rows}</table>`;
+  const box=$('#achips');if(box)box.outerHTML=grid;
   const act=$('#pact');if(act){act.innerHTML=`<span></span><button class="btn amber" id="pnext">${c.kind==='event'?'繼續建設 ➜':'下一組 ➜'}</button>`;
     $('#pnext').onclick=()=>{clearPadQ();closeModal();if(c.kind==='event')renderGame();else nextTurn(true);};}
   const resOut={};Object.keys(res).forEach(k=>resOut[k]={c:res[k].c,ok:res[k].ok,sec:res[k].sec,pts:res[k].pts});
