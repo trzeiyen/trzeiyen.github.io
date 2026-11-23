@@ -161,7 +161,8 @@ function render(){
     if(MINE||sending)return;sending=true;const c=+b.dataset.c;
     document.querySelectorAll('[data-c]').forEach(x=>x.classList.add(x===b?'sel':'dim'));
     $('#state').textContent='送出中…';
-    api({a:'ans',r:P.r,tm:me,seq:ST.seq,c}).then(j=>{sending=false;
+    const send=()=>api({a:'ans',r:P.r,tm:me,seq:ST.seq,ch:c});
+    send().catch(()=>new Promise(r=>setTimeout(r,700)).then(send)).then(j=>{sending=false;
       if(j.ok){MINE=j.mine;lastKey='';$('#state').textContent='✅ 已送出，等待揭曉…（不能更改）';}
       else{$('#state').textContent=j.err==='closed'?'⏰ 這題已經結束了':'這題不能作答';}
     }).catch(()=>{sending=false;document.querySelectorAll('[data-c]').forEach(x=>x.classList.remove('sel','dim'));$('#state').textContent='⚠️ 送出失敗，請再按一次';});

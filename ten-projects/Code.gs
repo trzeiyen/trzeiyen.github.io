@@ -74,7 +74,7 @@ function handle_(p) {
     return { ok: true, now: now, cls: room.cls, teams: room.teams, st: room.st, t0: get_(G + '_t0_' + seq) || 0, mine: get_(G + '_a_' + seq + '_' + tm) };
   }
   if (a === 'ans') {
-    const st = room.st, seq = parseInt(p.seq, 10), c = parseInt(p.c, 10);
+    const st = room.st, seq = parseInt(p.seq, 10), c = parseInt(p.ch, 10); // 注意：c 是 Apps Script 保留參數，不能用
     if (st.phase !== 'q' || st.seq !== seq) return { ok: false, err: 'closed' };
     if (st.only !== null && st.only !== undefined && st.only !== tm) return { ok: false, err: 'notyou' };
     const key = G + '_a_' + seq + '_' + tm;
