@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>十大建設大富翁｜蓋出臺灣地圖</title>
+<style>
+:root{--bg:#0e1a26;--panel:#172838;--panel2:#203a50;--line:#2f4c63;--amber:#f2b544;--text:#eef4f8;--muted:#9fb3c4;--green:#4fd18b;--red:#ff6b6b}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#08111a;overflow:hidden;font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;color:var(--text);touch-action:manipulation;user-select:none;-webkit-user-select:none}
+#stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;background:radial-gradient(circle at 25% 10%,#1b3248 0%,var(--bg) 60%);overflow:hidden}
+button{font-family:inherit;cursor:pointer;border:0;color:inherit}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:84px;padding:14px 34px;border-radius:22px;font-size:36px;font-weight:800;background:#4fd1c5;color:#06302c;transition:transform .08s}
+.btn:active{transform:scale(.96)}
+.btn.amber{background:var(--amber);color:#2a1c00}
+.btn.ghost{background:transparent;border:3px solid var(--line);color:var(--text)}
+.btn.small{min-height:64px;font-size:26px;padding:8px 22px;border-radius:16px}
+.screen{position:absolute;inset:0}
+/* setup */
+#setup{display:flex;flex-direction:column;align-items:center;padding:40px 80px}
+#setup h1{font-size:92px;margin:10px 0 0;letter-spacing:.04em}
+#setup h1 span{color:var(--amber)}
+#setup .lead{font-size:32px;color:var(--muted);margin:10px 0 26px}
+.modes{display:flex;gap:40px;margin-bottom:26px}
+.mode{width:640px;padding:28px 34px;border-radius:28px;background:var(--panel);border:4px solid var(--line);text-align:left}
+.mode.sel{border-color:var(--amber);background:#2c3020}
+.mode>b{font-size:44px;display:block;margin-bottom:8px}
+.mode p b{color:var(--amber)}
+.mode p{font-size:26px;color:var(--muted);margin:0;line-height:1.5}
+.setrow{display:flex;gap:30px;align-items:center;font-size:32px;margin:10px 0}
+.step{display:flex;align-items:center;gap:16px}
+.step button{width:72px;height:72px;border-radius:18px;background:var(--panel2);font-size:44px;font-weight:800}
+.step span{font-size:52px;font-weight:900;min-width:60px;text-align:center}
+.chips{display:flex;gap:14px}
+.chip{padding:12px 26px;border-radius:999px;background:var(--panel2);font-size:30px;font-weight:700;border:3px solid transparent}
+.chip.sel{border-color:var(--amber);color:var(--amber)}
+#teamNames{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin:14px 0 24px}
+#teamNames input{width:230px;font-size:30px;padding:12px 16px;border-radius:14px;border:4px solid;background:#0f1d2a;color:#fff;font-family:inherit;text-align:center}
+#cls{width:220px;font-size:30px;padding:12px;border-radius:14px;border:3px solid var(--line);background:#0f1d2a;color:#fff;text-align:center;font-family:inherit}
+.credit{position:absolute;right:40px;bottom:24px;font-size:24px;color:var(--muted)}
+/* game */
+#map{position:absolute;left:30px;top:10px;width:660px;height:1060px}
+#side{position:absolute;left:740px;top:24px;width:1150px;bottom:24px;display:flex;flex-direction:column;gap:18px}
+.topbar{display:flex;align-items:center;gap:16px}
+.topbar .title{font-size:40px;font-weight:900;flex:1}
+.topbar .title small{font-size:26px;color:var(--muted);font-weight:600;margin-left:10px}
+.clock{font-size:38px;font-weight:800;background:var(--panel2);padding:8px 22px;border-radius:16px;font-variant-numeric:tabular-nums}
+.clock.over{background:#7a2328;animation:blink 1s infinite alternate}
+@keyframes blink{to{opacity:.6}}
+.turn{border-radius:28px;padding:26px 34px;font-size:46px;font-weight:900;line-height:1.35;border:5px solid;background:var(--panel)}
+.turn small{display:block;font-size:30px;font-weight:600;color:var(--muted);margin-top:6px}
+.teams{display:grid;gap:14px}
+.team{display:flex;align-items:center;gap:18px;padding:14px 24px;border-radius:20px;background:var(--panel);border:4px solid transparent;font-size:36px;font-weight:800}
+.team.cur{border-color:var(--amber);box-shadow:0 0 0 4px #f2b54433}
+.team .dot{width:44px;height:44px;border-radius:12px;flex:none}
+.team .nm{flex:1}
+.team .cnt{font-size:28px;color:var(--muted);font-weight:700}
+.team .sc{font-size:46px;min-width:120px;text-align:right;font-variant-numeric:tabular-nums}
+.coopbar{background:var(--panel);border-radius:24px;padding:22px 30px;font-size:34px;font-weight:800}
+.coopbar .bar{height:44px;border-radius:22px;background:#0d1822;overflow:hidden;margin-top:14px}
+.coopbar .bar i{display:block;height:100%;background:linear-gradient(90deg,#f2b544,#ffd77a);transition:width .5s}
+.legend{display:flex;gap:16px;font-size:26px;color:var(--muted);flex-wrap:wrap}
+.legend span{background:var(--panel);padding:8px 18px;border-radius:999px}
+.tools{margin-top:auto;display:flex;gap:14px;flex-wrap:wrap}
+/* map svg */
+.site{cursor:pointer}
+.site .ring{transition:stroke-width .2s}
+.site.pulse .ring{animation:pulse 1.4s infinite}
+@keyframes pulse{50%{stroke-width:14}}
+.site text{pointer-events:none}
+/* modal */
+#modal{position:absolute;inset:0;background:#000a;display:flex;align-items:center;justify-content:center;z-index:20}
+#modal[hidden]{display:none}
+.card{width:1500px;max-height:1020px;background:var(--panel);border:4px solid var(--line);border-radius:36px;padding:40px 56px;box-shadow:0 30px 80px #000a;overflow:auto}
+.card .head{display:flex;align-items:center;gap:20px;margin-bottom:18px}
+.card .ico{font-size:84px;line-height:1}
+.card .head b{font-size:54px;display:block}
+.card .tag{display:inline-block;font-size:26px;padding:6px 18px;border-radius:999px;background:var(--panel2);margin-right:10px;font-weight:700}
+.card .q{font-size:52px;font-weight:800;line-height:1.4;margin:16px 0 26px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.opt{min-height:120px;border-radius:24px;background:var(--panel2);border:5px solid var(--line);font-size:40px;font-weight:700;padding:16px 26px;text-align:left;display:flex;align-items:center;gap:18px;line-height:1.3}
+.opt .k{flex:none;width:62px;height:62px;border-radius:16px;background:#0d1822;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:900;color:var(--amber)}
+.opt.ok{border-color:var(--green);background:#1d4430}
+.opt.bad{border-color:var(--red);background:#4a2126}
+.opt.dim{opacity:.45}
+.opts.ox .opt{justify-content:center;font-size:60px;min-height:170px}
+.fb{margin-top:24px;padding:22px 28px;border-radius:22px;font-size:36px;line-height:1.5;display:none}
+.fb.ok{display:block;background:#173a29;border:3px solid var(--green)}
+.fb.bad{display:block;background:#3d1f22;border:3px solid var(--red)}
+.fb .info{display:block;font-size:30px;color:#cfe0ec;margin-top:10px}
+.actions{display:flex;justify-content:space-between;align-items:center;margin-top:26px;gap:20px}
+.big{font-size:64px;font-weight:900;text-align:center;margin:10px 0}
+.teambtns{display:flex;flex-wrap:wrap;gap:16px;justify-content:center;margin-top:20px}
+.teambtns button{min-height:96px;padding:12px 32px;border-radius:22px;font-size:38px;font-weight:900;color:#fff}
+/* toast */
+#toast{position:absolute;left:50%;bottom:150px;transform:translate(-50%,300px);background:#000d;padding:20px 40px;border-radius:20px;font-size:36px;font-weight:800;transition:transform .3s;z-index:40;white-space:nowrap}
+#toast.on{transform:translate(-50%,0)}
+/* result */
+#result{display:flex;flex-direction:column;align-items:center;padding:30px 60px}
+#result h1{font-size:72px;margin:0}
+.podium{display:flex;align-items:flex-end;gap:30px;margin:10px 0}
+.pod{width:280px;border-radius:26px 26px 0 0;text-align:center;padding:14px;font-size:36px;font-weight:900;color:#fff}
+.pod .medal{font-size:64px}
+.pod .s{font-size:56px}
+.rlist{font-size:34px;width:1100px}
+.rlist div{display:flex;justify-content:space-between;padding:8px 26px;border-radius:16px;background:var(--panel);margin:8px 0;font-weight:700}
+.sumgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;width:1760px;margin-top:16px}
+.sumgrid>div{background:var(--panel);border-radius:16px;padding:10px 14px;font-size:24px;border-left:12px solid #555;display:flex;align-items:center;gap:12px;text-align:left}
+.sumgrid b{display:block;font-size:27px}
+.sumgrid .ic{font-size:44px}
+#side .sumgrid{grid-template-columns:1fr 1fr;width:auto}
+#confetti{position:absolute;inset:0;pointer-events:none;z-index:30}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="app"></div>
+  <div id="modal" hidden></div>
+  <div id="toast"></div>
+  <canvas id="confetti" width="1920" height="1080"></canvas>
+</div>
+<script>
+/* ================== 資料 ================== */
+const COLORS=['#e5484d','#3e8ef7','#30a46c','#f08c00','#8e4ec6','#e93d82'];
+const EMO=['🟥','🟦','🟩','🟧','🟪','🩷'];
+const CAT={traffic:'🚗 交通建設',heavy:'🏭 重工業',energy:'⚡ 能源'};
+const OX=['⭕ 對','❌ 錯'];
+const SITES=[
+ {id:'hwy',name:'中山高速公路',icon:'🛣️',cat:'traffic',p:[300,470],
+  info:'北起基隆、南到高雄，是臺灣第一條高速公路，民國67年全線通車，南北往來快很多。',
+  qs:[{q:'中山高速公路北起哪裡、南到哪裡？',o:['基隆 → 高雄','臺北 → 臺中','宜蘭 → 花蓮','桃園 → 臺南'],a:0},
+      {q:'中山高速公路是臺灣第一條高速公路。',o:OX,a:0},
+      {q:'中山高速公路通車後，西部發生什麼改變？',o:['南北往來時間大幅縮短','東部不用再走山路','漁獲量增加一倍','從此不需要鐵路'],a:0}],
+  ch:{q:'中山高速公路在哪一年全線通車？',o:['民國67年（1978年）','民國50年（1961年）','民國80年（1991年）','民國57年（1968年）'],a:0}},
+ {id:'north',name:'北迴鐵路',icon:'🚞',cat:'traffic',p:[592,410],anchor:[121.70,24.30],
+  info:'連接宜蘭蘇澳和花蓮，沿線多山、隧道很多，讓東部和北部往來更方便。',
+  qs:[{q:'北迴鐵路連接哪兩個地方？',o:['蘇澳和花蓮','臺北和基隆','高雄和屏東','臺中和彰化'],a:0},
+      {q:'北迴鐵路讓東部和北部之間的交通更方便。',o:OX,a:0},
+      {q:'政府興建北迴鐵路，最主要是為了什麼？',o:['改善東部對外交通','把石油運到高雄','讓飛機降落','發展漁港'],a:0}],
+  ch:{q:'北迴鐵路完成後，還要再蓋哪一段，臺灣鐵路才能繞全島一圈？',o:['南迴鐵路','縱貫線','平溪線','阿里山鐵路'],a:0}},
+ {id:'elec',name:'鐵路電氣化',icon:'🚆',cat:'traffic',p:[96,560],anchor:[120.45,23.60],
+  info:'西部縱貫線的火車改用電力行駛，速度更快、載運量更大，也比較少黑煙。',
+  qs:[{q:'「鐵路電氣化」是讓火車改用什麼當動力？',o:['電力','燒煤的蒸汽','風力','人力'],a:0},
+      {q:'鐵路電氣化主要在哪一條鐵路進行？',o:['西部縱貫線','阿里山森林鐵路','北迴鐵路','南迴鐵路'],a:0},
+      {q:'鐵路電氣化以後，火車速度更快、能載的人和貨更多。',o:OX,a:0}],
+  ch:{q:'電氣化火車和蒸汽火車比起來，哪一項「不是」它的好處？',o:['需要燒大量的煤','速度比較快','比較少黑煙','載運量比較大'],a:0}},
+ {id:'tcport',name:'臺中港',icon:'⚓',cat:'traffic',p:[110,330],anchor:[120.52,24.27],
+  info:'位在中部西海岸，分擔基隆港和高雄港的貨運，也帶動中部發展。',
+  qs:[{q:'臺中港位在臺灣的哪裡？',o:['中部西海岸','東部海岸','北部海岸','恆春半島'],a:0},
+      {q:'為什麼要興建臺中港？',o:['分擔基隆港和高雄港的運輸','蓋海水浴場','舉辦捕魚比賽','方便蓋機場'],a:0},
+      {q:'臺中港是十大建設之一。',o:OX,a:0}],
+  ch:{q:'十大建設裡有兩個港口，是哪兩個？',o:['臺中港、蘇澳港','基隆港、高雄港','安平港、花蓮港','臺中港、高雄港'],a:0}},
+ {id:'suao',name:'蘇澳港',icon:'🚢',cat:'traffic',p:[604,250],anchor:[121.86,24.60],
+  info:'位在宜蘭縣東北部海岸，輔助基隆港，分擔北部的貨運。',
+  qs:[{q:'蘇澳港位在哪一個縣？',o:['宜蘭縣','屏東縣','臺南市','新竹縣'],a:0},
+      {q:'蘇澳港主要的功能是什麼？',o:['輔助基隆港，分擔北部貨運','發射火箭','煉製石油','種植稻米'],a:0},
+      {q:'蘇澳港位在臺灣的西海岸。',o:OX,a:1}],
+  ch:{q:'蘇澳港旁邊接著哪一項十大建設，讓北部和東部交通連起來？',o:['北迴鐵路','中山高速公路','臺中港','中正國際機場'],a:0}},
+ {id:'air',name:'中正國際機場',icon:'✈️',cat:'traffic',p:[318,104],anchor:[121.23,25.08],
+  info:'位在桃園，民國68年啟用，取代不夠用的松山機場，現在叫「桃園國際機場」。',
+  qs:[{q:'十大建設的「中正國際機場」，現在叫什麼名字？',o:['桃園國際機場','松山機場','高雄國際機場','清泉崗機場'],a:0},
+      {q:'為什麼要蓋新的國際機場？',o:['原本的松山機場不夠用','臺灣以前沒有機場','為了生產飛機','為了運送稻米'],a:0},
+      {q:'中正國際機場位在桃園。',o:OX,a:0}],
+  ch:{q:'中正國際機場在哪一年啟用？',o:['民國68年（1979年）','民國38年（1949年）','民國90年（2001年）','民國55年（1966年）'],a:0}},
+ {id:'steel',name:'中國鋼鐵公司',icon:'🔩',cat:'heavy',p:[100,885],anchor:[120.35,22.56],
+  info:'設在高雄的大型鋼鐵廠，生產造船、建築、機械需要的鋼鐵。',
+  qs:[{q:'中國鋼鐵公司（中鋼）設在哪個城市？',o:['高雄','花蓮','新竹','基隆'],a:0},
+      {q:'為什麼要發展鋼鐵業？',o:['提供造船、建築、機械需要的鋼鐵','生產衣服','種植茶葉','發展觀光'],a:0},
+      {q:'鋼鐵業屬於「重工業」。',o:OX,a:0}],
+  ch:{q:'十大建設中，哪三項屬於重工業？',o:['鋼鐵、造船、石油化學','高速公路、鐵路、機場','港口、核電、鐵路','鋼鐵、機場、港口'],a:0}},
+ {id:'ship',name:'中國造船公司',icon:'⛴️',cat:'heavy',p:[100,720],anchor:[120.30,22.62],
+  info:'設在高雄，可以建造大型船隻，帶動航運和貿易。',
+  qs:[{q:'中國造船公司設在哪裡？',o:['高雄','臺中','宜蘭','臺東'],a:0},
+      {q:'臺灣四面環海，發展造船業有什麼好處？',o:['自己造大船，發展航運和貿易','讓農田變大','減少颱風','生產電腦晶片'],a:0},
+      {q:'造船需要大量鋼鐵，所以造船廠和中鋼都設在高雄很方便。',o:OX,a:0}],
+  ch:{q:'高雄能成為重工業中心，最重要的條件是什麼？',o:['有大型港口，原料和產品方便進出','位在臺灣最北邊','有很多溫泉','人口最少'],a:0}},
+ {id:'petro',name:'石油化學工業',icon:'🛢️',cat:'heavy',p:[300,950],anchor:[120.40,22.52],
+  info:'在高雄發展，把石油做成塑膠、人造纖維等原料，提供給民生工業使用。',
+  qs:[{q:'石油化學工業可以生產什麼？',o:['塑膠、人造纖維的原料','稻米','茶葉','木材'],a:0},
+      {q:'石化工業的產品，主要提供給哪些工業使用？',o:['紡織、塑膠等民生工業','只給軍隊','漁業捕魚','觀光業'],a:0},
+      {q:'石油化學工業屬於重工業。',o:OX,a:0}],
+  ch:{q:'民國62年發生「石油危機」，造成什麼影響？',o:['油價大漲，世界經濟變差','臺灣挖到大油田','石油變得很便宜','汽車全部停產'],a:0}},
+ {id:'nuke',name:'核能發電廠',icon:'⚛️',cat:'energy',p:[566,66],anchor:[121.56,25.29],
+  info:'核一廠位在新北市石門，提供工業發展需要的大量電力。',
+  qs:[{q:'興建核能發電廠，主要是為了什麼？',o:['提供工業需要的大量電力','生產自來水','種植蔬菜','發展漁業'],a:0},
+      {q:'臺灣第一座核能發電廠（核一廠）在哪裡？',o:['新北市石門（北部海岸）','臺東','臺中市區','澎湖'],a:0},
+      {q:'十大建設裡，核能發電廠屬於「能源」建設。',o:OX,a:0}],
+  ch:{q:'核能發電量大，但大家也擔心什麼問題？',o:['核廢料處理和安全','會長出很多稻米','需要很多風','海水會變甜'],a:0}}
+];
+const EVENTS=[
+ {q:'十大建設是哪一位行政院長推動的？',o:['蔣經國','孫中山','李登輝','陳誠'],a:0,ex:'民國60年代，行政院長蔣經國推動十大建設。'},
+ {q:'十大建設大約在什麼時候推動？',o:['民國60年代（民國63～68年）','民國30年代','民國80年代','民國100年以後'],a:0,ex:'民國63年開始，大約民國68年陸續完成。'},
+ {q:'下面哪一個「不是」推動十大建設的原因？',o:['臺灣人口太少','石油危機讓經濟變差','交通和電力不夠用','要發展重工業'],a:0,ex:'石油危機、交通電力不足、發展重工業，都是推動十大建設的原因。'},
+ {q:'十大建設中，「交通建設」有幾項？',o:['6 項','3 項','1 項','10 項'],a:0,ex:'高速公路、北迴鐵路、鐵路電氣化、臺中港、蘇澳港、國際機場，共 6 項。'},
+ {q:'十大建設完成後，政府接著推動了什麼？',o:['十二項建設','加工出口區','耕者有其田','美援'],a:0,ex:'十大建設之後，政府接著推動「十二項建設」。'}
+];
+/* 地圖投影 */
+const P=(lon,lat)=>[(lon-119.75)*260,(25.45-lat)*290+30];
+const COAST=[[121.53,25.30],[121.62,25.25],[121.75,25.15],[121.93,25.10],[122.00,25.01],[121.86,24.85],[121.83,24.65],[121.87,24.58],[121.78,24.40],[121.70,24.20],[121.62,24.00],[121.55,23.70],[121.48,23.40],[121.38,23.10],[121.18,22.80],[121.00,22.60],[120.90,22.35],[120.85,22.05],[120.83,21.90],[120.73,21.94],[120.70,22.10],[120.62,22.30],[120.50,22.45],[120.35,22.55],[120.27,22.70],[120.17,22.90],[120.10,23.05],[120.12,23.30],[120.15,23.55],[120.20,23.75],[120.30,23.95],[120.42,24.15],[120.52,24.30],[120.65,24.50],[120.80,24.70],[120.92,24.85],[121.05,25.00],[121.18,25.08],[121.35,25.17],[121.45,25.25]];
+const HWY=[[121.74,25.13],[121.50,25.04],[121.28,24.97],[120.99,24.80],[120.82,24.56],[120.68,24.14],[120.55,24.05],[120.45,23.48],[120.23,23.00],[120.32,22.63]];
+const RAIL=[[121.74,25.13],[121.50,25.04],[121.20,24.93],[120.95,24.78],[120.86,24.66],[120.66,24.22],[120.53,24.07],[120.43,23.47],[120.20,23.00],[120.29,22.63]];
+const NRAIL=[[121.86,24.60],[121.80,24.46],[121.74,24.30],[121.60,23.98]];
+const CITY=[['臺北',121.52,25.04],['臺中',120.68,24.14],['高雄',120.30,22.63],['花蓮',121.60,23.98],['宜蘭',121.75,24.75]];
+
+/* ================== 狀態 ================== */
+const KEY='ten_projects_v1';
+let S=null, HIST=[], muted=false;
+const $=s=>document.querySelector(s);
+const app=()=>$('#app');
+function fresh(mode,n,names,cls,limit){
+  return {mode,cls,limit,teams:names.slice(0,n).map((nm,i)=>({name:nm,color:COLORS[i],score:0,right:0,tries:0})),
+    turn:0,turns:0,phase:'build',stealLeft:0,start:Date.now(),eventIdx:0,
+    sites:Object.fromEntries(SITES.map(s=>[s.id,{owner:null,prog:0,qi:0}])),stage:'game',right:0,tries:0};
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+function snap(){HIST.push(JSON.stringify(S));if(HIST.length>40)HIST.shift();}
+function undo(){
+  if(!HIST.length){toast('沒有可以復原的步驟');return;}
+  S=JSON.parse(HIST.pop());closeModal();save();renderGame();toast('↶ 已回到上一步');
+}
+const need=()=>S.mode==='coop'?2:1;
+const built=id=>S.sites[id].prog>=need();
+const allBuilt=()=>SITES.every(s=>built(s.id));
+const builtCount=()=>SITES.filter(s=>built(s.id)).length;
+
+/* ================== 共用 ================== */
+function fit(){const st=$('#stage');const k=Math.min(innerWidth/1920,innerHeight/1080);st.style.transform=`scale(${k})`;st.style.left=(innerWidth-1920*k)/2+'px';st.style.top=(innerHeight-1080*k)/2+'px';}
+addEventListener('resize',fit);
+let tT;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(tT);tT=setTimeout(()=>t.classList.remove('on'),2400);}
+function modal(h){const m=$('#modal');m.innerHTML=`<div class="card">${h}</div>`;m.hidden=false;}
+function closeModal(){const m=$('#modal');m.hidden=true;m.innerHTML='';}
+let AC=null;
+function tone(seq){if(muted)return;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();let t=AC.currentTime;
+  seq.forEach(([f,d,type])=>{const o=AC.createOscillator(),g=AC.createGain();o.type=type||'triangle';o.frequency.value=f;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.25,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+d+.05);t+=d*.8;});}catch(e){}}
+const sOk=()=>tone([[523,.15],[659,.15],[784,.3]]),sBad=()=>tone([[220,.25,'sawtooth'],[165,.35,'sawtooth']]),sWin=()=>tone([[523,.15],[659,.15],[784,.15],[1046,.5]]);
+function confetti(){const c=$('#confetti'),x=c.getContext('2d');const ps=Array.from({length:160},()=>({x:Math.random()*1920,y:-20-Math.random()*400,v:4+Math.random()*6,r:Math.random()*6,c:COLORS[Math.random()*6|0],w:10+Math.random()*12}));let n=0;
+  (function f(){x.clearRect(0,0,1920,1080);ps.forEach(p=>{p.y+=p.v;p.r+=.1;x.save();x.translate(p.x+Math.sin(p.r)*20,p.y);x.rotate(p.r);x.fillStyle=p.c;x.fillRect(-p.w/2,-4,p.w,8);x.restore();});if(++n<200)requestAnimationFrame(f);else x.clearRect(0,0,1920,1080);})();}
+const mmss=s=>`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;};
+
+/* ================== 開始畫面 ================== */
+let SET={mode:'team',n:5,limit:25,names:COLORS.map((c,i)=>`第${i+1}組`),cls:''};
+function renderSetup(){
+  let saved=null;try{saved=JSON.parse(localStorage.getItem(KEY));}catch(e){}
+  app().innerHTML=`<div class="screen" id="setup">
+    <h1>🏗️ <span>十大建設</span> 蓋出臺灣地圖</h1>
+    <div class="lead">民國60年代，政府推動十大建設。輪流上台選一項建設、答對題目，就能把它蓋在地圖上！</div>
+    <div class="modes">
+      <button class="mode ${SET.mode==='team'?'sel':''}" data-m="team"><b>⚔️ 分組對抗</b><p>各組輪流上台，答對就把建設蓋成自己的顏色（+100 分），答錯<b>不扣分</b>、換下一組。全部蓋完還有「搶建設」回合！</p></button>
+      <button class="mode ${SET.mode==='coop'?'sel':''}" data-m="coop"><b>🤝 全班合作</b><p>全班一起當工程隊，各組輪流派人上台。每項建設要答對 <b>2 題</b>（動工→完工），看全班多快把十大建設全部完成！</p></button>
+    </div>
+    <div class="setrow"><span>組數</span><div class="step"><button id="nMinus">－</button><span id="nVal">${SET.n}</span><button id="nPlus">＋</button></div>
+      <span style="margin-left:40px">時間</span><div class="chips">${[20,25,0].map(m=>`<button class="chip ${SET.limit===m?'sel':''}" data-l="${m}">${m?m+' 分鐘':'不限時'}</button>`).join('')}</div>
+      <span style="margin-left:40px">班級</span><input id="cls" placeholder="例如 608" maxlength="3" inputmode="numeric" value="${SET.cls}"></div>
+    <div id="teamNames">${Array.from({length:SET.n},(_,i)=>`<input data-i="${i}" value="${SET.names[i]}" maxlength="8" style="border-color:${COLORS[i]}">`).join('')}</div>
+    <div style="display:flex;gap:30px">
+      ${saved&&saved.stage==='game'?`<button class="btn ghost" id="resume">↩ 繼續上次的遊戲</button>`:''}
+      <button class="btn amber" id="startBtn">開始建設 ▶</button>
+    </div>
+    <div class="credit">✨ Zeiyen老師製作</div>
+  </div>`;
+  document.querySelectorAll('.mode').forEach(b=>b.onclick=()=>{SET.mode=b.dataset.m;renderSetup();});
+  document.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{SET.limit=+b.dataset.l;renderSetup();});
+  const keep=()=>{document.querySelectorAll('#teamNames input').forEach(i=>SET.names[+i.dataset.i]=i.value.trim()||`第${+i.dataset.i+1}組`);SET.cls=$('#cls').value.trim();};
+  $('#nMinus').onclick=()=>{keep();SET.n=Math.max(2,SET.n-1);renderSetup();};
+  $('#nPlus').onclick=()=>{keep();SET.n=Math.min(6,SET.n+1);renderSetup();};
+  $('#startBtn').onclick=()=>{keep();S=fresh(SET.mode,SET.n,SET.names,SET.cls,SET.limit);HIST=[];save();renderGame();
+    setTimeout(()=>toast(`請 ${S.teams[0].name} 派一位同學上台！`),300);};
+  const r=$('#resume');if(r)r.onclick=()=>{S=saved;HIST=[];if(S.stage==='result')renderResult();else renderGame();};
+}
+
+/* ================== 地圖 ================== */
+function mapSVG(interactive){
+  const pts=a=>a.map(p=>P(p[0],p[1]).map(v=>v.toFixed(1)).join(',')).join(' ');
+  const own=id=>{const s=S.sites[id];if(!built(id))return null;return S.mode==='coop'?'#f2b544':S.teams[s.owner].color;};
+  const line=(id,arr,w,dash)=>{const c=own(id);return `<polyline points="${pts(arr)}" fill="none" stroke="${c||'#5b7489'}" stroke-width="${c?w:5}" stroke-linecap="round" stroke-linejoin="round" ${c?(dash?`stroke-dasharray="${dash}"`:''):'stroke-dasharray="10 10"'} opacity="${c?1:.7}"/>`;};
+  let h=`<svg id="mapsvg" viewBox="0 0 660 1060" width="660" height="1060">
+    <defs><filter id="sh"><feDropShadow dx="0" dy="6" stdDeviation="6" flood-opacity=".45"/></filter></defs>
+    <rect width="660" height="1060" rx="30" fill="#123048"/>
+    <polygon points="${pts(COAST)}" fill="#3f6b4a" stroke="#9ec7a6" stroke-width="4"/>
+    <polygon points="${pts([[121.0,24.6],[121.3,24.3],[121.2,23.6],[120.95,23.0],[120.8,22.6],[120.75,23.4],[120.85,24.1]])}" fill="#4f7d55" opacity=".7"/>
+    ${line('hwy',HWY,12)}${line('elec',RAIL.map(p=>[p[0]-0.05,p[1]]),8,'16 6')}${line('north',NRAIL,9,'16 6')}
+    ${CITY.map(([n,lo,la])=>{const [x,y]=P(lo,la);return `<circle cx="${x}" cy="${y}" r="6" fill="#fff"/><text x="${x+(lo>121.4?-12:12)}" y="${y+8}" font-size="24" fill="#e8f3ea" font-weight="700" text-anchor="${lo>121.4?'end':'start'}">${n}</text>`;}).join('')}`;
+  SITES.forEach(s=>{
+    const st=S.sites[s.id],c=own(s.id),[x,y]=s.p;
+    if(s.anchor){const [ax,ay]=P(...s.anchor);h+=`<line x1="${x}" y1="${y}" x2="${ax}" y2="${ay}" stroke="#ffffffaa" stroke-width="3" stroke-dasharray="6 6"/><circle cx="${ax}" cy="${ay}" r="8" fill="${c||'#fff'}" stroke="#000" stroke-width="2"/>`;}
+    const half=S.mode==='coop'&&st.prog===1;
+    const can=interactive&&((S.phase==='build'&&!built(s.id))||(S.phase==='steal'&&built(s.id)&&st.owner!==S.turn));
+    h+=`<g class="site ${can?'pulse':''}" data-id="${s.id}" filter="url(#sh)">
+      <circle class="ring" cx="${x}" cy="${y}" r="50" fill="${c||(half?'#6b5a2a':'#1c2f40')}" stroke="${can?'#ffe08a':(c?'#fff':'#9fb3c4')}" stroke-width="${can?7:4}"/>
+      ${half?`<circle cx="${x}" cy="${y}" r="50" fill="none" stroke="#f2b544" stroke-width="8" stroke-dasharray="157 400" transform="rotate(-90 ${x} ${y})"/>`:''}
+      <text x="${x}" y="${y+17}" font-size="50" text-anchor="middle">${s.icon}</text>
+      <rect x="${x-78}" y="${y+56}" width="156" height="38" rx="12" fill="#000b"/>
+      <text x="${x}" y="${y+83}" font-size="23" fill="#fff" font-weight="800" text-anchor="middle">${s.name.replace('公司','')}</text>
+      ${c&&S.mode==='team'?`<text x="${x+40}" y="${y-30}" font-size="34">🚩</text>`:''}${half?`<text x="${x+40}" y="${y-30}" font-size="34">🚧</text>`:''}${c&&S.mode==='coop'?`<text x="${x+40}" y="${y-30}" font-size="34">✅</text>`:''}
+    </g>`;
+  });
+  return h+'</svg>';
+}
+
+/* ================== 遊戲畫面 ================== */
+let clockT=null;
+function renderGame(){
+  S.stage='game';save();
+  const T=S.teams[S.turn],coop=S.mode==='coop';
+  const msg=S.phase==='steal'
+    ?`⚔️ 搶建設回合：<span style="color:${T.color}">${T.name}</span><small>點一個<b>別組</b>的建設，答對挑戰題就能搶過來！（剩 ${S.stealLeft} 次）</small>`
+    :`輪到 <span style="color:${T.color}">${T.name}</span> 上台！<small>${coop?'點一個還沒完工的建設，答對就能推進工程':'點一個還沒蓋好的建設，答對就蓋成你們的顏色 🚩'}</small>`;
+  app().innerHTML=`<div class="screen">
+    <div id="map">${mapSVG(true)}</div>
+    <div id="side">
+      <div class="topbar"><div class="title">🏗️ 十大建設 蓋出臺灣地圖<small>${S.cls?S.cls+' 班｜':''}${coop?'全班合作':'分組對抗'}</small></div><div class="clock" id="clock">00:00</div></div>
+      <div class="turn" style="border-color:${T.color}">${msg}</div>
+      ${coop?`<div class="coopbar">🤝 全班工程進度：完工 <b>${builtCount()}</b> / 10 項｜答對 ${S.right} / ${S.tries} 題<div class="bar"><i style="width:${SITES.reduce((n,s)=>n+Math.min(S.sites[s.id].prog,2),0)/20*100}%"></i></div></div>`:''}
+      <div class="teams" style="grid-template-columns:${S.teams.length>3?'1fr 1fr':'1fr'}">${S.teams.map((t,i)=>`<div class="team ${i===S.turn?'cur':''}"><div class="dot" style="background:${t.color}"></div><div class="nm">${t.name}</div>
+        ${coop?`<div class="cnt">答對 ${t.right} 題</div>`:`<div class="cnt">🚩${SITES.filter(s=>built(s.id)&&S.sites[s.id].owner===i).length}</div><div class="sc">${t.score}</div>`}</div>`).join('')}</div>
+      <div class="legend"><span>🚗 交通建設 6 項</span><span>🏭 重工業 3 項</span><span>⚡ 能源 1 項</span>${coop?'':'<span>答對 +100｜答錯不扣分</span>'}</div>
+      <div class="tools">
+        <button class="btn ghost small" id="undoBtn">↶ 上一步</button>
+        <button class="btn ghost small" id="skipBtn">⏭ 換下一組</button>
+        <button class="btn ghost small" id="fsBtn">⛶ 全螢幕</button>
+        <button class="btn ghost small" id="muteBtn">${muted?'🔇 音效關':'🔊 音效開'}</button>
+        <button class="btn ghost small" id="endBtn" style="margin-left:auto">🏁 結束看結果</button>
+      </div>
+    </div></div>`;
+  document.querySelectorAll('.site').forEach(g=>g.onclick=()=>pickSite(g.dataset.id));
+  $('#undoBtn').onclick=undo;
+  $('#skipBtn').onclick=()=>{snap();nextTurn(false);};
+  $('#fsBtn').onclick=()=>{const d=document.documentElement;if(!document.fullscreenElement)(d.requestFullscreen||d.webkitRequestFullscreen||(()=>{})).call(d);else document.exitFullscreen&&document.exitFullscreen();};
+  $('#muteBtn').onclick=()=>{muted=!muted;renderGame();};
+  $('#endBtn').onclick=()=>{modal(`<div class="big">要結束遊戲、看結果嗎？</div><div class="actions" style="justify-content:center"><button class="btn ghost" id="no">繼續玩</button><button class="btn amber" id="yes">看結果 🏆</button></div>`);
+    $('#no').onclick=closeModal;$('#yes').onclick=()=>{closeModal();finish();};};
+  tick();clearInterval(clockT);clockT=setInterval(tick,1000);
+}
+function tick(){const c=$('#clock');if(!c||!S)return;const s=Math.floor((Date.now()-S.start)/1000);
+  if(S.limit){const left=S.limit*60-s;c.textContent=(left>=0?'⏳ ':'⏰ +')+mmss(Math.abs(left));c.classList.toggle('over',left<0);
+    if(left===0)toast('⏰ 時間到！這題結束後可以按「結束看結果」');}
+  else c.textContent='⏱ '+mmss(s);}
+
+function pickSite(id){
+  const s=SITES.find(x=>x.id===id),st=S.sites[id];
+  if(S.phase==='build'&&built(id)){toast('這項建設已經完工了，選別的吧！');return;}
+  if(S.phase==='steal'){
+    if(!built(id))return;
+    if(st.owner===S.turn){toast('這是你們自己的建設，選別組的！');return;}
+    ask(s,s.ch,'steal');return;
+  }
+  ask(s,s.qs[st.qi%s.qs.length],'build');
+}
+function ask(s,q,kind){
+  const T=S.teams[S.turn],ox=q.o===OX;
+  const order=ox?[0,1]:shuffle([0,1,2,3]);
+  const st=S.sites[s.id];
+  const stageTag=kind==='steal'?`<span class="tag" style="background:#7a2328">⚔️ 搶建設挑戰題｜目前屬於 ${S.teams[st.owner].name}</span>`
+    :S.mode==='coop'?`<span class="tag">${st.prog===0?'🚧 第 1 題：動工':'🏁 第 2 題：完工'}</span>`:'';
+  modal(`<div class="head"><div class="ico">${s.icon}</div><div><b>${s.name}</b><span class="tag">${CAT[s.cat]}</span>${stageTag}<span class="tag" style="background:${T.color}">${T.name} 作答</span></div></div>
+    <div class="q">${q.q}</div>
+    <div class="opts ${ox?'ox':''}">${order.map((oi,k)=>`<button class="opt" data-o="${oi}">${ox?'':`<span class="k">${'ABCD'[k]}</span>`}<span>${q.o[oi]}</span></button>`).join('')}</div>
+    <div class="fb" id="fb"></div>
+    <div class="actions"><button class="btn ghost small" id="cancel">✖ 點錯了，換一個建設</button><span></span></div>`);
+  $('#cancel').onclick=closeModal;
+  let done=false;
+  document.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
+    if(done)return;done=true;
+    const ok=+b.dataset.o===q.a;
+    document.querySelectorAll('.opt').forEach(x=>{const o=+x.dataset.o;if(o===q.a)x.classList.add('ok');else if(x===b)x.classList.add('bad');else x.classList.add('dim');});
+    snap();
+    T.tries++;S.tries++;
+    let head;
+    if(ok){T.right++;S.right++;}
+    if(kind==='build'){
+      st.qi++;
+      if(ok){
+        if(S.mode==='coop'){st.prog++;head=st.prog>=2?`🎉 答對了！「${s.name}」完工！`:`👍 答對了！「${s.name}」動工了，再答對一題就完工！`;}
+        else{st.prog=1;st.owner=S.turn;T.score+=100;head=`🎉 答對了！${T.name} 蓋好「${s.name}」，+100 分！`;}
+      }else head=`😅 可惜答錯了！這項建設還沒蓋好，${S.mode==='coop'?'換下一組來挑戰':'其他組還有機會'}。`;
+    }else{
+      if(ok){const old=S.teams[st.owner];old.score-=100;T.score+=100;head=`⚔️ 挑戰成功！「${s.name}」從 ${old.name} 搶過來了！`;st.owner=S.turn;}
+      else head=`🛡️ 挑戰失敗！「${s.name}」還是屬於 ${S.teams[st.owner].name}。`;
+    }
+    ok?(built(s.id)?sWin():sOk()):sBad();
+    if(ok&&built(s.id))confetti();
+    const fb=$('#fb');fb.className='fb '+(ok?'ok':'bad');
+    fb.innerHTML=`${head}<span class="info">📘 ${s.name}：${s.info}</span>`;
+    const a=$('.actions');a.innerHTML=`<span></span><button class="btn amber" id="nextBtn">下一組 ➜</button>`;
+    $('#nextBtn').onclick=()=>{closeModal();nextTurn(true);};
+    save();
+  });
+}
+function nextTurn(counted){
+  if(S.phase==='steal'&&counted){S.stealLeft--;}
+  S.turn=(S.turn+1)%S.teams.length;
+  if(counted)S.turns++;
+  save();
+  if(S.phase==='steal'){
+    // 跳過沒有別組建設可搶的組
+    let guard=0;while(S.stealLeft>0&&!SITES.some(s=>S.sites[s.id].owner!==S.turn)&&guard++<10){S.turn=(S.turn+1)%S.teams.length;S.stealLeft--;}
+    if(S.stealLeft<=0){finish();return;}
+    renderGame();return;
+  }
+  if(allBuilt()){
+    renderGame();
+    if(S.mode==='coop'){setTimeout(finish,600);return;}
+    modal(`<div class="big">🎉 十大建設全部完工！</div><div style="font-size:38px;text-align:center;color:var(--muted)">還有時間的話，可以進入「搶建設」回合：<br>每組輪流 1 次，答對挑戰題就能搶走別組的建設！</div>
+      <div class="actions" style="justify-content:center"><button class="btn ghost" id="toRes">直接看結果 🏆</button><button class="btn amber" id="toSteal">進入搶建設回合 ⚔️</button></div>`);
+    $('#toRes').onclick=()=>{closeModal();finish();};
+    $('#toSteal').onclick=()=>{snap();S.phase='steal';S.stealLeft=S.teams.length;
+      const lowest=S.teams.map((t,i)=>[t.score,i]).sort((a,b)=>a[0]-b[0])[0][1];S.turn=lowest;
+      closeModal();save();renderGame();toast(`分數最低的 ${S.teams[S.turn].name} 先挑戰！`);};
+    return;
+  }
+  renderGame();
+  if(counted&&S.turns%4===0&&S.eventIdx<EVENTS.length)setTimeout(eventCard,350);
+}
+function eventCard(){
+  const e=EVENTS[S.eventIdx];S.eventIdx++;save();
+  modal(`<div class="head"><div class="ico">📰</div><div><b>時事快報：全班搶答！</b><span class="tag">${S.mode==='coop'?'全班一起想':'第一個舉手答對的組 +50 分'}</span></div></div>
+    <div class="q">${e.q}</div>
+    <div class="opts">${e.o.map((o,k)=>`<div class="opt" data-k="${k}"><span class="k">${'ABCD'[k]}</span><span>${o}</span></div>`).join('')}</div>
+    <div class="fb" id="fb"></div>
+    <div class="actions" id="evAct" style="justify-content:center"><button class="btn amber" id="reveal">揭曉答案 👀</button></div>`);
+  // 打亂顯示：簡單地把正確答案換到隨機位置
+  const opts=[...document.querySelectorAll('.opt')];const pos=Math.random()*4|0;
+  if(pos!==e.a){const a=opts[e.a].innerHTML,b=opts[pos].innerHTML;opts[e.a].innerHTML=b;opts[pos].innerHTML=a;
+    opts[e.a].querySelector('.k').textContent='ABCD'[e.a];opts[pos].querySelector('.k').textContent='ABCD'[pos];}
+  $('#reveal').onclick=()=>{
+    opts.forEach((o,k)=>o.classList.add(k===pos?'ok':'dim'));
+    $('#fb').className='fb ok';$('#fb').innerHTML=`✅ 答案是「${e.o[e.a]}」<span class="info">📘 ${e.ex}</span>`;sOk();
+    if(S.mode==='coop'){$('#evAct').innerHTML=`<button class="btn amber" id="evOk">繼續建設 ➜</button>`;$('#evOk').onclick=closeModal;return;}
+    $('#evAct').outerHTML=`<div style="text-align:center;font-size:34px;margin-top:20px;font-weight:800">哪一組最先答對？</div>
+      <div class="teambtns">${S.teams.map((t,i)=>`<button data-t="${i}" style="background:${t.color}">${t.name} +50</button>`).join('')}<button data-t="-1" style="background:#455a6b">沒有組答對</button></div>`;
+    document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{const i=+b.dataset.t;if(i>=0){snap();S.teams[i].score+=50;save();toast(`${S.teams[i].name} +50 分！`);}closeModal();renderGame();});
+  };
+}
+
+/* ================== 結果 ================== */
+function finish(){S.stage='result';S.end=S.end||Date.now();save();clearInterval(clockT);renderResult();sWin();confetti();}
+function renderResult(){
+  const used=Math.floor(((S.end||Date.now())-S.start)/1000),coop=S.mode==='coop';
+  const sum=`<div class="sumgrid">${SITES.map(s=>{const st=S.sites[s.id],b=built(s.id);const col=b?(coop?'#f2b544':S.teams[st.owner].color):'#555';
+    return `<div style="border-left-color:${col}"><div class="ic">${s.icon}</div><div><b>${s.name}</b>${b?(coop?'✅ 完工':`🚩 ${S.teams[st.owner].name}`):'🚧 未完工'}</div></div>`;}).join('')}</div>`;
+  let body;
+  if(coop){
+    const n=builtCount();
+    body=`<h1>${n===10?'🎉 全班完成十大建設！':`🏗️ 全班完成 ${n} / 10 項建設`}</h1>
+      <div style="font-size:44px;font-weight:800;margin:10px 0">⏱ 用時 ${mmss(used)}　✅ 答對 ${S.right} / ${S.tries} 題　🎯 答對率 ${S.tries?Math.round(S.right/S.tries*100):0}%</div>
+      <div class="rlist">${S.teams.map(t=>`<div><span style="color:${t.color}">● ${t.name}</span><span>答對 ${t.right} / ${t.tries} 題</span></div>`).join('')}</div>`;
+  }else{
+    const rank=S.teams.map((t,i)=>({...t,i,n:SITES.filter(s=>built(s.id)&&S.sites[s.id].owner===i).length})).sort((a,b)=>b.score-a.score||b.n-a.n);
+    const pod=[rank[1],rank[0],rank[2]].filter(Boolean);
+    const H={0:230,1:170,2:120},M=['🥇','🥈','🥉'];
+    body=`<h1>🏆 十大建設 建設王</h1>
+      <div class="podium">${pod.map(t=>{const r=rank.indexOf(t);return `<div class="pod" style="background:${t.color};min-height:${H[r]+150}px"><div class="medal">${M[r]}</div>${t.name}<div class="s">${t.score} 分</div><div style="font-size:28px">🚩 ${t.n} 項</div></div>`;}).join('')}</div>
+      ${rank.length>3?`<div class="rlist">${rank.slice(3).map((t,k)=>`<div><span style="color:${t.color}">${k+4}. ${t.name}</span><span>${t.score} 分｜🚩 ${t.n} 項</span></div>`).join('')}</div>`:''}
+      <div style="font-size:30px;color:var(--muted)">⏱ 遊戲時間 ${mmss(used)}｜全班答對 ${S.right} / ${S.tries} 題</div>`;
+  }
+  app().innerHTML=`<div class="screen" id="result">${body}${sum}
+    <div style="display:flex;gap:30px;margin-top:26px"><button class="btn ghost" id="backMap">🗺️ 回地圖看看</button><button class="btn amber" id="again">再玩一次 🔄</button></div>
+    <div class="credit">✨ Zeiyen老師製作</div></div>`;
+  $('#again').onclick=()=>{S=null;try{localStorage.removeItem(KEY);}catch(e){}renderSetup();};
+  $('#backMap').onclick=()=>{app().innerHTML=`<div class="screen"><div id="map">${mapSVG(false)}</div><div id="side"><div class="turn" style="border-color:var(--amber)">🗺️ 最後的臺灣地圖<small>${coop?'金色是全班完工的建設':'旗子顏色就是蓋好那項建設的組別'}</small></div>
+    ${sum}
+    <div class="tools"><button class="btn amber" id="backRes">🏆 回到結果</button></div></div></div>`;$('#backRes').onclick=renderResult;};
+}
+
+fit();renderSetup();
+</script>
+</body>
+</html>
