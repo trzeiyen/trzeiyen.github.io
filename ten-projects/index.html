@@ -513,7 +513,7 @@ function renderResult(){
 }
 
 /* ================== 平板連線 ================== */
-const GAS_URL='';
+const GAS_URL='https://script.google.com/macros/s/AKfycbxiShX-sM5D7gz1OfyNAtWWFVi9P5EUgqetyPfn6iIijvJuU6jzXq8-QpHtN8PeVzl1fg/exec';
 let PAD={loop:null,busy:false,joined:{},ans:{},now:0,skew:0,fails:0,cur:null,pickOpen:false,netHidden:false};
 const isPad=()=>!!(S&&S.link==='pad');
 const online=i=>!!(PAD.joined[i]&&PAD.now-PAD.joined[i]<12000);
