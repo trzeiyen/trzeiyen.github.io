@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>漢人文化成為主流｜三關探究</title>
+<style>
+:root{--ink:#23313f;--ink2:#5a6876;--paper:#fbf6ea;--card:#fffdf7;--han:#c4532d;--han2:#f3d9c9;--yuan:#1f7a7a;--yuan2:#d4ecea;--gold:#e9b949;--ok:#3d8a4f;--bad:#c23b3b;--line:#e4d8bd}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.6 "PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;-webkit-text-size-adjust:100%}
+button{font:inherit;cursor:pointer;touch-action:manipulation}
+.screen{display:none;min-height:100vh}.screen.on{display:block}
+/* 登入 */
+#login{display:none;place-items:center;padding:24px;background:radial-gradient(circle at 20% 10%,#fff6dc,transparent 50%),radial-gradient(circle at 85% 90%,#d4ecea,transparent 55%),var(--paper)}
+#login.on{display:grid}
+.lg{width:min(560px,100%);background:var(--card);border:3px solid var(--ink);border-radius:24px;padding:26px 26px 20px;box-shadow:8px 8px 0 var(--ink)}
+.lg h1{margin:0;font-size:clamp(34px,7vw,48px);font-weight:900;line-height:1.1;letter-spacing:.03em}
+.lg h1 span{color:var(--han)}
+.lg .sub{margin:8px 0 2px;font-weight:700;color:var(--yuan)}
+.lg .pg{display:inline-block;margin:6px 0 14px;font-size:14px;font-weight:700;background:var(--gold);padding:2px 12px;border-radius:99px}
+.lg ol{margin:0 0 16px;padding-left:22px;color:var(--ink2);font-size:16px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row label{flex:1 1 110px;font-weight:700;font-size:15px}
+.row input{display:block;width:100%;height:52px;margin-top:4px;font-size:22px;text-align:center;border:2px solid var(--ink);border-radius:12px;background:#fff}
+.row label.opt{color:var(--ink2)}
+.big{display:block;width:100%;min-height:56px;margin-top:14px;border:0;border-radius:14px;background:var(--han);color:#fff;font-weight:900;font-size:21px;box-shadow:0 4px 0 #8f3a1f}
+.big:active{transform:translateY(3px);box-shadow:0 1px 0 #8f3a1f}
+.big.alt{background:var(--yuan);box-shadow:0 4px 0 #145454}
+.big.ghost{background:#fff;color:var(--ink);border:2px solid var(--ink);box-shadow:none;min-height:48px;font-size:17px}
+.err{color:var(--bad);font-weight:700;min-height:1.6em;margin-top:8px}
+.credit{text-align:center;margin-top:14px;font-size:14px;color:var(--ink2);font-weight:700}
+/* 上方列 */
+header.top{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:10px;padding:10px max(14px,env(safe-area-inset-left));background:var(--ink);color:#fff;flex-wrap:wrap}
+header.top b{font-size:18px}
+.steps{display:flex;gap:6px;flex:1;justify-content:center;flex-wrap:wrap}
+.steps span{padding:3px 12px;border-radius:99px;background:rgba(255,255,255,.14);font-size:14px;font-weight:700;white-space:nowrap}
+.steps span.now{background:var(--gold);color:var(--ink)}
+.steps span.ok{background:var(--ok)}
+.meta{font-size:14px;font-weight:700;white-space:nowrap}
+main{max-width:1180px;margin:0 auto;padding:16px max(14px,env(safe-area-inset-left)) 40px}
+.lvtitle{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:4px 0 6px}
+.lvtitle h2{margin:0;font-size:clamp(24px,4vw,32px);font-weight:900}
+.lvtitle small{font-weight:700;color:var(--ink2)}
+.task{background:#fff;border-left:6px solid var(--gold);border-radius:10px;padding:10px 14px;margin:0 0 12px;font-weight:700}
+.panel{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:14px}
+.two{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:14px}
+@media(max-width:860px){.two{grid-template-columns:1fr}}
+svg{display:block;width:100%;height:auto}
+#map rect,#map g{transition:opacity .35s}
+/* 第1關 */
+.slider{margin:12px 6px 4px}
+.slider input{width:100%;height:44px;accent-color:var(--han)}
+.ticks{display:flex;justify-content:space-between;font-size:14px;font-weight:700;color:var(--ink2)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px;color:var(--ink2);margin-top:6px}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:4px}
+.voice{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;border:2px dashed var(--line);border-radius:14px;padding:10px 12px;background:#fff;margin-bottom:10px;color:var(--ink);min-height:64px}
+.voice .av{flex:none;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-weight:900;color:#fff;background:var(--yuan)}
+.voice.lock{opacity:.45;cursor:default}
+.voice.new{border-color:var(--han);animation:pulse 1.2s infinite}
+.voice.read{border-style:solid;border-color:var(--yuan)}
+@keyframes pulse{50%{box-shadow:0 0 0 5px rgba(196,83,45,.18)}}
+.q{margin-top:12px}
+.q h3{margin:0 0 8px;font-size:18px}
+.opts{display:grid;gap:8px}
+.opts button{min-height:52px;text-align:left;padding:8px 14px;border:2px solid var(--ink);border-radius:12px;background:#fff;font-weight:700;color:var(--ink)}
+.opts button.ok{background:#dff0e2;border-color:var(--ok)}
+.opts button.no{background:#f8dede;border-color:var(--bad);animation:shake .3s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+textarea{width:100%;min-height:96px;font:inherit;font-size:19px;padding:10px;border:2px solid var(--ink);border-radius:12px;background:#fff;resize:vertical}
+.fb{margin-top:8px;font-weight:700;min-height:1.6em}
+.fb.good{color:var(--ok)}.fb.warn{color:#9a6a00}
+/* 第2關 */
+.meters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.meter{flex:1 1 140px;background:#fff;border:2px solid var(--line);border-radius:12px;padding:6px 10px;font-weight:700}
+.meter .dots{display:flex;gap:4px;margin-top:2px}
+.meter .dots i{flex:1;height:12px;border-radius:6px;background:var(--yuan)}
+.meter .dots i.off{background:#e3e3e3}
+.meter.hit{animation:shake .4s}
+.gen{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.gen span{padding:2px 12px;border-radius:99px;font-size:14px;font-weight:700;background:#eee;color:var(--ink2)}
+.gen span.now{background:var(--yuan);color:#fff}
+.story{font-size:18px}
+.story p{margin:0 0 10px}
+.cons{background:var(--yuan2);border-radius:12px;padding:10px 12px;margin:10px 0;font-weight:700}
+.cluebar{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;font-size:14px;font-weight:700}
+.cluebar span{padding:3px 10px;border-radius:99px;background:#eee;color:#999}
+.cluebar span.got{background:var(--gold);color:var(--ink)}
+.clue{cursor:pointer}
+.clue .ring{fill:none;stroke:var(--gold);stroke-width:4;opacity:0}
+.hinting .clue:not(.got) .ring{animation:ring 1s 3}
+@keyframes ring{50%{opacity:1}}
+.clue.got{opacity:.35;pointer-events:none}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);width:min(520px,92vw);background:var(--ink);color:#fff;border-radius:16px;padding:14px 16px;z-index:40;box-shadow:0 10px 30px rgba(0,0,0,.25);display:none}
+.toast.on{display:block;animation:up .3s}
+.toast b{color:var(--gold)}
+@keyframes up{from{transform:translate(-50%,20px);opacity:0}}
+/* 第3關 */
+.tray{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;min-height:60px;margin-bottom:12px}
+.card{background:#fff;border:2px solid var(--ink);border-radius:12px;padding:10px 12px;font-weight:700;font-size:16px;line-height:1.45;touch-action:none;-webkit-user-select:none;user-select:none;cursor:grab;box-shadow:0 3px 0 var(--ink)}
+.card.sel{background:#fff4cf;border-color:var(--han);box-shadow:0 3px 0 var(--han)}
+.card.ghost{position:fixed;z-index:50;pointer-events:none;opacity:.92;transform:rotate(-2deg);box-shadow:0 10px 24px rgba(0,0,0,.25)}
+.card.lift{opacity:.3}
+.boxes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media(max-width:700px){.boxes{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.box{min-height:132px;border:3px dashed var(--yuan);border-radius:16px;background:var(--yuan2);padding:8px;transition:background .15s}
+.box h4{margin:0 0 6px;font-size:19px;color:var(--yuan);text-align:center}
+.box.over{background:#bfe3df}
+.box.no{animation:shake .3s;border-color:var(--bad)}
+.box .in{font-size:14px;background:#fff;border-radius:8px;padding:5px 8px;margin-top:5px;font-weight:700;border-left:4px solid var(--ok)}
+/* 結算 */
+.res{max-width:720px;margin:0 auto}
+.score{font-size:64px;font-weight:900;color:var(--han);line-height:1}
+.brk{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}
+.brk div{background:#fff;border:2px solid var(--line);border-radius:14px;padding:10px;text-align:center;font-weight:700}
+.brk b{display:block;font-size:30px;color:var(--yuan)}
+.sum{background:#fff;border-radius:14px;padding:12px 16px;border-left:6px solid var(--han)}
+.sum li{margin:4px 0}
+.center{text-align:center}
+.small{font-size:14px;color:var(--ink2)}
+</style>
+</head>
+<body>
+
+<!-- ================= 登入 ================= -->
+<section class="screen on" id="login">
+  <div class="lg">
+    <h1>漢人文化<br><span>成為主流</span></h1>
+    <div class="sub">三關探究：界線地圖・噶瑪蘭家族三代記・文化流失偵探</div>
+    <span class="pg">適用翰林版 五上第三單元 第1課 P.62～63</span>
+    <ol>
+      <li>第1關　紅線藍線往哪走（約 10 分鐘）</li>
+      <li>第2關　噶瑪蘭家族三代記（約 18 分鐘）</li>
+      <li>第3關　文化流失偵探（約 10 分鐘）</li>
+    </ol>
+    <div class="row">
+      <label>班級<input id="cls" inputmode="numeric" maxlength="3" placeholder="501" autocomplete="off"></label>
+      <label>座號<input id="seat" inputmode="numeric" maxlength="2" placeholder="1" autocomplete="off"></label>
+      <label class="opt">第2位座號<input id="m1" inputmode="numeric" maxlength="2" placeholder="選填" autocomplete="off"></label>
+      <label class="opt">第3位座號<input id="m2" inputmode="numeric" maxlength="2" placeholder="選填" autocomplete="off"></label>
+    </div>
+    <div class="err" id="lerr"></div>
+    <div id="resumeBox" hidden>
+      <button class="big alt" id="resume">繼續上次進度</button>
+      <button class="big ghost" id="restart">重新開始（上次的進度會清除）</button>
+    </div>
+    <button class="big" id="start">開始探究</button>
+    <div class="credit">由Zeiyen老師製作</div>
+  </div>
+</section>
+
+<!-- ================= 遊戲 ================= -->
+<section class="screen" id="game">
+  <header class="top">
+    <b>漢人文化成為主流</b>
+    <div class="steps" id="steps"></div>
+    <div class="meta" id="meta"></div>
+  </header>
+  <main id="stage"></main>
+</section>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===== 設定 ===== */
+// 與〈穿越清帝國大逃脫〉共用同一個 Apps Script（成績存在「漢人文化-成績」工作表）
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzqfvkWjqjGsLnnDsFNqlfvwluKJmvKC1KPbZjzwebmnk8PfmVhxOeSMGQUrRAP2fkVAg/exec';
+const GAME_ID = 'han-culture';
+const KEY = 'han-culture-v1';
+
+const $ = s=>document.querySelector(s);
+const esc = s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let S = null;
+
+/* ===== 狀態與保存 ===== */
+function skey(cls,seat){ return KEY+'-'+cls+'-'+seat; }
+function save(){ try{ localStorage.setItem(skey(S.cls,S.seat), JSON.stringify(S)); localStorage.setItem(KEY+'-who', JSON.stringify({cls:S.cls,seat:S.seat,mates:S.mates})); }catch(e){} }
+function load(cls,seat){ try{ return JSON.parse(localStorage.getItem(skey(cls,seat))); }catch(e){ return null; } }
+function fresh(cls,seat,mates){
+  return {cls,seat,mates,sid:Date.now().toString(36)+Math.random().toString(36).slice(2,6),start:Date.now(),end:0,lv:1,errors:0,wrongBy:{},
+    l1:{t:0,read:[],dir:false,sentence:'',tries:0,s:0,done:false},
+    l2:{g:0,d:0,shown:false,cons:'',choices:[],m:{lang:5,land:5,faith:5},clues:{},ending:'',s:0,done:false},
+    l3:{placed:{},firstWrong:{},cmpTries:0,cmp:'',cmpS:0,cmpDone:false,s:0,done:false}};
+}
+function miss(k){ S.errors++; S.wrongBy[k]=(S.wrongBy[k]||0)+1; save(); }
+function secs(){ return Math.floor(((S.end||Date.now())-S.start)/1000); }
+function fmt(s){ return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); }
+function total(){ return S.l1.s+S.l2.s+S.l3.s; }
+function cleared(){ return [S.l1.done,S.l2.done,S.l3.done].filter(Boolean).length; }
+
+/* ===== 上傳 ===== */
+function post(body){ if(!GAS_URL) return; try{ fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body),keepalive:true}).catch(()=>{}); }catch(e){} }
+function base(){ return {game:GAME_ID,sid:S.sid,cls:S.cls,seat:S.seat,mates:S.mates,lv:S.lv,done:S.lv>3}; }
+function report(){
+  post(Object.assign(base(),{cleared:cleared(),score:total(),s1:S.l1.s,s2:S.l2.s,s3:S.l3.s,secs:secs(),errors:S.errors,wrongBy:S.wrongBy,
+    sentence:S.l1.sentence,ending:S.l2.ending,clues:Object.keys(S.l2.clues).length,cmp:S.l3.cmp}));
+}
+let liveAt=0,liveSig='';
+function live(force){
+  if(!S || S.lv>3 || !$('#game').classList.contains('on')) return;
+  const sig=S.sid+'|'+S.lv, now=Date.now();
+  if(!force && sig===liveSig && now-liveAt<90000) return;
+  liveSig=sig; liveAt=now; post(Object.assign(base(),{type:'live'}));
+}
+setInterval(live,5000);
+
+/* ===== 畫面框架 ===== */
+function show(id){ document.querySelectorAll('.screen').forEach(e=>e.classList.toggle('on',e.id===id)); window.scrollTo(0,0); }
+function header(){
+  const names=['第1關 界線地圖','第2關 家族三代記','第3關 文化偵探'];
+  $('#steps').innerHTML=names.map((n,i)=>`<span class="${S.lv===i+1?'now':(S.lv>i+1?'ok':'')}">${S.lv>i+1?'✓ ':''}${n}</span>`).join('');
+  $('#meta').textContent=`${S.cls} 班 ${[S.seat].concat(S.mates).join('、')} 號｜${total()} 分｜${fmt(secs())}`;
+}
+setInterval(()=>{ if(S && $('#game').classList.contains('on')) header(); },1000);
+let toastT=0;
+function toast(html,ms){ const t=$('#toast'); t.innerHTML=html; t.classList.add('on'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('on'),ms||4200); }
+function go(){
+  show('game'); header(); live(true);
+  if(S.lv===1) L1(); else if(S.lv===2) L2(); else if(S.lv===3) L3(); else result();
+}
+function next(){ S.lv++; if(S.lv>3) S.end=Date.now(); save(); report(); go(); }
+
+/* ===== 登入 ===== */
+const num=v=>String(v||'').replace(/\D/g,'');
+function readLogin(){
+  const cls=num($('#cls').value), seat=parseInt(num($('#seat').value),10);
+  const mates=[$('#m1').value,$('#m2').value].map(v=>parseInt(num(v),10)).filter(n=>n>0&&n<=45&&n!==seat);
+  if(!/^[1-6](0[1-9]|1[0-9]|20)$/.test(cls)) return {err:'班級請填三位數，例如 501、609。'};
+  if(!(seat>=1&&seat<=45)) return {err:'座號請填 1～45。'};
+  return {cls,seat,mates:[...new Set(mates)]};
+}
+function checkResume(){
+  const r=readLogin(); const old=!r.err && load(r.cls,r.seat);
+  const can=!!(old && old.lv<=3);
+  $('#resumeBox').hidden=!can; $('#start').hidden=can;
+  if(old && old.lv>3){ $('#start').textContent='這組已經完成了，再挑戰一次'; } else $('#start').textContent='開始探究';
+}
+['#cls','#seat'].forEach(s=>$(s).addEventListener('input',checkResume));
+$('#start').onclick=()=>{ const r=readLogin(); if(r.err){ $('#lerr').textContent=r.err; return; } S=fresh(r.cls,r.seat,r.mates); save(); go(); };
+$('#restart').onclick=()=>{ const r=readLogin(); if(r.err){ $('#lerr').textContent=r.err; return; } S=fresh(r.cls,r.seat,r.mates); save(); go(); };
+$('#resume').onclick=()=>{ const r=readLogin(); if(r.err){ $('#lerr').textContent=r.err; return; } S=load(r.cls,r.seat); if(r.mates.length) S.mates=r.mates; save(); go(); };
+try{ const w=JSON.parse(localStorage.getItem(KEY+'-who')); if(w){ $('#cls').value=w.cls; $('#seat').value=w.seat; if(w.mates[0])$('#m1').value=w.mates[0]; if(w.mates[1])$('#m2').value=w.mates[1]; checkResume(); } }catch(e){}
+
+/* =====================================================================
+   第1關　紅線藍線往哪走
+   ===================================================================== */
+const VOICES=[
+  {at:30,who:'平埔',name:'平埔族人',txt:'漢人移民越來越多，在平原上開出一塊塊水田。我們打鹿的草原，一年比一年小。'},
+  {at:60,who:'平埔',name:'平埔族人',txt:'家裡缺錢，只好把祖先留下的土地租給漢人耕種。後來有些族人被迫離開家園，搬到別的地方生活。'},
+  {at:95,who:'山區',name:'山區原住民',txt:'官府畫了界線，可是越界開墾的人還是越來越多。界線一直往山裡移，我們的生活空間越來越小。'}
+];
+const FRONT=t=>230+t*5.1;          // 漢人開墾前緣（x）
+let seedN=7; const rnd=()=>(seedN=(seedN*16807)%2147483647)/2147483647;
+const PADDY=[], HOUSE=[], VIL=[];
+(function(){
+  for(let x=196;x<=740;x+=36) for(let y=40;y<=560;y+=38){ if(rnd()<.62) PADDY.push([x+rnd()*8,y+rnd()*8]); }
+  for(let i=0;i<16;i++) HOUSE.push([200+rnd()*520,60+rnd()*480]);
+  [[270,120],[330,300],[290,470],[420,190],[460,400],[520,90],[540,520]].forEach(([x,y])=>VIL.push({x,y,tx:Math.min(x+260,830),ty:y+(rnd()-.5)*60}));
+})();
+function mapSVG(){
+  const mts=[]; for(let i=0;i<34;i++){ const x=770+((i*53)%230), y=30+((i*97)%540), h=30+(i%4)*10; mts.push(`<path d="M${x-h*.8} ${y+h/2}L${x} ${y-h/2}L${x+h*.8} ${y+h/2}Z" fill="#5f9358" opacity=".85"/>`); }
+  return `<svg viewBox="0 0 1000 600" id="map" role="img" aria-label="清帝國時期漢人開墾範圍示意圖">
+  <rect width="1000" height="600" fill="#7fae6b"/>
+  <rect x="560" width="220" height="600" fill="#b6d48a"/>
+  <path d="M0 0H190Q160 80 185 150T175 300T190 450T178 600H0Z" fill="#8fd3e8"/>
+  <path d="M190 0Q160 80 185 150T175 300T190 450T178 600H560V0Z" fill="#dcefb7"/>
+  <text x="70" y="300" font-size="26" font-weight="900" fill="#2b7c98" writing-mode="tb" letter-spacing="8">臺灣海峽</text>
+  ${mts.join('')}
+  <text x="880" y="580" font-size="20" font-weight="900" fill="#fff" text-anchor="middle">山地</text>
+  <text x="670" y="580" font-size="20" font-weight="900" fill="#4a6a2a" text-anchor="middle">丘陵</text>
+  <text x="370" y="585" font-size="20" font-weight="900" fill="#4a6a2a" text-anchor="middle">平原</text>
+  ${[[60,'M1000 90C850 120 700 60 560 130S300 120 185 150'],[0,'M1000 330C860 300 720 360 560 320S320 340 178 300'],[0,'M1000 500C880 520 720 470 560 520S330 470 188 450']].map(r=>`<path d="${r[1]}" fill="none" stroke="#5cb8d8" stroke-width="7" stroke-linecap="round"/>`).join('')}
+  <path id="tribe" fill="#1f7a7a" opacity=".22" d=""/>
+  <text id="tribeT" x="890" y="300" font-size="19" font-weight="900" fill="#0f4f4f" text-anchor="middle">山區原住民</text>
+  <g id="paddy">${PADDY.map(([x,y],i)=>`<rect data-x="${x}" x="${x}" y="${y}" width="28" height="22" rx="3" fill="#f2d65c" stroke="#b89a28" stroke-width="2"/>`).join('')}</g>
+  <g id="house">${HOUSE.map(([x,y])=>`<g data-x="${x}" transform="translate(${x} ${y})"><rect x="-10" y="-2" width="20" height="14" fill="#fff4e4"/><path d="M-14 0L0 -12L14 0Z" fill="#c4532d"/></g>`).join('')}</g>
+  <g id="vil">${VIL.map((v,i)=>`<g data-i="${i}" transform="translate(${v.x} ${v.y})"><circle r="15" fill="#1f7a7a"/><path d="M-12 2L0 -14L12 2Z" fill="#a37b3a"/><rect x="-8" y="0" width="16" height="10" fill="#e7cf9c"/></g>`).join('')}</g>
+  <g id="red" opacity="0"><path d="M440 0C420 80 470 160 440 240S420 380 455 460 430 560 440 600" fill="none" stroke="#e23b3b" stroke-width="7" stroke-dasharray="16 8"/><rect x="385" y="14" width="112" height="30" rx="8" fill="#e23b3b"/><text x="441" y="35" font-size="17" font-weight="900" fill="#fff" text-anchor="middle">舊界線（較早）</text></g>
+  <g id="blue" opacity="0"><path d="M700 0C680 90 730 170 700 260S680 400 715 480 690 560 700 600" fill="none" stroke="#2457d6" stroke-width="7" stroke-dasharray="16 8"/><rect x="644" y="50" width="112" height="30" rx="8" fill="#2457d6"/><text x="700" y="71" font-size="17" font-weight="900" fill="#fff" text-anchor="middle">新界線（較晚）</text></g>
+  <g id="over" opacity="0"><rect x="0" y="0" width="140" height="34" rx="10" fill="#c4532d"/><text x="70" y="23" font-size="18" font-weight="900" fill="#fff" text-anchor="middle">越界開墾！</text></g>
+  <g id="arrow" opacity="0"><path d="M0 0H60" stroke="#c4532d" stroke-width="8"/><path d="M60 -14L84 0L60 14Z" fill="#c4532d"/></g>
+  </svg>`;
+}
+function drawMap(t){
+  const f=FRONT(t);
+  document.querySelectorAll('#paddy rect').forEach(r=>{ r.style.opacity = +r.dataset.x < f ? 1 : 0; });
+  document.querySelectorAll('#house g').forEach(r=>{ r.style.opacity = +r.dataset.x < f-20 ? 1 : 0; });
+  document.querySelectorAll('#vil g').forEach(g=>{ const v=VIL[g.dataset.i], gone = v.x < f-10;
+    g.setAttribute('transform', gone ? `translate(${v.tx} ${v.ty}) scale(.8)` : `translate(${v.x} ${v.y})`); g.style.opacity = gone ? .7 : 1; });
+  const b=Math.max(565,f+25);
+  $('#tribe').setAttribute('d',`M${b} 0C${b-15} 150 ${b+15} 300 ${b} 450S${b-10} 560 ${b} 600H1000V0Z`);
+  $('#tribeT').setAttribute('x',(b+1000)/2);
+  $('#red').style.opacity = t>=38?1:0; $('#blue').style.opacity = t>=80?1:0;
+  const ov=$('#over'); ov.style.opacity = (t>=50&&t<80)?1:0; ov.setAttribute('transform',`translate(${Math.min(f-60,620)} 250)`);
+  const ar=$('#arrow'); ar.style.opacity = t>5&&t<100?1:0; ar.setAttribute('transform',`translate(${f-70} 340)`);
+}
+function L1(){
+  const st=S.l1;
+  $('#stage').innerHTML=`
+  <div class="lvtitle"><h2>第1關　紅線藍線往哪走</h2><small>課本 P.62 圖1</small></div>
+  <div class="task">拖動下方的時間軸，從清帝國前期走到後期。看看地圖怎麼變，再點開三位原住民的心聲。</div>
+  <div class="two">
+    <div class="panel">${mapSVG()}
+      <div class="slider"><input type="range" id="tl" min="0" max="100" step="1" value="${st.t}" aria-label="時間軸"></div>
+      <div class="ticks"><span>清帝國前期</span><span>中期</span><span>後期</span></div>
+      <div class="legend"><span><i style="background:#f2d65c"></i>漢人水田</span><span><i style="background:#c4532d"></i>漢人聚落</span><span><i style="background:#1f7a7a"></i>平埔族群村社</span><span><i style="background:#1f7a7a;opacity:.35"></i>山區原住民生活範圍</span></div>
+    </div>
+    <div>
+      <div id="voices"></div>
+      <div id="l1q"></div>
+    </div>
+  </div>`;
+  const tl=$('#tl');
+  const upd=()=>{ const t=+tl.value; st.t=Math.max(st.t,t); drawMap(t); drawVoices(); };
+  tl.addEventListener('input',upd); tl.addEventListener('change',()=>save());
+  drawMap(+tl.value); drawVoices(); drawL1Q();
+}
+function drawVoices(){
+  const st=S.l1;
+  $('#voices').innerHTML=VOICES.map((v,i)=>{ const open=st.t>=v.at, read=st.read.includes(i);
+    return `<button class="voice ${!open?'lock':(read?'read':'new')}" data-i="${i}" ${open?'':'disabled'}>
+      <span class="av" style="${v.who==='山區'?'background:#0f4f4f':''}">${v.who}</span>
+      <span>${!open?`🔒 時間軸拖到「${v.at<50?'前期後段':v.at<90?'中期':'後期'}」才會出現`:(read?`<b>${v.name}：</b>${v.txt}`:`<b>${v.name}想說話……</b>點我聽聽看`)}</span></button>`; }).join('');
+  document.querySelectorAll('.voice:not([disabled])').forEach(b=>b.onclick=()=>{ const i=+b.dataset.i; if(!st.read.includes(i)){ st.read.push(i); save(); drawVoices(); drawL1Q(); } });
+}
+function drawL1Q(){
+  const st=S.l1, box=$('#l1q');
+  if(st.read.length<3){ box.innerHTML=`<div class="small">已聽 ${st.read.length}／3 則心聲。三則都聽完就會出現問題。</div>`; return; }
+  if(!st.dir){
+    box.innerHTML=`<div class="q panel"><h3>從紅線到藍線，漢人開墾的範圍往哪個方向擴大？</h3><div class="opts">
+      <button data-a="1">從海岸、平原往山區擴大</button><button data-a="0">從山區往海岸擴大</button><button data-a="0">界線一直沒有改變</button></div></div>`;
+    box.querySelectorAll('.opts button').forEach(b=>b.onclick=()=>{ if(b.dataset.a==='1'){ b.classList.add('ok'); st.dir=true; save(); setTimeout(drawL1Q,600); } else { b.classList.add('no'); miss('L1方向'); } });
+    return;
+  }
+  box.innerHTML=`<div class="q panel"><h3>用一句話寫下：界線變動，對原住民的生活造成什麼影響？</h3>
+    <textarea id="sent" maxlength="120" placeholder="例如：原住民的……">${esc(st.sentence)}</textarea>
+    <div class="fb" id="sfb"></div>
+    <button class="big" id="sok">${st.done?'進入第2關 →':'送出這一句'}</button></div>`;
+  if(st.done){ $('#sent').disabled=true; $('#sfb').className='fb good'; $('#sfb').textContent=`第1關完成，得 ${st.s} 分！`; }
+  $('#sok').onclick=()=>{
+    if(st.done){ next(); return; }
+    const s=$('#sent').value.trim();
+    if(s.replace(/\s/g,'').length<6){ $('#sfb').className='fb warn'; $('#sfb').textContent='多寫幾個字，至少寫成一句完整的話喔。'; return; }
+    st.tries++; st.sentence=s;
+    const has=w=>w.some(k=>s.includes(k));
+    const G=[['土地','家園','獵場','鹿場','生活空間','空間','住的地方','地方','範圍','草原','田'],
+             ['變小','縮小','減少','變少','不見','失去','沒有','被占','被搶','侵占','少了','縮減','越來越小'],
+             ['搬','遷','離開','移到','往山','被迫','逃'],['衝突','打架','打仗','爭','抵抗','受傷','吵'],
+             ['文化','語言','漢化','習慣','傳統','流失','族語']];
+    const good=(has(G[0])&&has(G[1]))||has(G[2])||has(G[3])||has(G[4]);
+    if(!good && st.tries<2){ $('#sfb').className='fb warn'; $('#sfb').textContent='想一想：原住民的土地、獵場、住的地方變得怎麼樣？他們可能怎麼做？改一改再送出一次。'; save(); return; }
+    st.s = 10 + (good?10:5); st.done=true; save(); report(); drawL1Q(); header();
+    toast(good?'<b>說得好！</b>你看出了界線往山區移動，原住民的生活空間跟著縮小。':'<b>完成！</b>課本的重點是：漢人開墾範圍擴大，原住民的生活空間持續縮減，有些平埔族群被迫遷移。',5200);
+  };
+}
+
+/* =====================================================================
+   第2關　噶瑪蘭家族三代記
+   ===================================================================== */
+const GENS=[
+  {name:'阿公這一代',intro:'阿公年輕的時候，吳沙招募漳州、泉州、廣東各地的漢人移民來到宜蘭開墾。漢人在部落附近蓋起土圍，開出一塊塊田地。',
+   clues:[{id:'deed',name:'地契',x:690,y:330,txt:'<b>地契</b>：漢人用銀子、布向族人買土地時簽下的契約。土地一旦賣出，就很難再拿回來。'},
+          {id:'trade',name:'布與鐵鍋',x:470,y:400,txt:'<b>交易</b>：族人用鹿皮等物品和漢人交換布、鹽、鐵鍋，生活開始用上漢人的東西。'}],
+   ds:[{q:'漢人的土圍越蓋越近，族人聚在一起討論：該怎麼辦？',
+        o:[{t:'拿起武器，保護部落的土地',c:'族人和漢人發生衝突，雙方都有人受傷。部落暫時守住了，但漢人移民還是一批一批地來。',fx:{}},
+           {t:'和漢人交換東西，先看看情況',c:'族人用鹿皮換來布和鐵鍋，也學會了幾句漢語。',fx:{lang:-1}}]},
+       {q:'有漢人拿著銀子和布，想買部落旁邊的田地。',
+        o:[{t:'不賣，要留給子孫',c:'阿公沒有賣。可是附近越來越多田被別人賣掉，漢人的田一路開到家門口。',fx:{land:-1}},
+           {t:'賣掉，換銀子和布',c:'阿公在地契上按了手印。銀子很快就用完了，土地卻再也回不來。',fx:{land:-2}}]}]},
+  {name:'爸爸這一代',intro:'到了爸爸這一代，宜蘭平原上到處都是漢人的水田和街市，平埔族群和漢人的接觸越來越頻繁。',
+   clues:[{id:'lease',name:'租約',x:250,y:400,txt:'<b>租約</b>：缺錢、沒有力氣耕種時，只好把祖先留下的土地出租給漢人開墾。（課本 P.63）'},
+          {id:'book',name:'漢文書本',x:770,y:380,txt:'<b>漢文書本</b>：清帝國辦理學校，鼓勵平埔族群讀漢文，族語因此流失得很快。（課本 P.63）'}],
+   ds:[{q:'家裡缺錢，田又沒有足夠的人力耕種。',
+        o:[{t:'把田租給漢人耕種，收一點租金',c:'每年可以收到租金。可是租得越久，那塊田好像越來越像漢人的。',fx:{land:-1}},
+           {t:'向漢人學種水稻的方法，自己耕種',c:'爸爸學會了種稻，也學會用漢語和漢人溝通、買賣。',fx:{lang:-1}}]},
+       {q:'官府辦了學校，鼓勵族人的孩子讀漢文、用漢姓。',
+        o:[{t:'送孩子去學校讀漢文',c:'孩子學會讀寫漢文，以後和官府、商人打交道比較方便，可是族語說得越來越少。',fx:{lang:-2}},
+           {t:'讓孩子留在家，跟長輩學族語和祭典',c:'孩子會唱祖先的歌、懂祭典的規矩，卻看不懂官府的公告，和漢人做生意常常吃虧。',fx:{}}]}]},
+  {name:'你這一代',intro:'到了你這一代，漢人越來越多，漢人的風俗習慣成為社會主流，也主導了這裡的政治和經濟活動。',
+   clues:[{id:'name',name:'漢姓名牌',x:300,y:330,txt:'<b>漢姓</b>：使用漢姓（例如「潘」），原本的族名越來越少人叫了。'},
+          {id:'cloth',name:'漢式衣服',x:640,y:420,txt:'<b>漢式衣著</b>：穿著、髮型漸漸變得和漢人一樣，傳統服飾只在祭典時才拿出來。'}],
+   ds:[{q:'官府登記戶口，名字要用漢字寫下來。',
+        o:[{t:'取一個漢姓',c:'你取了漢姓「潘」。後來大家都叫你的漢名，族名只有家裡的老人會叫。',fx:{lang:-1}},
+           {t:'堅持用族名，用漢字寫下發音',c:'你保留了族名，但官府文件、買賣契約都要用漢字，生活上常常不方便。',fx:{}}]},
+       {q:'部落的土地越來越少，族人要決定未來在哪裡生活。',
+        o:[{t:'留在宜蘭，和漢人通婚、一起生活',c:'你的家族留在宜蘭。子孫說漢語、過漢人的節日、拜漢人的神明，噶瑪蘭的語言和祭典，慢慢只剩老人記得。',fx:{faith:-2,lang:-1},end:'留在宜蘭・與漢人通婚'},
+           {t:'和部分族人一起遷到花蓮，重建家園',c:'你的家族離開宜蘭，到花蓮重新開始。祖先的土地留在宜蘭了，但族人在新家園繼續說族語、舉行祭典。',fx:{land:-2},end:'遷居花蓮・重建家園'}]}]}
+];
+const MNAME={lang:'語言',land:'土地',faith:'信仰與祭典'};
+function sceneSVG(g){
+  const G=GENS[g];
+  const paddies=[]; const n=[4,14,22][g];
+  for(let i=0;i<n;i++){ const x=130+((i*137)%560), y=300+((i*61)%150); paddies.push(`<rect x="${x}" y="${y}" width="58" height="34" rx="4" fill="#f2d65c" stroke="#b89a28" stroke-width="2"/>`); }
+  const hut=(x,y,s=1)=>`<g transform="translate(${x} ${y}) scale(${s})"><rect x="-26" y="0" width="52" height="34" fill="#e7cf9c"/><path d="M-38 4L0 -36L38 4Z" fill="#a37b3a"/><rect x="-7" y="12" width="14" height="22" fill="#6b4a22"/><path d="M-26 34V50M26 34V50" stroke="#6b4a22" stroke-width="5"/></g>`;
+  const han=(x,y,s=1)=>`<g transform="translate(${x} ${y}) scale(${s})"><rect x="-34" y="0" width="68" height="40" fill="#fff4e4"/><path d="M-44 4Q0 -30 44 4Z" fill="#c4532d"/><rect x="-8" y="14" width="16" height="26" fill="#7a3a22"/></g>`;
+  const huts=[[[220,250],[330,230],[420,262],[560,245]],[[240,250],[360,240]],[[230,250]]][g];
+  const hans=[[[760,250]],[[560,240],[700,230],[820,250]],[[380,240],[520,232],[660,236],[790,248]]][g];
+  const school = g===1?`<g transform="translate(780 330)"><rect x="-50" y="0" width="100" height="50" fill="#fff4e4"/><path d="M-62 4Q0 -34 62 4Z" fill="#8b2e1a"/><rect x="-22" y="8" width="44" height="22" fill="#fff" stroke="#8b2e1a"/><text x="0" y="25" font-size="16" font-weight="900" text-anchor="middle" fill="#8b2e1a">學堂</text></g>`:'';
+  const wall = g===0?`<path d="M650 290H900" stroke="#9c6b3a" stroke-width="16" stroke-linecap="round"/><text x="775" y="318" font-size="16" font-weight="900" text-anchor="middle" fill="#7a4a22">漢人土圍</text>`:'';
+  const boat = g===2?`<g transform="translate(905 455)"><path d="M-40 0H40L28 18H-28Z" fill="#8d5a3b"/><path d="M0 0V-46L30 -6Z" fill="#fff"/></g><text x="905" y="500" font-size="15" font-weight="900" fill="#fff" text-anchor="middle">往花蓮→</text>`:'';
+  const icon={deed:`<rect x="-22" y="-16" width="44" height="32" rx="3" fill="#fff8e1" stroke="#7a4a22" stroke-width="2"/><path d="M-14 -6H14M-14 2H10" stroke="#7a4a22" stroke-width="3"/><circle cx="12" cy="9" r="5" fill="#d62828"/>`,
+    trade:`<ellipse cx="-8" cy="6" rx="18" ry="10" fill="#3a3a3a"/><rect x="6" y="-16" width="22" height="26" fill="#3d7dd6"/><path d="M6 -6H28" stroke="#fff" stroke-width="3"/>`,
+    lease:`<rect x="-22" y="-16" width="44" height="32" rx="3" fill="#fff8e1" stroke="#7a4a22" stroke-width="2"/><text x="0" y="6" font-size="15" font-weight="900" text-anchor="middle" fill="#7a4a22">租</text>`,
+    book:`<rect x="-22" y="-14" width="44" height="30" fill="#2f4a6b"/><path d="M0 -14V16" stroke="#fff" stroke-width="2"/><text x="-11" y="6" font-size="11" fill="#fff" text-anchor="middle">漢</text><text x="11" y="6" font-size="11" fill="#fff" text-anchor="middle">文</text>`,
+    name:`<rect x="-14" y="-24" width="28" height="48" rx="3" fill="#8b2e1a"/><text x="0" y="6" font-size="18" font-weight="900" text-anchor="middle" fill="#ffe08a">潘</text>`,
+    cloth:`<path d="M-20 -16L-8 -20L0 -12L8 -20L20 -16L26 0L14 2V22H-14V2L-26 0Z" fill="#3d5a99"/><path d="M0 -12V22" stroke="#ffe08a" stroke-width="2"/>`};
+  return `<svg viewBox="0 0 1000 520" role="img" aria-label="${G.name}的宜蘭平原">
+   <defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9fdcf8"/><stop offset="1" stop-color="#e8f7fd"/></linearGradient></defs>
+   <rect width="1000" height="520" fill="url(#sky)"/>
+   <path d="M0 210L80 120L160 170L240 90L330 160L400 110L470 190L0 230Z" fill="#6a9a5e"/>
+   <rect y="215" width="1000" height="305" fill="#bfe08f"/>
+   <path d="M860 215H1000V520H840Q870 380 860 215Z" fill="#59b9dc"/>
+   <path d="M900 205Q930 160 970 200Z" fill="#5f8f55"/><text x="935" y="190" font-size="13" font-weight="700" fill="#2b5a33" text-anchor="middle">龜山島</text>
+   ${paddies.join('')}${wall}${school}
+   ${huts.map(([x,y])=>hut(x,y)).join('')}${hans.map(([x,y])=>han(x,y)).join('')}${boat}
+   ${G.clues.map(c=>`<g class="clue ${S.l2.clues[c.id]?'got':''}" data-id="${c.id}" transform="translate(${c.x} ${c.y})" role="button" aria-label="線索"><circle r="40" fill="transparent"/><circle class="ring" r="34"/>${icon[c.id]}</g>`).join('')}
+   <text x="20" y="505" font-size="15" font-weight="700" fill="#3d5a2a">宜蘭平原（示意圖）</text>
+  </svg>`;
+}
+function L2(){
+  const st=S.l2;
+  if(st.done){ return L2end(); }
+  const G=GENS[st.g], D=G.ds[st.d];
+  const allClues=GENS.flatMap(x=>x.clues);
+  $('#stage').innerHTML=`
+  <div class="lvtitle"><h2>第2關　噶瑪蘭家族三代記</h2><small>課本 P.62「噶瑪蘭族的遷移」</small></div>
+  <div class="task">你們是一個噶瑪蘭族家族。經歷三代人的選擇，也請在畫面中找出藏起來的「漢化線索」（每一代 2 個）。</div>
+  <div class="gen">${GENS.map((x,i)=>`<span class="${i===st.g?'now':''}">${i<st.g?'✓ ':''}${x.name}</span>`).join('')}</div>
+  <div class="meters" id="meters"></div>
+  <div class="two">
+    <div class="panel" id="scene">${sceneSVG(st.g)}
+      <div class="cluebar">漢化線索：${allClues.map(c=>`<span class="${st.clues[c.id]?'got':''}">${st.clues[c.id]?c.name:'？'}</span>`).join('')}</div>
+      <button class="big ghost" id="hint" style="margin-top:10px">線索在哪裡？閃一下給我看</button>
+    </div>
+    <div class="panel story" id="story"></div>
+  </div>`;
+  drawMeters();
+  $('#scene').querySelectorAll('.clue').forEach(c=>c.addEventListener('click',()=>{ const id=c.dataset.id; if(st.clues[id]) return;
+    st.clues[id]=1; save(); c.classList.add('got'); const cl=allClues.find(x=>x.id===id); toast('🔍 找到漢化線索！'+cl.txt,5200); L2(); }));
+  $('#hint').onclick=()=>{ const sc=$('#scene'); sc.classList.remove('hinting'); void sc.offsetWidth; sc.classList.add('hinting'); };
+  drawStory();
+}
+function drawMeters(changed){
+  const m=S.l2.m;
+  $('#meters').innerHTML=Object.keys(MNAME).map(k=>`<div class="meter ${changed&&changed[k]?'hit':''}">${MNAME[k]}<div class="dots">${[0,1,2,3,4].map(i=>`<i class="${i<m[k]?'':'off'}"></i>`).join('')}</div></div>`).join('');
+}
+function drawStory(){
+  const st=S.l2, G=GENS[st.g], D=G.ds[st.d], box=$('#story');
+  if(st.cons){
+    const last=st.d===G.ds.length-1;
+    const missing=G.clues.filter(c=>!st.clues[c.id]).length;
+    box.innerHTML=`<p><b>${G.name}</b></p><p>${esc(D.q)}</p><div class="cons">${esc(st.cons)}</div>
+      ${last&&missing?`<p class="small">這一代還有 ${missing} 個漢化線索沒找到，可以先在左邊的畫面找一找。</p>`:''}
+      <button class="big alt" id="nx">${last?(st.g===2?'看看家族的結局 →':'進到下一代 →'):'繼續 →'}</button>`;
+    $('#nx').onclick=()=>{
+      if(last && missing && !confirm('這一代還有 '+missing+' 個線索沒找到，確定要繼續嗎？')) return;
+      st.cons='';
+      if(!last){ st.d++; }
+      else if(st.g<2){ st.g++; st.d=0; }
+      else { finishL2(); return; }
+      save(); L2();
+    };
+    return;
+  }
+  box.innerHTML=`${st.d===0?`<p>${esc(G.intro)}</p>`:''}<p><b>${esc(D.q)}</b></p><div class="opts">${D.o.map((o,i)=>`<button data-i="${i}">${esc(o.t)}</button>`).join('')}</div>`;
+  box.querySelectorAll('.opts button').forEach(b=>b.onclick=()=>{
+    const o=D.o[+b.dataset.i], ch={};
+    Object.entries(o.fx).forEach(([k,v])=>{ st.m[k]=Math.max(0,st.m[k]+v); ch[k]=1; });
+    st.choices.push(st.g+'-'+st.d+':'+b.dataset.i); st.cons=o.c; if(o.end) st.ending=o.end;
+    save(); drawMeters(ch); drawStory();
+  });
+}
+function finishL2(){
+  const st=S.l2; const nc=Object.keys(st.clues).length;
+  st.s=12+3*nc; st.done=true; save(); report(); header(); L2end();
+}
+function L2end(){
+  const st=S.l2, m=st.m, nc=Object.keys(st.clues).length;
+  $('#stage').innerHTML=`
+  <div class="lvtitle"><h2>第2關　家族的結局</h2></div>
+  <div class="two">
+   <div class="panel story">
+    <p style="font-size:22px;font-weight:900;color:var(--yuan)">${esc(st.ending||'')}</p>
+    <div class="meters" id="meters"></div>
+    <p>你們的家族還保留：語言 ${m.lang}／5、土地 ${m.land}／5、信仰與祭典 ${m.faith}／5。</p>
+    <div class="cons">結局沒有對錯。歷史上這兩種情形都發生過：<b>部分噶瑪蘭族人留下來，與漢人通婚；部分遷居花蓮等地。</b>不管怎麼選，漢人越來越多，漢人文化逐漸成為社會主流。</div>
+    <p>今天，噶瑪蘭族人努力找回自己的語言和文化，在 2002 年成為政府正式承認的原住民族。</p>
+   </div>
+   <div class="panel">
+    <h3 style="margin-top:0">第2關成績</h3>
+    <p>走完三代：12 分<br>找到漢化線索 ${nc}／6 個：${nc*3} 分</p>
+    <p style="font-size:30px;font-weight:900;color:var(--han);margin:6px 0">共 ${st.s} 分</p>
+    <button class="big" id="nx">進入第3關 →</button>
+   </div>
+  </div>`;
+  drawMeters();
+  $('#nx').onclick=next;
+}
+
+/* =====================================================================
+   第3關　文化流失偵探
+   ===================================================================== */
+const BOXES=['語言','姓名','信仰','土地','婚姻','教育'];
+const CARDS=[
+  {id:'a1',b:'語言',t:'族人到市場買賣時，改用漢語討價還價'},
+  {id:'a2',b:'語言',t:'年輕人越來越少說族語，只有老人還記得'},
+  {id:'b1',b:'姓名',t:'登記戶口時，改用漢姓「潘」'},
+  {id:'b2',b:'姓名',t:'孩子出生後，取了一個漢人的名字'},
+  {id:'c1',b:'信仰',t:'把信奉的神明「老太祖」刻成神像，前面雕一隻臺灣土狗'},
+  {id:'c2',b:'信仰',t:'家裡開始拜漢人的神明、過漢人的節日'},
+  {id:'d1',b:'土地',t:'缺錢無力耕種，把祖先留下的土地租給漢人'},
+  {id:'d2',b:'土地',t:'用土地換銀子，和漢人簽下買賣契約'},
+  {id:'e1',b:'婚姻',t:'平埔族女子嫁給來臺開墾的漢人'},
+  {id:'e2',b:'婚姻',t:'辦婚禮時，改用漢人的禮俗、請媒人說親'},
+  {id:'f1',b:'教育',t:'村社的兒童在學堂裡讀寫漢文'},
+  {id:'f2',b:'教育',t:'清帝國辦理學校，鼓勵平埔族群讀漢文'}
+];
+let order=null, selId=null;
+function L3(){
+  const st=S.l3;
+  if(!order){ order=CARDS.map(c=>c.id).sort(()=>Math.random()-.5); }
+  const left=order.filter(id=>!st.placed[id]);
+  $('#stage').innerHTML=`
+  <div class="lvtitle"><h2>第3關　文化流失偵探</h2><small>課本 P.63</small></div>
+  <div class="task">平埔族群在哪些方面受到漢人文化影響？把每張線索卡拖進正確的箱子（也可以先點卡片，再點箱子）。</div>
+  <div class="tray" id="tray">${left.map(id=>{ const c=CARDS.find(x=>x.id===id); return `<div class="card ${selId===id?'sel':''}" data-id="${id}">${esc(c.t)}</div>`; }).join('')||'<div class="small">線索卡都分類完了！</div>'}</div>
+  <div class="boxes">${BOXES.map(b=>`<div class="box" data-b="${b}"><h4>${b}</h4>${CARDS.filter(c=>c.b===b&&st.placed[c.id]).map(c=>`<div class="in">${esc(c.t)}</div>`).join('')}</div>`).join('')}</div>
+  <div id="cmp"></div>`;
+  bindDrag();
+  if(left.length===0) drawCmp();
+}
+function place(id,b,el){
+  const st=S.l3, c=CARDS.find(x=>x.id===id);
+  if(c.b===b){ st.placed[id]=1; selId=null; save(); L3(); toast('✔ 正確！這張屬於「'+b+'」。',1600); }
+  else { if(!st.firstWrong[id]){ st.firstWrong[id]=1; } miss('L3-'+id); save();
+    if(el){ el.classList.remove('no'); void el.offsetWidth; el.classList.add('no'); }
+    toast('再想想看：這張卡片說的是「'+esc(c.t)+'」，改變的是哪一方面？',2600); }
+}
+function bindDrag(){
+  document.querySelectorAll('#tray .card').forEach(card=>{
+    let ghost=null, sx=0, sy=0, moved=false, over=null;
+    card.addEventListener('pointerdown',e=>{ sx=e.clientX; sy=e.clientY; moved=false; card.setPointerCapture(e.pointerId); });
+    card.addEventListener('pointermove',e=>{
+      if(!card.hasPointerCapture(e.pointerId)) return;
+      if(!moved && Math.hypot(e.clientX-sx,e.clientY-sy)<8) return;
+      if(!moved){ moved=true; ghost=card.cloneNode(true); ghost.classList.add('ghost'); ghost.style.width=card.offsetWidth+'px'; document.body.appendChild(ghost); card.classList.add('lift'); }
+      ghost.style.left=(e.clientX-card.offsetWidth/2)+'px'; ghost.style.top=(e.clientY-24)+'px';
+      const t=document.elementFromPoint(e.clientX,e.clientY), bx=t&&t.closest('.box');
+      if(over&&over!==bx) over.classList.remove('over'); if(bx) bx.classList.add('over'); over=bx;
+    });
+    const end=e=>{
+      if(ghost){ ghost.remove(); ghost=null; card.classList.remove('lift'); if(over) over.classList.remove('over');
+        if(over){ place(card.dataset.id,over.dataset.b,over); } over=null; return; }
+      if(!moved){ selId = selId===card.dataset.id ? null : card.dataset.id; document.querySelectorAll('#tray .card').forEach(c=>c.classList.toggle('sel',c.dataset.id===selId)); }
+    };
+    card.addEventListener('pointerup',end); card.addEventListener('pointercancel',()=>{ if(ghost){ghost.remove();ghost=null;card.classList.remove('lift');} });
+  });
+  document.querySelectorAll('.box').forEach(bx=>bx.addEventListener('click',()=>{ if(selId) place(selId,bx.dataset.b,bx); else toast('先點一張線索卡，再點箱子。',1600); }));
+}
+const CMP=[{t:'他們住在深山，和漢人接觸比較少',a:1},{t:'他們比平埔族群更喜歡自己的文化',a:0},{t:'清帝國規定他們不能讀漢文',a:0},{t:'深山裡也有很多漢人辦的學校',a:0}];
+function drawCmp(){
+  const st=S.l3, box=$('#cmp');
+  const sortScore=Math.round(40*(CARDS.length-Object.keys(st.firstWrong).length)/CARDS.length);
+  if(st.cmpDone){
+    box.innerHTML=`<div class="panel q"><h3>偵探結案！</h3><p>分類一次就答對的卡片：${CARDS.length-Object.keys(st.firstWrong).length}／12，得 ${sortScore} 分；比較題得 ${st.cmpS} 分。</p>
+      <button class="big" id="nx">看總成績 →</button></div>`;
+    $('#nx').onclick=next; return;
+  }
+  box.innerHTML=`<div class="panel q" style="margin-top:14px"><h3>最後一題：為什麼生活在深山的原住民，受漢化影響比較少，還能保有原來的文化？</h3>
+    <div class="opts">${CMP.map((o,i)=>`<button data-i="${i}">${esc(o.t)}</button>`).join('')}</div><div class="fb" id="cfb"></div></div>`;
+  box.querySelectorAll('.opts button').forEach(b=>b.onclick=()=>{
+    const o=CMP[+b.dataset.i]; st.cmpTries++;
+    if(o.a){ b.classList.add('ok'); st.cmp=o.t; st.cmpS = st.cmpTries===1?10:(st.cmpTries===2?5:0); st.cmpDone=true; st.s=sortScore+st.cmpS; st.done=true;
+      save(); report(); header(); $('#cfb').className='fb good'; $('#cfb').textContent='沒錯！平埔族群住在海岸、平原，和漢人接觸頻繁；深山原住民接觸少，所以受漢化影響較少。'; setTimeout(drawCmp,1800); }
+    else { b.classList.add('no'); b.disabled=true; miss('L3比較題'); $('#cfb').className='fb warn'; $('#cfb').textContent='再想想：課本說平埔族群受影響很大，是因為和漢人「接觸頻繁」。'; }
+  });
+}
+
+/* ===== 總成績 ===== */
+function result(){
+  $('#stage').innerHTML=`<div class="res center">
+    <h2 style="font-size:30px;margin:10px 0">三關完成！</h2>
+    <div class="score">${total()}<span style="font-size:26px"> 分</span></div>
+    <div class="small">${S.cls} 班 ${[S.seat].concat(S.mates).join('、')} 號｜用時 ${fmt(secs())}</div>
+    <div class="brk"><div>第1關 界線地圖<b>${S.l1.s}</b>／20</div><div>第2關 家族三代記<b>${S.l2.s}</b>／30</div><div>第3關 文化偵探<b>${S.l3.s}</b>／50</div></div>
+    <div class="sum" style="text-align:left"><b>這一節課的重點</b><ul>
+      <li>漢人開墾範圍擴大，常侵犯平埔族群的生活空間，有些平埔族群被迫遷移。</li>
+      <li>清帝國劃設界線隔離，但越界開墾不斷，界線往山區移動，原住民生活空間持續縮減。</li>
+      <li>通婚、租地耕作、買賣土地，加上學校鼓勵讀漢文、用漢姓，平埔族群的語言和文化快速流失；漢人文化成為社會主流。</li>
+      <li>生活在深山的原住民和漢人接觸少，比較能保有原來的文化。</li></ul></div>
+    <p style="font-weight:700">${GAS_URL?'成績已經傳給老師囉。':'請把這個畫面拿給老師看。'}</p>
+    <button class="big ghost" id="again" style="max-width:360px;margin:10px auto">回到首頁</button>
+    <div class="credit">由Zeiyen老師製作</div></div>`;
+  $('#again').onclick=()=>{ show('login'); checkResume(); };
+}
+</script>
+</body>
+</html>

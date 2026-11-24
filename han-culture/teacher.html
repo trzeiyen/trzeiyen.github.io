@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>漢人文化成為主流｜教師後台</title>
+<style>
+body{font-family:"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;background:#fbf6ea;color:#23313f;margin:0;padding:18px;font-size:16px}
+.wrap{max-width:1180px;margin:0 auto}
+h1{color:#c4532d;margin:0 0 4px;font-size:28px}
+.lead{margin:0 0 12px;color:#5a6876;font-weight:700}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:end;background:#fffdf7;border:2px solid #e4d8bd;border-radius:12px;padding:12px}
+label{font-weight:700;font-size:14px}
+input,select{display:block;height:42px;font-size:17px;padding:0 10px;border:2px solid #23313f;border-radius:8px;background:#fff;margin-top:3px}
+button{height:42px;padding:0 18px;border:0;border-radius:8px;background:#c4532d;color:#fff;font-weight:700;font-size:16px;cursor:pointer}
+button.g{background:#1f7a7a}
+#msg{margin:10px 2px;font-weight:700;color:#c4532d;min-height:1.5em}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:8px 0 14px}
+.cards div{background:#fffdf7;border:2px solid #e4d8bd;border-radius:10px;padding:10px;text-align:center}
+.cards b{display:block;font-size:28px}
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;background:#fffdf7}
+th,td{padding:8px 10px;border-bottom:1px solid #e4d8bd;text-align:center;font-variant-numeric:tabular-nums}
+td.l{text-align:left;min-width:220px}
+th{background:#23313f;color:#fbf6ea;font-size:14px;white-space:nowrap}
+tr.done td:first-child{border-left:5px solid #3d8a4f}
+tr.ing td:first-child{border-left:5px solid #e9b949}
+h2{font-size:21px;margin:22px 0 8px}
+.box{background:#fffdf7;border:2px solid #e4d8bd;border-radius:12px;padding:12px;margin:10px 0}
+.box h2{margin:0 0 6px}
+.note{color:#5a6876;font-size:14px;margin-bottom:8px}
+.live{display:flex;flex-wrap:wrap;gap:8px}
+.live span{background:#d4ecea;border-radius:8px;padding:6px 10px;font-weight:700}
+.live span.stale{opacity:.45}
+.miss{display:grid;gap:6px}
+.miss div{display:flex;gap:10px;align-items:center;background:#fffdf7;border-radius:8px;padding:6px 10px}
+.miss i{height:14px;background:#c4532d;border-radius:7px;display:block}
+.miss span{flex:1}
+.ends{display:flex;gap:10px;flex-wrap:wrap}
+.ends div{background:#d4ecea;border-radius:10px;padding:8px 14px;font-weight:700}
+.auto{display:flex;align-items:center;gap:6px;font-weight:700;font-size:14px;height:42px}
+.auto input{display:inline;height:auto;width:auto;margin:0}
+</style>
+</head>
+<body><div class="wrap">
+<h1>漢人文化成為主流｜教師後台</h1>
+<p class="lead">與〈穿越清帝國大逃脫〉共用同一個後台與密碼，成績存在「漢人文化-成績」工作表。</p>
+<div class="bar">
+  <label>後台密碼<input id="key" type="password" autocomplete="off"></label>
+  <label>班級<input id="cls" inputmode="numeric" maxlength="3" placeholder="全部" style="width:110px"></label>
+  <label>顯示<select id="mode"><option value="best">每組最高分</option><option value="last">每組最新一筆</option></select></label>
+  <button id="go">讀取成績</button>
+  <span class="auto"><input type="checkbox" id="auto" checked>每 20 秒自動更新</span>
+  <button id="csv" class="g">下載 CSV</button>
+</div>
+<div id="msg"></div>
+<div class="cards" id="cards"></div>
+<div class="box"><h2>正在作答的組別</h2>
+  <div class="note">學生進入遊戲、換關時會更新；超過 5 分鐘沒更新會變淡。</div>
+  <div class="live" id="live"></div></div>
+<div class="tbl"><table id="tb"></table></div>
+<h2>第2關　家族結局統計</h2>
+<div class="ends" id="ends"></div>
+<h2>最常答錯的題目（全班錯誤次數）</h2>
+<div class="miss" id="miss"></div>
+</div>
+<script>
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzqfvkWjqjGsLnnDsFNqlfvwluKJmvKC1KPbZjzwebmnk8PfmVhxOeSMGQUrRAP2fkVAg/exec';
+const NAMES = {'L1方向':'第1關－開墾擴大方向','L3比較題':'第3關－深山原住民比較題',
+ 'L3-a1':'語言－市場改用漢語','L3-a2':'語言－少說族語','L3-b1':'姓名－改漢姓潘','L3-b2':'姓名－取漢人名字',
+ 'L3-c1':'信仰－老太祖神像與臺灣土狗','L3-c2':'信仰－拜漢人神明','L3-d1':'土地－租地給漢人','L3-d2':'土地－買賣契約',
+ 'L3-e1':'婚姻－嫁給漢人','L3-e2':'婚姻－漢人禮俗','L3-f1':'教育－學堂讀漢文','L3-f2':'教育－清辦學校'};
+const $ = s=>document.querySelector(s);
+const esc = s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt = s=>String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+let view = [];
+$('#go').onclick = async ()=>{
+  $('#msg').textContent='讀取中…';
+  try{
+    const u = GAS_URL+'?game=han-culture&key='+encodeURIComponent($('#key').value)+'&cls='+encodeURIComponent($('#cls').value.trim());
+    const j = await (await fetch(u)).json();
+    if(!j.ok){ $('#msg').textContent='密碼不正確。'; return; }
+    if((j.rows||[]).length && j.rows[0].s1===undefined){ $('#msg').textContent='後台還沒更新：請把新版 Code.gs 貼進 Apps Script，並部署「新版本」。'; return; }
+    try{ localStorage.setItem('qing-teacher-key', $('#key').value); }catch(e){}
+    render(j.rows||[], j.live||[]);
+    $('#msg').textContent = (j.rows||[]).length ? '更新於 '+new Date().toLocaleTimeString('zh-TW',{hour12:false}) : '目前還沒有成績。';
+  }catch(e){ $('#msg').textContent='讀取失敗，請確認網路與部署權限（存取權需設為「所有人」）。'; }
+};
+$('#mode').onchange = ()=>$('#go').click();
+setInterval(()=>{ if($('#auto').checked && $('#key').value) $('#go').click(); }, 20000);
+try{ const k = localStorage.getItem('qing-teacher-key'); if(k){ $('#key').value = k; $('#go').click(); } }catch(e){}
+
+function render(rows, live){
+  const by = {}, mode = $('#mode').value;
+  rows.forEach(r=>{ const k=r.cls+'-'+r.seat, o=by[k];
+    if(!o || (mode==='best' ? (r.score>o.score || (r.score===o.score && r.ts>o.ts)) : r.ts>o.ts)) by[k]=r; });
+  view = Object.values(by).sort((a,b)=>a.cls.localeCompare(b.cls)||a.seat-b.seat);
+  const now = Date.now();
+  const L = live.filter(l=>l.status==='作答中' && now-l.t<2*3600*1000).sort((a,b)=>a.cls.localeCompare(b.cls)||a.seat-b.seat);
+  $('#live').innerHTML = L.length ? L.map(l=>`<span class="${now-l.t>5*60000?'stale':''}">${l.cls} 班 ${[l.seat].concat(l.mates).join('、')} 號・第 ${l.lv} 關</span>`).join('') : '<span style="background:none;color:#5a6876">目前沒有正在作答的組別。</span>';
+  const n=view.length, done=view.filter(r=>r.done).length, avg=n?Math.round(view.reduce((s,r)=>s+r.score,0)/n):0;
+  const people = view.reduce((s,r)=>s+1+r.mates.length,0);
+  $('#cards').innerHTML=`<div><b>${L.length}</b>作答中組數</div><div><b>${n}</b>組數</div><div><b>${people}</b>參與人數</div><div><b>${done}</b>三關完成</div><div><b>${avg}</b>平均分數</div>`;
+  $('#tb').innerHTML='<tr><th>班級</th><th>座號</th><th>同組</th><th>完成關卡</th><th>總分</th><th>第1關</th><th>第2關</th><th>第3關</th><th>線索</th><th>用時</th><th>錯誤</th><th>第1關寫的一句話</th><th>第2關結局</th><th>更新時間</th></tr>'+
+    view.map(r=>`<tr class="${r.done?'done':'ing'}"><td>${r.cls}</td><td>${r.seat}</td><td>${r.mates.join('、')||'—'}</td><td>${r.done?'✅ 3/3':r.cleared+'/3'}</td><td><b>${r.score}</b></td><td>${r.s1}</td><td>${r.s2}</td><td>${r.s3}</td><td>${r.clues}/6</td><td>${fmt(r.secs)}</td><td>${r.errors}</td><td class="l">${esc(r.sentence||'—')}</td><td>${esc(r.ending||'—')}</td><td>${new Date(r.ts).toLocaleString('zh-TW',{hour12:false})}</td></tr>`).join('');
+  const ends={}; view.forEach(r=>{ if(r.ending) ends[r.ending]=(ends[r.ending]||0)+1; });
+  $('#ends').innerHTML = Object.keys(ends).length ? Object.entries(ends).map(([k,v])=>`<div>${esc(k)}：${v} 組</div>`).join('') : '<div style="background:none">還沒有組別走到結局。</div>';
+  const miss={}; view.forEach(r=>Object.entries(r.wrongBy||{}).forEach(([k,v])=>miss[k]=(miss[k]||0)+v));
+  const list=Object.entries(miss).sort((a,b)=>b[1]-a[1]).slice(0,10), max=list.length?list[0][1]:1;
+  $('#miss').innerHTML = list.length ? list.map(([k,v])=>`<div><span>${NAMES[k]||k}</span><i style="width:${Math.round(220*v/max)}px"></i><b>${v}</b></div>`).join('') : '<div>還沒有錯誤紀錄。</div>';
+}
+$('#csv').onclick = ()=>{
+  if(!view.length){ $('#msg').textContent='請先讀取成績。'; return; }
+  const q=s=>'"'+String(s||'').replace(/"/g,'""')+'"';
+  const head=['班級','座號','同組','完成關卡','總分','第1關','第2關','第3關','線索','用時秒','錯誤','第1關一句話','第2關結局'];
+  const body=view.map(r=>[r.cls,r.seat,q(r.mates.join('、')),r.cleared,r.score,r.s1,r.s2,r.s3,r.clues,r.secs,r.errors,q(r.sentence),q(r.ending)].join(','));
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['﻿'+head.join(',')+'\n'+body.join('\n')],{type:'text/csv'}));
+  a.download='漢人文化成為主流-成績.csv'; a.click();
+};
+</script>
+</body>
+</html>
