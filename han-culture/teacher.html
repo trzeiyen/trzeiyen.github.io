@@ -38,6 +38,7 @@ h2{font-size:21px;margin:22px 0 8px}
 .miss span{flex:1}
 .ends{display:flex;gap:10px;flex-wrap:wrap}
 .ends div{background:#d4ecea;border-radius:10px;padding:8px 14px;font-weight:700}
+.answers{display:grid;gap:6px}.answers div{background:#fffdf7;border:1px solid #e4d8bd;border-radius:8px;padding:8px 12px}.answers b{color:#1f7a7a;margin-right:8px}
 .auto{display:flex;align-items:center;gap:6px;font-weight:700;font-size:14px;height:42px}
 .auto input{display:inline;height:auto;width:auto;margin:0}
 </style>
@@ -59,6 +60,9 @@ h2{font-size:21px;margin:22px 0 8px}
   <div class="note">學生進入遊戲、換關時會更新；超過 5 分鐘沒更新會變淡。</div>
   <div class="live" id="live"></div></div>
 <div class="tbl"><table id="tb"></table></div>
+<h2>思考題作答</h2>
+<div class="bar" style="margin-bottom:8px"><label>題目<select id="tq" style="min-width:min(560px,80vw)"></select></label></div>
+<div class="answers" id="answers"></div>
 <h2>第2關　家族結局統計</h2>
 <div class="ends" id="ends"></div>
 <h2>最常答錯的題目（全班錯誤次數）</h2>
@@ -66,7 +70,7 @@ h2{font-size:21px;margin:22px 0 8px}
 </div>
 <script>
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbzqfvkWjqjGsLnnDsFNqlfvwluKJmvKC1KPbZjzwebmnk8PfmVhxOeSMGQUrRAP2fkVAg/exec';
-const NAMES = {'L1方向':'第1關－開墾擴大方向','L3比較題':'第3關－深山原住民比較題',
+const NAMES = {'L1方向':'第1關－開墾擴大方向','L1劃界':'第1關－清帝國為什麼劃界線','L3比較題':'第3關－深山原住民比較題',
  'L3-a1':'語言－市場改用漢語','L3-a2':'語言－少說族語','L3-b1':'姓名－改漢姓潘','L3-b2':'姓名－取漢人名字',
  'L3-c1':'信仰－老太祖神像與臺灣土狗','L3-c2':'信仰－拜漢人神明','L3-d1':'土地－租地給漢人','L3-d2':'土地－買賣契約',
  'L3-e1':'婚姻－嫁給漢人','L3-e2':'婚姻－漢人禮俗','L3-f1':'教育－學堂讀漢文','L3-f2':'教育－清辦學校'};
@@ -87,6 +91,16 @@ $('#go').onclick = async ()=>{
   }catch(e){ $('#msg').textContent='讀取失敗，請確認網路與部署權限（存取權需設為「所有人」）。'; }
 };
 $('#mode').onchange = ()=>$('#go').click();
+const TQ=[['L1越界','第1關｜劃了界線，為什麼還是一直有人越界開墾？'],['L1影響','第1關｜界線往山裡移，對原住民生活的影響'],
+ ['L2一','第2關｜為什麼一個家族的選擇，很難擋住變化？'],['L2二','第2關｜讀漢文的好處與失去的東西'],['L2三','第2關｜你會用什麼方法留下祖先的語言和文化？'],
+ ['L3最快','第3關｜哪一種影響讓文化流失最快？為什麼？'],['L3今天','第3關｜今天可以怎麼保存原住民族的語言和文化？'],
+ ['L1方向','第1關（選擇）｜開墾擴大方向'],['L1劃界','第1關（選擇）｜清帝國為什麼劃界線'],['L3比較題','第3關（選擇）｜深山原住民為什麼受影響少']];
+$('#tq').innerHTML=TQ.map(([k,t])=>`<option value="${k}">${t}</option>`).join('');
+$('#tq').onchange=drawAnswers;
+function drawAnswers(){
+  const k=$('#tq').value, L=view.filter(r=>r.think&&r.think[k]);
+  $('#answers').innerHTML = L.length ? L.map(r=>`<div><b>${r.cls} 班 ${[r.seat].concat(r.mates).join('、')} 號</b>${esc(r.think[k])}</div>`).join('') : '<div>這一題還沒有人作答。</div>';
+}
 setInterval(()=>{ if($('#auto').checked && $('#key').value) $('#go').click(); }, 20000);
 try{ const k = localStorage.getItem('qing-teacher-key'); if(k){ $('#key').value = k; $('#go').click(); } }catch(e){}
 
@@ -105,6 +119,7 @@ function render(rows, live){
     view.map(r=>`<tr class="${r.done?'done':'ing'}"><td>${r.cls}</td><td>${r.seat}</td><td>${r.mates.join('、')||'—'}</td><td>${r.done?'✅ 3/3':r.cleared+'/3'}</td><td><b>${r.score}</b></td><td>${r.s1}</td><td>${r.s2}</td><td>${r.s3}</td><td>${r.clues}/6</td><td>${fmt(r.secs)}</td><td>${r.errors}</td><td class="l">${esc(r.sentence||'—')}</td><td>${esc(r.ending||'—')}</td><td>${new Date(r.ts).toLocaleString('zh-TW',{hour12:false})}</td></tr>`).join('');
   const ends={}; view.forEach(r=>{ if(r.ending) ends[r.ending]=(ends[r.ending]||0)+1; });
   $('#ends').innerHTML = Object.keys(ends).length ? Object.entries(ends).map(([k,v])=>`<div>${esc(k)}：${v} 組</div>`).join('') : '<div style="background:none">還沒有組別走到結局。</div>';
+  drawAnswers();
   const miss={}; view.forEach(r=>Object.entries(r.wrongBy||{}).forEach(([k,v])=>miss[k]=(miss[k]||0)+v));
   const list=Object.entries(miss).sort((a,b)=>b[1]-a[1]).slice(0,10), max=list.length?list[0][1]:1;
   $('#miss').innerHTML = list.length ? list.map(([k,v])=>`<div><span>${NAMES[k]||k}</span><i style="width:${Math.round(220*v/max)}px"></i><b>${v}</b></div>`).join('') : '<div>還沒有錯誤紀錄。</div>';

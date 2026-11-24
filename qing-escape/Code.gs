@@ -105,13 +105,14 @@ function safe_(s) { try { return JSON.parse(s); } catch (e) { return {}; } }
 
 /* ===================== 漢人文化成為主流（han-culture） ===================== */
 const HAN = '漢人文化-成績';
-const HAN_HEAD = ['時間','sid','班級','座號','同組座號','完成關卡','全部完成','總分','第1關','第2關','第3關','用時秒','錯誤','各題錯誤(JSON)','第1關一句話','第2關結局','第2關線索數','第3關比較題作答'];
+const HAN_HEAD = ['時間','sid','班級','座號','同組座號','完成關卡','全部完成','總分','第1關','第2關','第3關','用時秒','錯誤','各題錯誤(JSON)','第1關一句話','第2關結局','第2關線索數','第3關比較題作答','思考題作答(JSON)'];
 const HAN_LIVE = '漢人文化-即時';
 const HAN_LIVE_HEAD = ['sid','最後更新','班級','座號','同組座號','所在關卡','狀態'];
 function hanSheet_(name, head) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let sh = ss.getSheetByName(name);
   if (!sh) { sh = ss.insertSheet(name); sh.appendRow(head); sh.setFrozenRows(1); }
+  else if (sh.getLastColumn() < head.length) sh.getRange(1, 1, 1, head.length).setValues([head]);  // 舊表補上新欄位標題
   return sh;
 }
 // 學生寫的文字：限長度，開頭是 = + - @ 的加上 ' 避免被當成公式
@@ -137,8 +138,15 @@ function hanPost_(d) {
     Math.max(0, Math.min(3, Number(d.cleared) || 0)), d.done ? 'Y' : '',
     Number(d.score) || 0, Number(d.s1) || 0, Number(d.s2) || 0, Number(d.s3) || 0,
     Number(d.secs) || 0, Number(d.errors) || 0, JSON.stringify(d.wrongBy || {}).slice(0, 2000),
-    txt_(d.sentence, 200), txt_(d.ending, 40), Number(d.clues) || 0, txt_(d.cmp, 80)]);
+    txt_(d.sentence, 200), txt_(d.ending, 40), Number(d.clues) || 0, txt_(d.cmp, 80), thinkJson_(d.think)]);
   return json_({ ok: true });
+}
+// 思考題：{題號: 作答}，每題限 200 字
+function thinkJson_(t) {
+  const o = {};
+  if (t && typeof t === 'object') Object.keys(t).slice(0, 20).forEach(k => { o[String(k).slice(0, 12)] = String(t[k] || '').replace(/[\r\n\t]+/g, ' ').slice(0, 200); });
+  const s = JSON.stringify(o);
+  return /^[=+\-@]/.test(s) ? "'" + s : s;
 }
 function hanGet_(q) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -149,7 +157,7 @@ function hanGet_(q) {
       mates: String(r[4] || '').split(',').map(Number).filter(n => n), cleared: Number(r[5]) || 0, done: r[6] === 'Y',
       score: Number(r[7]) || 0, s1: Number(r[8]) || 0, s2: Number(r[9]) || 0, s3: Number(r[10]) || 0,
       secs: Number(r[11]) || 0, errors: Number(r[12]) || 0, wrongBy: safe_(r[13]),
-      sentence: String(r[14] || '').replace(/^'/, ''), ending: String(r[15] || ''), clues: Number(r[16]) || 0, cmp: String(r[17] || '') }));
+      sentence: String(r[14] || '').replace(/^'/, ''), ending: String(r[15] || ''), clues: Number(r[16]) || 0, cmp: String(r[17] || ''), think: safe_(String(r[18] || '{}').replace(/^'/, '')) }));
   const lsh = ss.getSheetByName(HAN_LIVE), since = Date.now() - 12 * 3600 * 1000;
   const live = (lsh && lsh.getLastRow() > 1 ? lsh.getRange(2, 1, lsh.getLastRow() - 1, HAN_LIVE_HEAD.length).getValues() : [])
     .filter(r => r[1] instanceof Date && r[1].getTime() > since)

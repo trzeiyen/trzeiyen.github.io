@@ -69,6 +69,9 @@ svg{display:block;width:100%;height:auto}
 textarea{width:100%;min-height:96px;font:inherit;font-size:19px;padding:10px;border:2px solid var(--ink);border-radius:12px;background:#fff;resize:vertical}
 .fb{margin-top:8px;font-weight:700;min-height:1.6em}
 .fb.good{color:var(--ok)}.fb.warn{color:#9a6a00}
+.think{border-color:#e9b949;background:#fffaf0}
+.tq{display:inline-block;background:var(--gold);border-radius:99px;padding:1px 12px;font-size:14px;font-weight:900;margin-bottom:6px}
+.pick{grid-template-columns:repeat(3,1fr);margin-bottom:8px}.pick button{text-align:center}
 /* 第2關 */
 .meters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
 .meter{flex:1 1 140px;background:#fff;border:2px solid var(--line);border-radius:12px;padding:6px 10px;font-weight:700}
@@ -90,7 +93,7 @@ textarea{width:100%;min-height:96px;font:inherit;font-size:19px;padding:10px;bor
 .hinting .clue:not(.got) .ring{animation:ring 1s 3}
 @keyframes ring{50%{opacity:1}}
 .clue.got{opacity:.35;pointer-events:none}
-.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);width:min(520px,92vw);background:var(--ink);color:#fff;border-radius:16px;padding:14px 16px;z-index:40;box-shadow:0 10px 30px rgba(0,0,0,.25);display:none}
+.toast{pointer-events:none;position:fixed;left:50%;bottom:24px;transform:translateX(-50%);width:min(520px,92vw);background:var(--ink);color:#fff;border-radius:16px;padding:14px 16px;z-index:40;box-shadow:0 10px 30px rgba(0,0,0,.25);display:none}
 .toast.on{display:block;animation:up .3s}
 .toast b{color:var(--gold)}
 @keyframes up{from{transform:translate(-50%,20px);opacity:0}}
@@ -128,9 +131,9 @@ textarea{width:100%;min-height:96px;font:inherit;font-size:19px;padding:10px;bor
     <div class="sub">三關探究：界線地圖・噶瑪蘭家族三代記・文化流失偵探</div>
     <span class="pg">適用翰林版 五上第三單元 第1課 P.62～63</span>
     <ol>
-      <li>第1關　紅線藍線往哪走（約 10 分鐘）</li>
-      <li>第2關　噶瑪蘭家族三代記（約 18 分鐘）</li>
-      <li>第3關　文化流失偵探（約 10 分鐘）</li>
+      <li>第1關　紅線藍線往哪走（約 12 分鐘・思考題 4 題）</li>
+      <li>第2關　噶瑪蘭家族三代記（約 16 分鐘・思考題 3 題）</li>
+      <li>第3關　文化流失偵探（約 12 分鐘・思考題 3 題）</li>
     </ol>
     <div class="row">
       <label>班級<input id="cls" inputmode="numeric" maxlength="3" placeholder="501" autocomplete="off"></label>
@@ -165,7 +168,7 @@ textarea{width:100%;min-height:96px;font:inherit;font-size:19px;padding:10px;bor
 // 與〈穿越清帝國大逃脫〉共用同一個 Apps Script（成績存在「漢人文化-成績」工作表）
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbzqfvkWjqjGsLnnDsFNqlfvwluKJmvKC1KPbZjzwebmnk8PfmVhxOeSMGQUrRAP2fkVAg/exec';
 const GAME_ID = 'han-culture';
-const KEY = 'han-culture-v1';
+const KEY = 'han-culture-v2';
 
 const $ = s=>document.querySelector(s);
 const esc = s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -176,7 +179,7 @@ function skey(cls,seat){ return KEY+'-'+cls+'-'+seat; }
 function save(){ try{ localStorage.setItem(skey(S.cls,S.seat), JSON.stringify(S)); localStorage.setItem(KEY+'-who', JSON.stringify({cls:S.cls,seat:S.seat,mates:S.mates})); }catch(e){} }
 function load(cls,seat){ try{ return JSON.parse(localStorage.getItem(skey(cls,seat))); }catch(e){ return null; } }
 function fresh(cls,seat,mates){
-  return {cls,seat,mates,sid:Date.now().toString(36)+Math.random().toString(36).slice(2,6),start:Date.now(),end:0,lv:1,errors:0,wrongBy:{},
+  return {think:{},cls,seat,mates,sid:Date.now().toString(36)+Math.random().toString(36).slice(2,6),start:Date.now(),end:0,lv:1,errors:0,wrongBy:{},
     l1:{t:0,read:[],dir:false,sentence:'',tries:0,s:0,done:false},
     l2:{g:0,d:0,shown:false,cons:'',choices:[],m:{lang:5,land:5,faith:5},clues:{},ending:'',s:0,done:false},
     l3:{placed:{},firstWrong:{},cmpTries:0,cmp:'',cmpS:0,cmpDone:false,s:0,done:false}};
@@ -192,7 +195,8 @@ function post(body){ if(!GAS_URL) return; try{ fetch(GAS_URL,{method:'POST',mode
 function base(){ return {game:GAME_ID,sid:S.sid,cls:S.cls,seat:S.seat,mates:S.mates,lv:S.lv,done:S.lv>3}; }
 function report(){
   post(Object.assign(base(),{cleared:cleared(),score:total(),s1:S.l1.s,s2:S.l2.s,s3:S.l3.s,secs:secs(),errors:S.errors,wrongBy:S.wrongBy,
-    sentence:S.l1.sentence,ending:S.l2.ending,clues:Object.keys(S.l2.clues).length,cmp:S.l3.cmp}));
+    sentence:S.l1.sentence,ending:S.l2.ending,clues:Object.keys(S.l2.clues).length,cmp:S.l3.cmp,
+    think:Object.fromEntries(Object.entries(S.think).filter(([k,v])=>v.a).map(([k,v])=>[k,(v.pick?'【'+v.pick+'】':'')+v.a]))}));
 }
 let liveAt=0,liveSig='';
 function live(force){
@@ -297,7 +301,7 @@ function L1(){
   const st=S.l1;
   $('#stage').innerHTML=`
   <div class="lvtitle"><h2>第1關　紅線藍線往哪走</h2><small>課本 P.62 圖1</small></div>
-  <div class="task">拖動下方的時間軸，從清帝國前期走到後期。看看地圖怎麼變，再點開三位原住民的心聲。</div>
+  <div class="task">拖動下方的時間軸，從清帝國前期走到後期。看看地圖怎麼變，再點開三位原住民的心聲，最後回答思考題。</div>
   <div class="two">
     <div class="panel">${mapSVG()}
       <div class="slider"><input type="range" id="tl" min="0" max="100" step="1" value="${st.t}" aria-label="時間軸"></div>
@@ -322,35 +326,70 @@ function drawVoices(){
       <span>${!open?`🔒 時間軸拖到「${v.at<50?'前期後段':v.at<90?'中期':'後期'}」才會出現`:(read?`<b>${v.name}：</b>${v.txt}`:`<b>${v.name}想說話……</b>點我聽聽看`)}</span></button>`; }).join('');
   document.querySelectorAll('.voice:not([disabled])').forEach(b=>b.onclick=()=>{ const i=+b.dataset.i; if(!st.read.includes(i)){ st.read.push(i); save(); drawVoices(); drawL1Q(); } });
 }
+/* ===== 思考題（開放題）共用 =====
+   q.ok(答案) 回傳 true 代表有寫到重點；第一次沒寫到重點會給提示、可再寫一次 */
+const hasAny=(s,w)=>w.some(k=>s.includes(k));
+function think(el,q,done){
+  const T=S.think[q.id]||(S.think[q.id]={a:'',tries:0,s:0,done:false});
+  el.innerHTML=`<div class="panel q think"><div class="tq">💭 思考題</div><h3>${q.title}</h3>${q.sub?`<p class="small" style="margin:-4px 0 8px">${q.sub}</p>`:''}
+    ${q.pick?`<div class="opts pick">${q.pick.map(x=>`<button data-v="${esc(x)}" class="${T.pick===x?'ok':''}">${esc(x)}</button>`).join('')}</div>`:''}
+    <textarea maxlength="160" placeholder="${esc(q.ph||'寫下你的想法……')}">${esc(T.a)}</textarea>
+    <div class="fb"></div><button class="big">${T.done?'下一步 →':'送出'}</button></div>`;
+  const ta=el.querySelector('textarea'), fb=el.querySelector('.fb'), bt=el.querySelector('.big');
+  if(q.pick) el.querySelectorAll('.pick button').forEach(b=>b.onclick=()=>{ if(T.done) return; T.pick=b.dataset.v; el.querySelectorAll('.pick button').forEach(x=>x.classList.toggle('ok',x===b)); save(); });
+  if(T.done){ ta.disabled=true; fb.className='fb good'; fb.textContent=`${T.s===q.pts?'想得很好！':'謝謝你的想法！'}得 ${T.s}／${q.pts} 分。${q.after||''}`; bt.onclick=()=>done(); return; }
+  bt.onclick=()=>{
+    const a=ta.value.trim();
+    if(q.pick && !T.pick){ fb.className='fb warn'; fb.textContent='先在上面選一個，再寫原因。'; return; }
+    if(a.replace(/\s/g,'').length<(q.min||8)){ fb.className='fb warn'; fb.textContent='多寫幾個字，寫成完整的一句話喔。'; return; }
+    T.a=a; T.tries++;
+    const good=q.ok(a);
+    if(!good && T.tries<2){ fb.className='fb warn'; fb.textContent='💡 '+q.hint; save(); return; }
+    T.s = good?q.pts:Math.ceil(q.pts/2); T.done=true; save(); report(); header();
+    if(q.onScore) q.onScore();
+    think(el,q,done);
+  };
+}
+function mcq(el,q,done){
+  const T=S.think[q.id]||(S.think[q.id]={a:'',tries:0,s:0,done:false});
+  el.innerHTML=`<div class="panel q"><h3>${q.title}</h3><div class="opts">${q.o.map((o,i)=>`<button data-i="${i}" class="${T.done&&o.a?'ok':''}">${esc(o.t)}</button>`).join('')}</div><div class="fb"></div>${T.done?'<button class="big">下一步 →</button>':''}</div>`;
+  const fb=el.querySelector('.fb');
+  if(T.done){ fb.className='fb good'; fb.textContent=q.why; el.querySelector('.big').onclick=()=>done(); return; }
+  el.querySelectorAll('.opts button').forEach(b=>b.onclick=()=>{
+    const o=q.o[+b.dataset.i]; T.tries++;
+    if(o.a){ T.a=o.t; T.s=T.tries===1?q.pts:(T.tries===2?Math.ceil(q.pts/2):0); T.done=true; save(); report(); header(); if(q.onScore) q.onScore(); mcq(el,q,done); }
+    else { b.classList.add('no'); b.disabled=true; miss(q.id); fb.className='fb warn'; fb.textContent=q.hint; }
+  });
+}
+const L1Q=[
+  {type:'mcq',id:'L1方向',pts:4,title:'從紅線到藍線，漢人開墾的範圍往哪個方向擴大？',
+   o:[{t:'從海岸、平原往山區擴大',a:1},{t:'從山區往海岸擴大',a:0},{t:'界線一直沒有改變',a:0}],
+   hint:'再拖一次時間軸，看看黃色的水田是往哪邊長出去的。',why:'沒錯！漢人開墾從靠海的平原，一路往丘陵、山區推進。'},
+  {type:'mcq',id:'L1劃界',pts:4,title:'清帝國為什麼要在漢人和原住民之間劃設界線？',
+   o:[{t:'為了避免漢人侵犯生活在山地的原住民',a:1},{t:'為了讓漢人更方便進山開墾',a:0},{t:'為了把原住民全部趕到海邊',a:0},{t:'因為原住民要求漢人幫忙種田',a:0}],
+   hint:'課本 P.62 有寫：清帝國劃界線，是想「避免」什麼事情發生？',why:'對！清帝國劃界線，是為了避免漢人侵犯山地原住民的生活空間。'},
+  {type:'open',id:'L1越界',pts:6,title:'已經劃了界線，為什麼還是一直有人「越界開墾」？',ph:'因為……',
+   hint:'想一想：漢人移民的人數有什麼變化？他們需要什麼？',
+   ok:a=>hasAny(a,['多','增加','變多','不斷'])||(hasAny(a,['土地','田','地'])&&hasAny(a,['不夠','需要','需求','想要','缺','少']))||hasAny(a,['管不','沒人管','管理','官員','罰']),
+   after:'課本的說法是：漢人人數愈來愈多，土地需求持續增加，所以常常越界開墾。'},
+  {type:'open',id:'L1影響',pts:6,title:'用一句話寫下：界線一直往山裡移動，對原住民的生活造成什麼影響？',ph:'原住民的……',
+   hint:'想一想：原住民的土地、獵場、住的地方變得怎麼樣？他們可能怎麼做？',
+   ok:a=>(hasAny(a,['土地','家園','獵場','鹿場','生活空間','空間','住的地方','地方','範圍','草原','田'])&&hasAny(a,['變小','縮小','減少','變少','不見','失去','沒有','被占','被搶','侵占','少了','縮減','越來越小']))||hasAny(a,['搬','遷','離開','移到','往山','被迫','逃','衝突','打架','打仗','抵抗','受傷','文化','語言','漢化','習慣','傳統','流失','族語']),
+   after:'重點是：原住民的生活空間持續縮減，有些平埔族群被迫遷移到其他地方。'}
+];
 function drawL1Q(){
   const st=S.l1, box=$('#l1q');
-  if(st.read.length<3){ box.innerHTML=`<div class="small">已聽 ${st.read.length}／3 則心聲。三則都聽完就會出現問題。</div>`; return; }
-  if(!st.dir){
-    box.innerHTML=`<div class="q panel"><h3>從紅線到藍線，漢人開墾的範圍往哪個方向擴大？</h3><div class="opts">
-      <button data-a="1">從海岸、平原往山區擴大</button><button data-a="0">從山區往海岸擴大</button><button data-a="0">界線一直沒有改變</button></div></div>`;
-    box.querySelectorAll('.opts button').forEach(b=>b.onclick=()=>{ if(b.dataset.a==='1'){ b.classList.add('ok'); st.dir=true; save(); setTimeout(drawL1Q,600); } else { b.classList.add('no'); miss('L1方向'); } });
-    return;
+  if(st.read.length<3){ box.innerHTML=`<div class="small">已聽 ${st.read.length}／3 則心聲。三則都聽完就會出現思考題。</div>`; return; }
+  const i=L1Q.findIndex(q=>!(S.think[q.id]&&S.think[q.id].done&&S.think[q.id].seen));
+  if(i<0){
+    st.s=L1Q.reduce((n,q)=>n+S.think[q.id].s,0); st.done=true; st.sentence=S.think['L1影響'].a; save();
+    box.innerHTML=`<div class="panel q"><h3>第1關完成！</h3><p>得 ${st.s}／20 分。</p><button class="big" id="sok">進入第2關 →</button></div>`;
+    $('#sok').onclick=next; return;
   }
-  box.innerHTML=`<div class="q panel"><h3>用一句話寫下：界線變動，對原住民的生活造成什麼影響？</h3>
-    <textarea id="sent" maxlength="120" placeholder="例如：原住民的……">${esc(st.sentence)}</textarea>
-    <div class="fb" id="sfb"></div>
-    <button class="big" id="sok">${st.done?'進入第2關 →':'送出這一句'}</button></div>`;
-  if(st.done){ $('#sent').disabled=true; $('#sfb').className='fb good'; $('#sfb').textContent=`第1關完成，得 ${st.s} 分！`; }
-  $('#sok').onclick=()=>{
-    if(st.done){ next(); return; }
-    const s=$('#sent').value.trim();
-    if(s.replace(/\s/g,'').length<6){ $('#sfb').className='fb warn'; $('#sfb').textContent='多寫幾個字，至少寫成一句完整的話喔。'; return; }
-    st.tries++; st.sentence=s;
-    const has=w=>w.some(k=>s.includes(k));
-    const G=[['土地','家園','獵場','鹿場','生活空間','空間','住的地方','地方','範圍','草原','田'],
-             ['變小','縮小','減少','變少','不見','失去','沒有','被占','被搶','侵占','少了','縮減','越來越小'],
-             ['搬','遷','離開','移到','往山','被迫','逃'],['衝突','打架','打仗','爭','抵抗','受傷','吵'],
-             ['文化','語言','漢化','習慣','傳統','流失','族語']];
-    const good=(has(G[0])&&has(G[1]))||has(G[2])||has(G[3])||has(G[4]);
-    if(!good && st.tries<2){ $('#sfb').className='fb warn'; $('#sfb').textContent='想一想：原住民的土地、獵場、住的地方變得怎麼樣？他們可能怎麼做？改一改再送出一次。'; save(); return; }
-    st.s = 10 + (good?10:5); st.done=true; save(); report(); drawL1Q(); header();
-    toast(good?'<b>說得好！</b>你看出了界線往山區移動，原住民的生活空間跟著縮小。':'<b>完成！</b>課本的重點是：漢人開墾範圍擴大，原住民的生活空間持續縮減，有些平埔族群被迫遷移。',5200);
-  };
+  const q=L1Q[i];
+  box.innerHTML=`<div class="small" style="margin-bottom:6px">思考題 ${i+1}／${L1Q.length}</div><div id="qq"></div>`;
+  const done=()=>{ S.think[q.id].seen=1; save(); drawL1Q(); };
+  (q.type==='mcq'?mcq:think)($('#qq'),q,done);
 }
 
 /* =====================================================================
@@ -423,7 +462,7 @@ function L2(){
   const allClues=GENS.flatMap(x=>x.clues);
   $('#stage').innerHTML=`
   <div class="lvtitle"><h2>第2關　噶瑪蘭家族三代記</h2><small>課本 P.62「噶瑪蘭族的遷移」</small></div>
-  <div class="task">你們是一個噶瑪蘭族家族。經歷三代人的選擇，也請在畫面中找出藏起來的「漢化線索」（每一代 2 個）。</div>
+  <div class="task">你們是一個噶瑪蘭族家族。經歷三代人的選擇，也請在畫面中找出藏起來的「漢化線索」（每一代 2 個）。每一代結束後有一題思考題。</div>
   <div class="gen">${GENS.map((x,i)=>`<span class="${i===st.g?'now':''}">${i<st.g?'✓ ':''}${x.name}</span>`).join('')}</div>
   <div class="meters" id="meters"></div>
   <div class="two">
@@ -445,6 +484,11 @@ function drawMeters(changed){
 }
 function drawStory(){
   const st=S.l2, G=GENS[st.g], D=G.ds[st.d], box=$('#story');
+  if(st.pend!=null){
+    const q=L2Q[st.pend];
+    think(box,q,()=>{ S.think[q.id].seen=1; st.pend=null; st.g++; st.d=0; save(); L2(); });
+    return;
+  }
   if(st.cons){
     const last=st.d===G.ds.length-1;
     const missing=G.clues.filter(c=>!st.clues[c.id]).length;
@@ -455,7 +499,7 @@ function drawStory(){
       if(last && missing && !confirm('這一代還有 '+missing+' 個線索沒找到，確定要繼續嗎？')) return;
       st.cons='';
       if(!last){ st.d++; }
-      else if(st.g<2){ st.g++; st.d=0; }
+      else if(st.g<2){ st.pend=st.g; save(); drawStory(); return; }
       else { finishL2(); return; }
       save(); L2();
     };
@@ -469,12 +513,27 @@ function drawStory(){
     save(); drawMeters(ch); drawStory();
   });
 }
+const L2Q=[
+  {id:'L2一',pts:4,title:'阿公不管賣不賣地，漢人的田都越開越近。為什麼一個家族的選擇，很難擋住這樣的變化？',ph:'因為……',
+   hint:'想一想：來的漢人有多少？是不是只有你們一家在面對？',
+   ok:a=>hasAny(a,['多','一直來','越來越','不斷','很多人','一批','大家','別人','其他','整個','只有一','人數','擋不住','官府']),
+   after:'漢人移民一批接一批，土地需求不斷增加；一個家族的選擇，改變不了整個社會的大趨勢。'},
+  {id:'L2二',pts:4,title:'送孩子去讀漢文，對族人有什麼「好處」？又可能「失去」什麼？',sub:'好處和失去的東西都要寫到喔。',ph:'好處是……，但是會……',min:12,
+   hint:'好處：和官府、漢人打交道會怎樣？失去：族語、文化會怎樣？兩邊都寫寫看。',
+   ok:a=>hasAny(a,['方便','溝通','看得懂','讀懂','做生意','買賣','不吃虧','工作','官府','好處','容易'])&&hasAny(a,['族語','語言','文化','傳統','祭典','忘','失去','流失','不會說','少說','少']),
+   after:'讀漢文讓生活比較方便，卻也讓平埔族群的語言和文化很快流失，這就是課本說的「漢化」。'},
+  {id:'L2三',pts:4,title:'如果你是噶瑪蘭族的子孫，你會想用什麼方法，把祖先的語言和文化留下來？',ph:'我會……',
+   hint:'可以從「說」、「學」、「記錄」、「辦活動」想一想，例如在家裡怎麼做？',
+   ok:a=>hasAny(a,['說','講','教','學','記','寫','錄','拍','祭典','活動','歌','舞','傳','老人','長輩','族語','課','博物館','保存','衣服','分享']),
+   after:'今天噶瑪蘭族人就是用學族語、恢復祭典、記錄故事等方法，努力把文化找回來。'}
+];
 function finishL2(){
-  const st=S.l2; const nc=Object.keys(st.clues).length;
-  st.s=12+3*nc; st.done=true; save(); report(); header(); L2end();
+  const st=S.l2; st.done=true; calcL2(); save(); report(); header(); L2end();
 }
+function calcL2(){ const st=S.l2; st.s=6+2*Object.keys(st.clues).length+L2Q.reduce((n,q)=>n+((S.think[q.id]&&S.think[q.id].s)||0),0); }
 function L2end(){
   const st=S.l2, m=st.m, nc=Object.keys(st.clues).length;
+  calcL2();
   $('#stage').innerHTML=`
   <div class="lvtitle"><h2>第2關　家族的結局</h2></div>
   <div class="two">
@@ -485,15 +544,20 @@ function L2end(){
     <div class="cons">結局沒有對錯。歷史上這兩種情形都發生過：<b>部分噶瑪蘭族人留下來，與漢人通婚；部分遷居花蓮等地。</b>不管怎麼選，漢人越來越多，漢人文化逐漸成為社會主流。</div>
     <p>今天，噶瑪蘭族人努力找回自己的語言和文化，在 2002 年成為政府正式承認的原住民族。</p>
    </div>
-   <div class="panel">
-    <h3 style="margin-top:0">第2關成績</h3>
-    <p>走完三代：12 分<br>找到漢化線索 ${nc}／6 個：${nc*3} 分</p>
-    <p style="font-size:30px;font-weight:900;color:var(--han);margin:6px 0">共 ${st.s} 分</p>
-    <button class="big" id="nx">進入第3關 →</button>
+   <div>
+    <div id="endq"></div>
+    <div class="panel" id="l2sc" hidden>
+     <h3 style="margin-top:0">第2關成績</h3>
+     <p>走完三代：6 分<br>找到漢化線索 ${nc}／6 個：${nc*2} 分<br>思考題：${L2Q.reduce((n,q)=>n+((S.think[q.id]&&S.think[q.id].s)||0),0)}／12 分</p>
+     <p style="font-size:30px;font-weight:900;color:var(--han);margin:6px 0">共 ${st.s}／30 分</p>
+     <button class="big" id="nx">進入第3關 →</button>
+    </div>
    </div>
   </div>`;
   drawMeters();
-  $('#nx').onclick=next;
+  const q=L2Q[2], T=S.think[q.id];
+  if(T&&T.seen){ $('#l2sc').hidden=false; $('#nx').onclick=next; }
+  else think($('#endq'),q,()=>{ S.think[q.id].seen=1; calcL2(); save(); report(); L2end(); });
 }
 
 /* =====================================================================
@@ -556,23 +620,35 @@ function bindDrag(){
   });
   document.querySelectorAll('.box').forEach(bx=>bx.addEventListener('click',()=>{ if(selId) place(selId,bx.dataset.b,bx); else toast('先點一張線索卡，再點箱子。',1600); }));
 }
-const CMP=[{t:'他們住在深山，和漢人接觸比較少',a:1},{t:'他們比平埔族群更喜歡自己的文化',a:0},{t:'清帝國規定他們不能讀漢文',a:0},{t:'深山裡也有很多漢人辦的學校',a:0}];
+const L3Q=[
+  {type:'mcq',id:'L3比較題',pts:6,title:'為什麼生活在深山的原住民，受漢化影響比較少，還能保有原來的文化？',
+   o:[{t:'他們住在深山，和漢人接觸比較少',a:1},{t:'他們比平埔族群更喜歡自己的文化',a:0},{t:'清帝國規定他們不能讀漢文',a:0},{t:'深山裡也有很多漢人辦的學校',a:0}],
+   hint:'再想想：課本說平埔族群受影響很大，是因為和漢人「接觸頻繁」。',why:'沒錯！平埔族群住在海岸、平原，和漢人接觸頻繁；深山原住民接觸少，受漢化影響較少。'},
+  {type:'open',id:'L3最快',pts:7,title:'這六種影響裡，你覺得哪一種讓平埔族群的文化流失得最快？為什麼？',sub:'先選一個，再寫原因。沒有標準答案，理由說得通就好。',
+   pick:['語言','姓名','信仰','土地','婚姻','教育'],ph:'我覺得是……，因為……',min:10,
+   hint:'試著用「因為……所以……」說說看：這一種影響改變了什麼？會不會連帶影響其他方面？',
+   ok:a=>hasAny(a,['因為','所以','會','就','讓','導致','造成','如果','沒有','不能','失去','忘','一代','小孩','孩子']),
+   after:'很多同學會發現：這些影響是互相連在一起的，例如失去土地、上學讀漢文，都會讓族語越來越少人說。'},
+  {type:'open',id:'L3今天',pts:7,title:'今天的臺灣，可以用哪些方法幫助原住民族保存語言和文化？寫出一個方法。',ph:'可以……',
+   hint:'想一想：學校、電視、博物館、節慶活動，可以怎麼幫忙？',
+   ok:a=>hasAny(a,['族語','母語','語言','課','學校','教','祭典','活動','節','博物館','電視','節目','廣播','歌','舞','記錄','書','字典','正名','保存','傳承','老人','長輩','網路','影片','認識','尊重']),
+   after:'例如學校開族語課、電視有原住民族電視台、部落舉辦祭典，都是保存文化的方法。'}
+];
 function drawCmp(){
   const st=S.l3, box=$('#cmp');
-  const sortScore=Math.round(40*(CARDS.length-Object.keys(st.firstWrong).length)/CARDS.length);
-  if(st.cmpDone){
-    box.innerHTML=`<div class="panel q"><h3>偵探結案！</h3><p>分類一次就答對的卡片：${CARDS.length-Object.keys(st.firstWrong).length}／12，得 ${sortScore} 分；比較題得 ${st.cmpS} 分。</p>
+  const right=CARDS.length-Object.keys(st.firstWrong).length, sortScore=Math.round(30*right/CARDS.length);
+  const i=L3Q.findIndex(q=>!(S.think[q.id]&&S.think[q.id].done&&S.think[q.id].seen));
+  const tq=L3Q.reduce((n,q)=>n+((S.think[q.id]&&S.think[q.id].s)||0),0);
+  st.s=sortScore+tq;
+  if(i<0){
+    st.done=true; st.cmp=S.think['L3最快']?(S.think['L3最快'].pick||''):''; save();
+    box.innerHTML=`<div class="panel q" style="margin-top:14px"><h3>偵探結案！</h3><p>分類一次就答對的卡片：${right}／12，得 ${sortScore}／30 分；思考題得 ${tq}／20 分。</p>
       <button class="big" id="nx">看總成績 →</button></div>`;
     $('#nx').onclick=next; return;
   }
-  box.innerHTML=`<div class="panel q" style="margin-top:14px"><h3>最後一題：為什麼生活在深山的原住民，受漢化影響比較少，還能保有原來的文化？</h3>
-    <div class="opts">${CMP.map((o,i)=>`<button data-i="${i}">${esc(o.t)}</button>`).join('')}</div><div class="fb" id="cfb"></div></div>`;
-  box.querySelectorAll('.opts button').forEach(b=>b.onclick=()=>{
-    const o=CMP[+b.dataset.i]; st.cmpTries++;
-    if(o.a){ b.classList.add('ok'); st.cmp=o.t; st.cmpS = st.cmpTries===1?10:(st.cmpTries===2?5:0); st.cmpDone=true; st.s=sortScore+st.cmpS; st.done=true;
-      save(); report(); header(); $('#cfb').className='fb good'; $('#cfb').textContent='沒錯！平埔族群住在海岸、平原，和漢人接觸頻繁；深山原住民接觸少，所以受漢化影響較少。'; setTimeout(drawCmp,1800); }
-    else { b.classList.add('no'); b.disabled=true; miss('L3比較題'); $('#cfb').className='fb warn'; $('#cfb').textContent='再想想：課本說平埔族群受影響很大，是因為和漢人「接觸頻繁」。'; }
-  });
+  const q=L3Q[i];
+  box.innerHTML=`<div style="margin-top:14px" class="small">分類完成！接下來是思考題 ${i+1}／${L3Q.length}</div><div id="qq"></div>`;
+  (q.type==='mcq'?mcq:think)($('#qq'),q,()=>{ S.think[q.id].seen=1; save(); drawCmp(); });
 }
 
 /* ===== 總成績 ===== */
