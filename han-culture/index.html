@@ -131,9 +131,9 @@ textarea{width:100%;min-height:96px;font:inherit;font-size:19px;padding:10px;bor
     <div class="sub">三關探究：界線地圖・噶瑪蘭家族三代記・文化流失偵探</div>
     <span class="pg">適用翰林版 五上第三單元 第1課 P.62～63</span>
     <ol>
-      <li>第1關　紅線藍線往哪走（約 12 分鐘・思考題 4 題）</li>
-      <li>第2關　噶瑪蘭家族三代記（約 16 分鐘・思考題 3 題）</li>
-      <li>第3關　文化流失偵探（約 12 分鐘・思考題 3 題）</li>
+      <li>第1關　紅線藍線往哪走（約 10 分鐘・思考題 1 題）</li>
+      <li>第2關　噶瑪蘭家族三代記（約 18 分鐘・思考題 1 題）</li>
+      <li>第3關　文化流失偵探（約 10 分鐘・思考題 1 題）</li>
     </ol>
     <div class="row">
       <label>班級<input id="cls" inputmode="numeric" maxlength="3" placeholder="501" autocomplete="off"></label>
@@ -168,7 +168,7 @@ textarea{width:100%;min-height:96px;font:inherit;font-size:19px;padding:10px;bor
 // 與〈穿越清帝國大逃脫〉共用同一個 Apps Script（成績存在「漢人文化-成績」工作表）
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbzqfvkWjqjGsLnnDsFNqlfvwluKJmvKC1KPbZjzwebmnk8PfmVhxOeSMGQUrRAP2fkVAg/exec';
 const GAME_ID = 'han-culture';
-const KEY = 'han-culture-v2';
+const KEY = 'han-culture-v3';
 
 const $ = s=>document.querySelector(s);
 const esc = s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -362,24 +362,17 @@ function mcq(el,q,done){
   });
 }
 const L1Q=[
-  {type:'mcq',id:'L1方向',pts:4,title:'從紅線到藍線，漢人開墾的範圍往哪個方向擴大？',
+  {type:'mcq',id:'L1方向',pts:8,title:'從紅線到藍線，漢人開墾的範圍往哪個方向擴大？',
    o:[{t:'從海岸、平原往山區擴大',a:1},{t:'從山區往海岸擴大',a:0},{t:'界線一直沒有改變',a:0}],
    hint:'再拖一次時間軸，看看黃色的水田是往哪邊長出去的。',why:'沒錯！漢人開墾從靠海的平原，一路往丘陵、山區推進。'},
-  {type:'mcq',id:'L1劃界',pts:4,title:'清帝國為什麼要在漢人和原住民之間劃設界線？',
-   o:[{t:'為了避免漢人侵犯生活在山地的原住民',a:1},{t:'為了讓漢人更方便進山開墾',a:0},{t:'為了把原住民全部趕到海邊',a:0},{t:'因為原住民要求漢人幫忙種田',a:0}],
-   hint:'課本 P.62 有寫：清帝國劃界線，是想「避免」什麼事情發生？',why:'對！清帝國劃界線，是為了避免漢人侵犯山地原住民的生活空間。'},
-  {type:'open',id:'L1越界',pts:6,title:'已經劃了界線，為什麼還是一直有人「越界開墾」？',ph:'因為……',
-   hint:'想一想：漢人移民的人數有什麼變化？他們需要什麼？',
-   ok:a=>hasAny(a,['多','增加','變多','不斷'])||(hasAny(a,['土地','田','地'])&&hasAny(a,['不夠','需要','需求','想要','缺','少']))||hasAny(a,['管不','沒人管','管理','官員','罰']),
-   after:'課本的說法是：漢人人數愈來愈多，土地需求持續增加，所以常常越界開墾。'},
-  {type:'open',id:'L1影響',pts:6,title:'用一句話寫下：界線一直往山裡移動，對原住民的生活造成什麼影響？',ph:'原住民的……',
+  {type:'open',id:'L1影響',pts:12,title:'用一句話寫下：界線一直往山裡移動，對原住民的生活造成什麼影響？',ph:'原住民的……',
    hint:'想一想：原住民的土地、獵場、住的地方變得怎麼樣？他們可能怎麼做？',
    ok:a=>(hasAny(a,['土地','家園','獵場','鹿場','生活空間','空間','住的地方','地方','範圍','草原','田'])&&hasAny(a,['變小','縮小','減少','變少','不見','失去','沒有','被占','被搶','侵占','少了','縮減','越來越小']))||hasAny(a,['搬','遷','離開','移到','往山','被迫','逃','衝突','打架','打仗','抵抗','受傷','文化','語言','漢化','習慣','傳統','流失','族語']),
    after:'重點是：原住民的生活空間持續縮減，有些平埔族群被迫遷移到其他地方。'}
 ];
 function drawL1Q(){
   const st=S.l1, box=$('#l1q');
-  if(st.read.length<3){ box.innerHTML=`<div class="small">已聽 ${st.read.length}／3 則心聲。三則都聽完就會出現思考題。</div>`; return; }
+  if(st.read.length<3){ box.innerHTML=`<div class="small">已聽 ${st.read.length}／3 則心聲。三則都聽完就會出現問題。</div>`; return; }
   const i=L1Q.findIndex(q=>!(S.think[q.id]&&S.think[q.id].done&&S.think[q.id].seen));
   if(i<0){
     st.s=L1Q.reduce((n,q)=>n+S.think[q.id].s,0); st.done=true; st.sentence=S.think['L1影響'].a; save();
@@ -387,7 +380,7 @@ function drawL1Q(){
     $('#sok').onclick=next; return;
   }
   const q=L1Q[i];
-  box.innerHTML=`<div class="small" style="margin-bottom:6px">思考題 ${i+1}／${L1Q.length}</div><div id="qq"></div>`;
+  box.innerHTML=`<div class="small" style="margin-bottom:6px">第 ${i+1}／${L1Q.length} 題</div><div id="qq"></div>`;
   const done=()=>{ S.think[q.id].seen=1; save(); drawL1Q(); };
   (q.type==='mcq'?mcq:think)($('#qq'),q,done);
 }
@@ -462,7 +455,7 @@ function L2(){
   const allClues=GENS.flatMap(x=>x.clues);
   $('#stage').innerHTML=`
   <div class="lvtitle"><h2>第2關　噶瑪蘭家族三代記</h2><small>課本 P.62「噶瑪蘭族的遷移」</small></div>
-  <div class="task">你們是一個噶瑪蘭族家族。經歷三代人的選擇，也請在畫面中找出藏起來的「漢化線索」（每一代 2 個）。每一代結束後有一題思考題。</div>
+  <div class="task">你們是一個噶瑪蘭族家族。經歷三代人的選擇，也請在畫面中找出藏起來的「漢化線索」（每一代 2 個）。爸爸這一代結束後有一題思考題。</div>
   <div class="gen">${GENS.map((x,i)=>`<span class="${i===st.g?'now':''}">${i<st.g?'✓ ':''}${x.name}</span>`).join('')}</div>
   <div class="meters" id="meters"></div>
   <div class="two">
@@ -485,7 +478,7 @@ function drawMeters(changed){
 function drawStory(){
   const st=S.l2, G=GENS[st.g], D=G.ds[st.d], box=$('#story');
   if(st.pend!=null){
-    const q=L2Q[st.pend];
+    const q=L2Q[0];
     think(box,q,()=>{ S.think[q.id].seen=1; st.pend=null; st.g++; st.d=0; save(); L2(); });
     return;
   }
@@ -499,7 +492,8 @@ function drawStory(){
       if(last && missing && !confirm('這一代還有 '+missing+' 個線索沒找到，確定要繼續嗎？')) return;
       st.cons='';
       if(!last){ st.d++; }
-      else if(st.g<2){ st.pend=st.g; save(); drawStory(); return; }
+      else if(st.g===1){ st.pend=1; save(); drawStory(); return; }
+      else if(st.g<2){ st.g++; st.d=0; }
       else { finishL2(); return; }
       save(); L2();
     };
@@ -514,18 +508,10 @@ function drawStory(){
   });
 }
 const L2Q=[
-  {id:'L2一',pts:4,title:'阿公不管賣不賣地，漢人的田都越開越近。為什麼一個家族的選擇，很難擋住這樣的變化？',ph:'因為……',
-   hint:'想一想：來的漢人有多少？是不是只有你們一家在面對？',
-   ok:a=>hasAny(a,['多','一直來','越來越','不斷','很多人','一批','大家','別人','其他','整個','只有一','人數','擋不住','官府']),
-   after:'漢人移民一批接一批，土地需求不斷增加；一個家族的選擇，改變不了整個社會的大趨勢。'},
-  {id:'L2二',pts:4,title:'送孩子去讀漢文，對族人有什麼「好處」？又可能「失去」什麼？',sub:'好處和失去的東西都要寫到喔。',ph:'好處是……，但是會……',min:12,
+  {id:'L2二',pts:12,title:'送孩子去讀漢文，對族人有什麼「好處」？又可能「失去」什麼？',sub:'好處和失去的東西都要寫到喔。',ph:'好處是……，但是會……',min:12,
    hint:'好處：和官府、漢人打交道會怎樣？失去：族語、文化會怎樣？兩邊都寫寫看。',
    ok:a=>hasAny(a,['方便','溝通','看得懂','讀懂','做生意','買賣','不吃虧','工作','官府','好處','容易'])&&hasAny(a,['族語','語言','文化','傳統','祭典','忘','失去','流失','不會說','少說','少']),
-   after:'讀漢文讓生活比較方便，卻也讓平埔族群的語言和文化很快流失，這就是課本說的「漢化」。'},
-  {id:'L2三',pts:4,title:'如果你是噶瑪蘭族的子孫，你會想用什麼方法，把祖先的語言和文化留下來？',ph:'我會……',
-   hint:'可以從「說」、「學」、「記錄」、「辦活動」想一想，例如在家裡怎麼做？',
-   ok:a=>hasAny(a,['說','講','教','學','記','寫','錄','拍','祭典','活動','歌','舞','傳','老人','長輩','族語','課','博物館','保存','衣服','分享']),
-   after:'今天噶瑪蘭族人就是用學族語、恢復祭典、記錄故事等方法，努力把文化找回來。'}
+   after:'讀漢文讓生活比較方便，卻也讓平埔族群的語言和文化很快流失，這就是課本說的「漢化」。'}
 ];
 function finishL2(){
   const st=S.l2; st.done=true; calcL2(); save(); report(); header(); L2end();
@@ -545,8 +531,7 @@ function L2end(){
     <p>今天，噶瑪蘭族人努力找回自己的語言和文化，在 2002 年成為政府正式承認的原住民族。</p>
    </div>
    <div>
-    <div id="endq"></div>
-    <div class="panel" id="l2sc" hidden>
+    <div class="panel" id="l2sc">
      <h3 style="margin-top:0">第2關成績</h3>
      <p>走完三代：6 分<br>找到漢化線索 ${nc}／6 個：${nc*2} 分<br>思考題：${L2Q.reduce((n,q)=>n+((S.think[q.id]&&S.think[q.id].s)||0),0)}／12 分</p>
      <p style="font-size:30px;font-weight:900;color:var(--han);margin:6px 0">共 ${st.s}／30 分</p>
@@ -555,9 +540,7 @@ function L2end(){
    </div>
   </div>`;
   drawMeters();
-  const q=L2Q[2], T=S.think[q.id];
-  if(T&&T.seen){ $('#l2sc').hidden=false; $('#nx').onclick=next; }
-  else think($('#endq'),q,()=>{ S.think[q.id].seen=1; calcL2(); save(); report(); L2end(); });
+  $('#nx').onclick=next;
 }
 
 /* =====================================================================
@@ -621,18 +604,14 @@ function bindDrag(){
   document.querySelectorAll('.box').forEach(bx=>bx.addEventListener('click',()=>{ if(selId) place(selId,bx.dataset.b,bx); else toast('先點一張線索卡，再點箱子。',1600); }));
 }
 const L3Q=[
-  {type:'mcq',id:'L3比較題',pts:6,title:'為什麼生活在深山的原住民，受漢化影響比較少，還能保有原來的文化？',
+  {type:'mcq',id:'L3比較題',pts:10,title:'為什麼生活在深山的原住民，受漢化影響比較少，還能保有原來的文化？',
    o:[{t:'他們住在深山，和漢人接觸比較少',a:1},{t:'他們比平埔族群更喜歡自己的文化',a:0},{t:'清帝國規定他們不能讀漢文',a:0},{t:'深山裡也有很多漢人辦的學校',a:0}],
    hint:'再想想：課本說平埔族群受影響很大，是因為和漢人「接觸頻繁」。',why:'沒錯！平埔族群住在海岸、平原，和漢人接觸頻繁；深山原住民接觸少，受漢化影響較少。'},
-  {type:'open',id:'L3最快',pts:7,title:'這六種影響裡，你覺得哪一種讓平埔族群的文化流失得最快？為什麼？',sub:'先選一個，再寫原因。沒有標準答案，理由說得通就好。',
+  {type:'open',id:'L3最快',pts:10,title:'這六種影響裡，你覺得哪一種讓平埔族群的文化流失得最快？為什麼？',sub:'先選一個，再寫原因。沒有標準答案，理由說得通就好。',
    pick:['語言','姓名','信仰','土地','婚姻','教育'],ph:'我覺得是……，因為……',min:10,
    hint:'試著用「因為……所以……」說說看：這一種影響改變了什麼？會不會連帶影響其他方面？',
    ok:a=>hasAny(a,['因為','所以','會','就','讓','導致','造成','如果','沒有','不能','失去','忘','一代','小孩','孩子']),
-   after:'很多同學會發現：這些影響是互相連在一起的，例如失去土地、上學讀漢文，都會讓族語越來越少人說。'},
-  {type:'open',id:'L3今天',pts:7,title:'今天的臺灣，可以用哪些方法幫助原住民族保存語言和文化？寫出一個方法。',ph:'可以……',
-   hint:'想一想：學校、電視、博物館、節慶活動，可以怎麼幫忙？',
-   ok:a=>hasAny(a,['族語','母語','語言','課','學校','教','祭典','活動','節','博物館','電視','節目','廣播','歌','舞','記錄','書','字典','正名','保存','傳承','老人','長輩','網路','影片','認識','尊重']),
-   after:'例如學校開族語課、電視有原住民族電視台、部落舉辦祭典，都是保存文化的方法。'}
+   after:'很多同學會發現：這些影響是互相連在一起的，例如失去土地、上學讀漢文，都會讓族語越來越少人說。'}
 ];
 function drawCmp(){
   const st=S.l3, box=$('#cmp');
@@ -647,7 +626,7 @@ function drawCmp(){
     $('#nx').onclick=next; return;
   }
   const q=L3Q[i];
-  box.innerHTML=`<div style="margin-top:14px" class="small">分類完成！接下來是思考題 ${i+1}／${L3Q.length}</div><div id="qq"></div>`;
+  box.innerHTML=`<div style="margin-top:14px" class="small">分類完成！接下來回答問題（第 ${i+1}／${L3Q.length} 題）</div><div id="qq"></div>`;
   (q.type==='mcq'?mcq:think)($('#qq'),q,()=>{ S.think[q.id].seen=1; save(); drawCmp(); });
 }
 
