@@ -8,6 +8,7 @@
  *
  * 同一個後台也收〈漢人文化成為主流〉三關探究（han-culture）的成績，
  * 存在「漢人文化-成績」「漢人文化-即時」兩張工作表，不會和清帝國大逃脫混在一起。
+ * 也收〈讀懂選舉公報：南園里政見探究〉（nanyuan）的作答，存在「南園里-成績」「南園里-即時」。
  * 更新本檔後：部署 → 管理部署作業 → 編輯（鉛筆）→ 版本選「新版本」→ 部署，網址不變。
  */
 const SHEET = 'records';
@@ -57,6 +58,7 @@ function doPost(e) {
     lock.waitLock(15000);
     const d = JSON.parse(e.postData.contents);
     if (d.game === 'han-culture') return hanPost_(d);
+    if (d.game === 'nanyuan') return nyPost_(d);
     if (d.game !== 'qing-escape') return json_({ ok: false });
     const cls = String(d.cls || '').replace(/\D/g, '').slice(0, 3);
     const seat = Math.max(0, Math.min(99, parseInt(d.seat, 10) || 0));
@@ -84,6 +86,7 @@ function doGet(e) {
   const k = key_();
   if (!k || q.key !== k) return json_({ ok: false, error: 'key' });
   if (q.game === 'han-culture') return hanGet_(q);
+  if (q.game === 'nanyuan') return nyGet_(q);
   const rows = sheet_().getDataRange().getValues().slice(1);
   const out = rows
     .filter(r => (!q.cls || String(r[2]) === String(q.cls)) && (!q.ch || String(r[16]) === String(q.ch)))
@@ -164,5 +167,64 @@ function hanGet_(q) {
     .filter(r => !q.cls || String(r[2]) === String(q.cls))
     .map(r => ({ sid: String(r[0]), t: r[1].getTime(), cls: String(r[2]), seat: Number(r[3]),
       mates: String(r[4] || '').split(',').map(Number).filter(n => n), lv: Number(r[5]) || 1, status: String(r[6]) }));
+  return json_({ ok: true, rows: rows, live: live });
+}
+
+/* ===================== 讀懂選舉公報：南園里政見探究（nanyuan） ===================== */
+const NY = '南園里-成績';
+const NY_HEAD = ['時間','sid','班級','組別','角色','完成關卡','全部完成','提早交卷','總分','第1關','第2關','第3關','用時秒','錯誤','各題錯誤(JSON)','三把尺(JSON)','最在意(代碼)','最在意政見','最在意理由','我的政見'];
+const NY_LIVE = '南園里-即時';
+const NY_LIVE_HEAD = ['sid','最後更新','班級','組別','角色','所在關卡','狀態'];
+const NY_ROLES = ['kid','elder','dog','bus','rain','new'];
+function nyRulers_(o) {
+  const out = {}, okv = /^[\u4e00-\u9fffA-Za-z]{0,8}$/;
+  if (o && typeof o === 'object') Object.keys(o).slice(0, 8).forEach(k => {
+    const id = String(k).replace(/[^A-Za-z0-9]/g, '').slice(0, 4), r = o[k] || {};
+    if (!id) return;
+    out[id] = { c: okv.test(r.c || '') ? r.c : '', f: okv.test(r.f || '') ? r.f : '', v: okv.test(r.v || '') ? r.v : '',
+      why: String(r.why || '').replace(/[\r\n\t]+/g, ' ').slice(0, 200) };
+  });
+  const s = JSON.stringify(out);
+  return /^[=+\-@]/.test(s) ? "'" + s : s;
+}
+function nyPost_(d) {
+  const cls = String(d.cls || '').replace(/\D/g, '').slice(0, 3);
+  const grp = Math.max(0, Math.min(8, parseInt(d.grp, 10) || 0));
+  const sid = String(d.sid || '').replace(/[^a-z0-9]/gi, '').slice(0, 20);
+  const role = NY_ROLES.indexOf(d.role) >= 0 ? d.role : '';
+  const lv = Math.max(1, Math.min(4, Number(d.lv) || 1));
+  const status = d.done ? (d.early ? '提早交卷' : '全部完成') : '作答中';
+  if (sid) {
+    const sh = hanSheet_(NY_LIVE, NY_LIVE_HEAD), n = sh.getLastRow();
+    const ids = n > 1 ? sh.getRange(2, 1, n - 1, 1).getValues() : [];
+    let row = -1;
+    for (let i = ids.length - 1; i >= 0; i--) if (String(ids[i][0]) === sid) { row = i + 2; break; }
+    const v = [sid, new Date(), cls, grp, role, lv, status];
+    if (row > 0) sh.getRange(row, 1, 1, v.length).setValues([v]); else sh.appendRow(v);
+  }
+  if (d.type === 'live') return json_({ ok: true });
+  hanSheet_(NY, NY_HEAD).appendRow([new Date(), sid, cls, grp, role,
+    Math.max(0, Math.min(3, Number(d.cleared) || 0)), d.done ? 'Y' : '', d.early ? 'Y' : '',
+    Number(d.score) || 0, Number(d.s1) || 0, Number(d.s2) || 0, Number(d.s3) || 0,
+    Number(d.secs) || 0, Number(d.errors) || 0, JSON.stringify(d.wrongBy || {}).slice(0, 2000),
+    nyRulers_(d.rulers), String(d.top || '').replace(/[^A-Za-z0-9]/g, '').slice(0, 4),
+    txt_(d.topText, 120), txt_(d.topWhy, 200), txt_(d.mine, 200)]);
+  return json_({ ok: true });
+}
+function nyGet_(q) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const un = v => String(v || '').replace(/^'/, '');
+  const sh = ss.getSheetByName(NY);
+  const rows = (sh && sh.getLastRow() > 1 ? sh.getRange(2, 1, sh.getLastRow() - 1, NY_HEAD.length).getValues() : [])
+    .filter(r => !q.cls || String(r[2]) === String(q.cls))
+    .map(r => ({ ts: new Date(r[0]).getTime(), sid: String(r[1]), cls: String(r[2]), grp: Number(r[3]) || 0, role: String(r[4] || ''),
+      cleared: Number(r[5]) || 0, done: r[6] === 'Y', early: r[7] === 'Y', score: Number(r[8]) || 0,
+      s1: Number(r[9]) || 0, s2: Number(r[10]) || 0, s3: Number(r[11]) || 0, secs: Number(r[12]) || 0, errors: Number(r[13]) || 0,
+      wrongBy: safe_(r[14]), rulers: safe_(un(r[15])), top: String(r[16] || ''), topText: un(r[17]), topWhy: un(r[18]), mine: un(r[19]) }));
+  const lsh = ss.getSheetByName(NY_LIVE), since = Date.now() - 12 * 3600 * 1000;
+  const live = (lsh && lsh.getLastRow() > 1 ? lsh.getRange(2, 1, lsh.getLastRow() - 1, NY_LIVE_HEAD.length).getValues() : [])
+    .filter(r => r[1] instanceof Date && r[1].getTime() > since)
+    .filter(r => !q.cls || String(r[2]) === String(q.cls))
+    .map(r => ({ sid: String(r[0]), t: r[1].getTime(), cls: String(r[2]), grp: Number(r[3]) || 0, role: String(r[4] || ''), lv: Number(r[5]) || 1, status: String(r[6]) }));
   return json_({ ok: true, rows: rows, live: live });
 }

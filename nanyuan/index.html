@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>讀懂選舉公報｜南園里政見探究</title>
+<style>
+:root{--ink:#22303d;--ink2:#5b6875;--paper:#f6f4ee;--card:#fffefa;--blue:#2b5d9b;--blue2:#dbe6f4;--green:#2f7d5b;--green2:#d9efe3;--gold:#e8b23c;--ok:#3d8a4f;--bad:#c23b3b;--line:#dcd6c6;--pur:#7a4f9a;--pur2:#ece2f4}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.6 "PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;-webkit-text-size-adjust:100%}
+button{font:inherit;cursor:pointer;touch-action:manipulation;color:inherit}
+.screen{display:none;min-height:100vh}.screen.on{display:block}
+#login.on{display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 15% 10%,#fff3d6,transparent 50%),radial-gradient(circle at 85% 90%,#dbe6f4,transparent 55%),var(--paper)}
+.lg{width:min(580px,100%);background:var(--card);border:3px solid var(--ink);border-radius:24px;padding:26px 26px 20px;box-shadow:8px 8px 0 var(--ink)}
+.lg h1{margin:0;font-size:clamp(34px,7vw,48px);font-weight:900;line-height:1.12;letter-spacing:.03em}
+.lg h1 span{color:var(--blue)}
+.lg .sub{margin:8px 0 6px;font-weight:700;color:var(--green)}
+.rule{background:var(--blue2);border-radius:12px;padding:8px 12px;font-weight:700;font-size:15px;margin:8px 0 12px}
+.lg ol{margin:0 0 14px;padding-left:22px;color:var(--ink2);font-size:16px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row label{flex:1 1 140px;font-weight:700;font-size:15px}
+.row input,.row select{display:block;width:100%;height:54px;margin-top:4px;font-size:22px;text-align:center;border:2px solid var(--ink);border-radius:12px;background:#fff}
+.big{display:block;width:100%;min-height:56px;margin-top:14px;border:0;border-radius:14px;background:var(--blue);color:#fff;font-weight:900;font-size:21px;box-shadow:0 4px 0 #1b3f6c}
+.big:active{transform:translateY(3px);box-shadow:0 1px 0 #1b3f6c}
+.big.alt{background:var(--green);box-shadow:0 4px 0 #1d5a3f}
+.big.ghost{background:#fff;color:var(--ink);border:2px solid var(--ink);box-shadow:none;min-height:48px;font-size:17px}
+.big:disabled{opacity:.45}
+.err{color:var(--bad);font-weight:700;min-height:1.6em;margin-top:8px}
+.credit{text-align:center;margin-top:14px;font-size:14px;color:var(--ink2);font-weight:700}
+header.top{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:10px;padding:10px max(14px,env(safe-area-inset-left));background:var(--ink);color:#fff;flex-wrap:wrap}
+header.top b{font-size:18px}
+.steps{display:flex;gap:6px;flex:1;justify-content:center;flex-wrap:wrap}
+.steps span{padding:3px 12px;border-radius:99px;background:rgba(255,255,255,.14);font-size:14px;font-weight:700;white-space:nowrap}
+.steps span.now{background:var(--gold);color:var(--ink)}
+.steps span.ok{background:var(--ok)}
+.meta{font-size:14px;font-weight:700;white-space:nowrap}
+#early{border:2px solid #fff;background:transparent;color:#fff;border-radius:10px;padding:4px 12px;font-weight:700;font-size:14px}
+main{max-width:1180px;margin:0 auto;padding:16px max(14px,env(safe-area-inset-left)) 40px}
+.lvtitle{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:4px 0 6px}
+.lvtitle h2{margin:0;font-size:clamp(24px,4vw,32px);font-weight:900}
+.lvtitle small{font-weight:700;color:var(--ink2)}
+.task{background:#fff;border-left:6px solid var(--gold);border-radius:10px;padding:10px 14px;margin:0 0 12px;font-weight:700}
+.panel{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:14px}
+.two{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:14px;align-items:start}
+@media(max-width:860px){.two{grid-template-columns:1fr}}
+/* 範例公報 */
+.bul{background:#fff;border:2px solid var(--ink);border-radius:6px;overflow:hidden}
+.bul .bh{background:#eee8d8;padding:6px 12px;font-weight:900;text-align:center;border-bottom:2px solid var(--ink)}
+.bul .fake{font-size:13px;color:var(--bad);font-weight:700;text-align:center;padding:2px;background:#fff4f4;border-bottom:1px solid var(--line)}
+.fld{display:grid;grid-template-columns:122px 1fr;border-bottom:1px solid var(--line);width:100%;text-align:left;background:#fff;border-left:0;border-right:0;border-top:0;padding:0;min-height:48px}
+.fld:last-child{border-bottom:0}
+.fld .k{background:#f5f1e6;font-weight:900;padding:8px 10px;border-right:1px solid var(--line);display:flex;align-items:center}
+.fld .v{padding:8px 10px;font-size:16px}
+.fld.ok{background:#dff0e2}.fld.ok .k{background:#bfe2c7}
+.fld.no{animation:shake .3s;background:#f8dede}
+.q h3{margin:0 0 8px;font-size:19px}
+.opts{display:grid;gap:8px}
+.opts button{min-height:54px;text-align:left;padding:8px 14px;border:2px solid var(--ink);border-radius:12px;background:#fff;font-weight:700}
+.opts button.ok{background:#dff0e2;border-color:var(--ok)}
+.opts button.no{background:#f8dede;border-color:var(--bad);animation:shake .3s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.fb{margin-top:8px;font-weight:700;min-height:1.6em}
+.fb.good{color:var(--ok)}.fb.warn{color:#9a6a00}
+.qnum{display:inline-block;background:var(--gold);border-radius:99px;padding:1px 12px;font-size:14px;font-weight:900;margin-bottom:6px}
+/* 第2關 */
+.tray{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;min-height:60px;margin-bottom:12px}
+.card{background:#fff;border:2px solid var(--ink);border-radius:12px;padding:10px 12px;font-weight:700;font-size:16px;line-height:1.5;touch-action:none;-webkit-user-select:none;user-select:none;cursor:grab;box-shadow:0 3px 0 var(--ink)}
+.card mark{background:#ffe28a;padding:0 3px;border-radius:4px;font-weight:900;font-size:18px}
+.card.sel{background:#fff4cf;border-color:var(--blue);box-shadow:0 3px 0 var(--blue)}
+.card.ghost{position:fixed;z-index:50;pointer-events:none;opacity:.92;transform:rotate(-2deg);box-shadow:0 10px 24px rgba(0,0,0,.25)}
+.card.lift{opacity:.3}
+.boxes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.box{min-height:150px;border:3px dashed var(--green);border-radius:16px;background:var(--green2);padding:8px;transition:background .15s}
+.box h4{margin:0;font-size:19px;color:var(--green);text-align:center}
+.box p{margin:0 0 6px;font-size:13px;text-align:center;color:var(--ink2);font-weight:700}
+.box.b2{border-color:var(--blue);background:var(--blue2)}.box.b2 h4{color:var(--blue)}
+.box.b3{border-color:var(--pur);background:var(--pur2)}.box.b3 h4{color:var(--pur)}
+.box.over{filter:brightness(.92)}
+.box.no{animation:shake .3s;border-color:var(--bad)}
+.box .in{font-size:14px;background:#fff;border-radius:8px;padding:5px 8px;margin-top:5px;font-weight:700;border-left:4px solid var(--ok)}
+/* 第3關 */
+.roles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media(max-width:700px){.roles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.role{border:2px solid var(--ink);border-radius:16px;background:#fff;padding:14px;text-align:center;font-weight:700;min-height:150px}
+.role .ic{font-size:46px;line-height:1.2}
+.role b{display:block;font-size:20px}
+.role small{color:var(--ink2);font-size:14px}
+.prog{display:flex;gap:6px;margin:0 0 10px;flex-wrap:wrap}
+.prog span{padding:3px 12px;border-radius:99px;background:#e6e2d6;font-weight:700;font-size:14px}
+.prog span.now{background:var(--gold)}.prog span.ok{background:var(--ok);color:#fff}
+.pol{font-size:21px;font-weight:900;background:#fff;border:2px solid var(--ink);border-radius:14px;padding:14px 16px;margin-bottom:12px;line-height:1.55}
+.pol small{display:block;font-size:13px;color:var(--ink2);font-weight:700}
+.ruler{background:#fff;border:2px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:10px}
+.ruler h4{margin:0 0 6px;font-size:18px}
+.ruler h4 span{font-weight:700;font-size:14px;color:var(--ink2)}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.seg button{min-height:52px;border:2px solid var(--ink);border-radius:12px;background:#fff;font-weight:700;font-size:16px;padding:4px 6px}
+.seg button.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+textarea{width:100%;min-height:84px;font:inherit;font-size:19px;padding:10px;border:2px solid var(--ink);border-radius:12px;background:#fff;resize:vertical}
+.pickl{display:grid;gap:8px}
+.pickl button{text-align:left;min-height:54px;border:2px solid var(--ink);border-radius:12px;background:#fff;font-weight:700;padding:8px 14px}
+.pickl button.on{background:var(--gold);border-color:var(--ink)}
+.toast{pointer-events:none;position:fixed;left:50%;bottom:24px;transform:translateX(-50%);width:min(540px,92vw);background:var(--ink);color:#fff;border-radius:16px;padding:14px 16px;z-index:40;box-shadow:0 10px 30px rgba(0,0,0,.25);display:none}
+.toast.on{display:block;animation:up .3s}
+.toast b{color:var(--gold)}
+@keyframes up{from{transform:translate(-50%,20px);opacity:0}}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;place-items:center;z-index:60;padding:20px}
+.modal.on{display:grid}
+.modal .in{background:var(--card);border:3px solid var(--ink);border-radius:20px;padding:20px;width:min(460px,100%)}
+.res{max-width:760px;margin:0 auto}
+.score{font-size:64px;font-weight:900;color:var(--blue);line-height:1}
+.brk{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}
+.brk div{background:#fff;border:2px solid var(--line);border-radius:14px;padding:10px;text-align:center;font-weight:700}
+.brk b{display:block;font-size:30px;color:var(--green)}
+.sum{background:#fff;border-radius:14px;padding:12px 16px;border-left:6px solid var(--blue);text-align:left}
+.sum li{margin:4px 0}
+.center{text-align:center}
+.small{font-size:14px;color:var(--ink2)}
+</style>
+</head>
+<body>
+
+<!-- ================= 登入 ================= -->
+<section class="screen on" id="login">
+  <div class="lg">
+    <h1>讀懂<br><span>選舉公報</span></h1>
+    <div class="sub">南園里里長選舉公報・政見探究（三關）</div>
+    <div class="rule">🤝 這不是投票，也不比較誰比較好。<br>我們只練習：拿到公報時，怎麼讀懂一條政見。</div>
+    <ol>
+      <li>第1關　公報解剖（約 8 分鐘）</li>
+      <li>第2關　動詞偵探（約 10 分鐘）</li>
+      <li>第3關　我是哪種里民？三把尺（約 15 分鐘）</li>
+    </ol>
+    <div class="row">
+      <label>班級<input id="cls" inputmode="numeric" maxlength="3" placeholder="609" autocomplete="off"></label>
+      <label>組別<select id="grp"><option value="">請選擇</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option></select></label>
+    </div>
+    <div class="err" id="lerr"></div>
+    <div id="resumeBox" hidden>
+      <button class="big alt" id="resume">繼續上次進度</button>
+      <button class="big ghost" id="restart">重新開始（上次的進度會清除）</button>
+    </div>
+    <button class="big" id="start">開始探究</button>
+    <div class="credit">由Zeiyen老師製作</div>
+  </div>
+</section>
+
+<!-- ================= 遊戲 ================= -->
+<section class="screen" id="game">
+  <header class="top">
+    <b>讀懂選舉公報</b>
+    <div class="steps" id="steps"></div>
+    <div class="meta" id="meta"></div>
+    <button id="early">提早交卷</button>
+  </header>
+  <main id="stage"></main>
+</section>
+
+<div class="toast" id="toast"></div>
+<div class="modal" id="modal"><div class="in">
+  <h3 style="margin:0 0 8px;font-size:22px">確定要提早交卷嗎？</h3>
+  <p style="margin:0 0 6px">目前做到的部分會送給老師，交卷後就不能再作答了。</p>
+  <button class="big" id="mYes">確定交卷</button>
+  <button class="big ghost" id="mNo">再想想，繼續作答</button>
+</div></div>
+
+<script>
+/* ===== 設定 ===== */
+// 與〈穿越清帝國大逃脫〉共用同一個 Apps Script（成績存在「南園里-成績」工作表）
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzqfvkWjqjGsLnnDsFNqlfvwluKJmvKC1KPbZjzwebmnk8PfmVhxOeSMGQUrRAP2fkVAg/exec';
+const GAME_ID = 'nanyuan';
+const KEY = 'nanyuan-v1';
+const CLASSES = ['608','609','610'];
+
+/* ===== 公報政見（請對照原始公報 PDF 確認文字）=====
+   甲、乙只是代號，不對應號次。畫面上的政見卡都不標示甲乙。
+   甲的「參選保證金與補助款捐款」承諾刻意不放入。 */
+const POL = {
+  A1:{c:'甲',t:'持續守護學童安全，推動巡守、防災與民防服務。'},
+  A2:{c:'甲',t:'追蹤改善道路坑洞、照明、公園及公共環境。'},
+  A3:{c:'甲',t:'里務公開透明，善用社群即時說明，接受里民監督。'},
+  A4:{c:'甲',t:'做到找得到人、聽得到聲音、看得到行動。'},
+  B1:{c:'乙',t:'爭取全面優化萬坪公園與兒三公園遊具。'},
+  B2:{c:'乙',t:'活化學府路綠帶部分區域，改為毛小孩友善場域。'},
+  B3:{c:'乙',t:'配合捷運萬大線，爭取直達捷運站的公車路線、加密班次，並增設 YouBike 2.0。'},
+  B4:{c:'乙',t:'刨鋪路口柏油、強化夜間照明，爭取增設路口監視系統。'},
+  B5:{c:'乙',t:'優化學勤路滯洪池與佳園路箱涵排水分流，汛期前清淤。'},
+  B7:{c:'乙',t:'開辦親子共學、健康養生及手機實用操作課程。'},
+  B8:{c:'乙',t:'舉辦無人機法規與操作、手機拍照與影音剪輯等課程。'},
+  B9:{c:'乙',t:'活化銀髮俱樂部，開辦歌唱及健康律動課程。'},
+  B11:{c:'乙',t:'整合南園互聯網與 LINE@、FB 專頁，即時反映民意。'},
+  B12:{c:'乙',t:'結合醫療機構定期辦理健檢與量血壓；推動學童上下學路段的愛心導護商店，舉辦 CPR 與 AED 訓練。'},
+  B13:{c:'乙',t:'辦理寵物狂犬病疫苗施打與晶片登記。'}
+};
+
+const $ = s=>document.querySelector(s);
+const esc = s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const shuffle = a=>{ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+let S = null;
+
+/* ===== 狀態與保存 ===== */
+function skey(cls,grp){ return KEY+'-'+cls+'-'+grp; }
+function save(){ try{ localStorage.setItem(skey(S.cls,S.grp), JSON.stringify(S)); localStorage.setItem(KEY+'-who', JSON.stringify({cls:S.cls,grp:S.grp})); }catch(e){} }
+function load(cls,grp){ try{ return JSON.parse(localStorage.getItem(skey(cls,grp))); }catch(e){ return null; } }
+function fresh(cls,grp){
+  return {cls,grp,sid:Date.now().toString(36)+Math.random().toString(36).slice(2,6),start:Date.now(),end:0,lv:1,early:false,errors:0,wrongBy:{},
+    l1:{i:0,first:{},s:0,done:false},
+    l2:{order:shuffle(VERBS.map(v=>v.id)),placed:{},firstWrong:{},s:0,done:false},
+    l3:{role:'',order:[],i:0,r:{},top:'',topWhy:'',mine:'',step:'rate',s:0,done:false}};
+}
+function miss(k){ S.errors++; S.wrongBy[k]=(S.wrongBy[k]||0)+1; save(); }
+function secs(){ return Math.floor(((S.end||Date.now())-S.start)/1000); }
+function fmt(s){ return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); }
+function total(){ return S.l1.s+S.l2.s+S.l3.s; }
+function cleared(){ return [S.l1.done,S.l2.done,S.l3.done].filter(Boolean).length; }
+
+/* ===== 上傳 ===== */
+function post(body){ if(!GAS_URL) return; try{ fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body),keepalive:true}).catch(()=>{}); }catch(e){} }
+function base(){ return {game:GAME_ID,sid:S.sid,cls:S.cls,grp:S.grp,role:S.l3.role,lv:S.lv,done:S.lv>3,early:S.early}; }
+function rulersOut(){
+  const o={}; Object.keys(S.l3.r).forEach(id=>{ const r=S.l3.r[id]; o[id]={c:r.c||'',f:r.f||'',v:r.v||'',why:(r.why||'').slice(0,200)}; }); return o;
+}
+function report(){
+  post(Object.assign(base(),{cleared:cleared(),score:total(),s1:S.l1.s,s2:S.l2.s,s3:S.l3.s,secs:secs(),errors:S.errors,wrongBy:S.wrongBy,
+    rulers:rulersOut(),top:S.l3.top,topText:S.l3.top&&POL[S.l3.top]?POL[S.l3.top].t:'',topWhy:S.l3.topWhy,mine:S.l3.mine}));
+}
+let liveAt=0,liveSig='';
+function live(force){
+  if(!S || S.lv>3 || !$('#game').classList.contains('on')) return;
+  const sig=S.sid+'|'+S.lv, now=Date.now();
+  if(!force && sig===liveSig && now-liveAt<90000) return;
+  liveSig=sig; liveAt=now; post(Object.assign(base(),{type:'live'}));
+}
+setInterval(live,5000);
+
+/* ===== 畫面框架 ===== */
+function show(id){ document.querySelectorAll('.screen').forEach(e=>e.classList.toggle('on',e.id===id)); window.scrollTo(0,0); }
+function header(){
+  const names=['第1關 公報解剖','第2關 動詞偵探','第3關 三把尺'];
+  $('#steps').innerHTML=names.map((n,i)=>`<span class="${S.lv===i+1?'now':(S.lv>i+1?'ok':'')}">${S.lv>i+1?'✓ ':''}${n}</span>`).join('');
+  $('#meta').textContent=`${S.cls} 班 第 ${S.grp} 組｜${total()} 分｜${fmt(secs())}`;
+  $('#early').hidden = S.lv>3;
+}
+setInterval(()=>{ if(S && $('#game').classList.contains('on')) header(); },1000);
+let toastT=0;
+function toast(html,ms){ const t=$('#toast'); t.innerHTML=html; t.classList.add('on'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('on'),ms||4200); }
+function go(){
+  $('#toast').classList.remove('on'); clearTimeout(toastT);
+  show('game'); header(); live(true);
+  if(S.lv===1) L1(); else if(S.lv===2) L2(); else if(S.lv===3) L3(); else result();
+}
+function next(){ S.lv++; if(S.lv>3) S.end=Date.now(); save(); report(); go(); }
+
+/* 提早交卷 */
+$('#early').onclick=()=>$('#modal').classList.add('on');
+$('#mNo').onclick=()=>$('#modal').classList.remove('on');
+$('#mYes').onclick=()=>{ $('#modal').classList.remove('on'); S.early=true; S.lv=4; S.end=Date.now(); save(); report(); go(); };
+
+/* ===== 登入 ===== */
+const num=v=>String(v||'').replace(/\D/g,'');
+function readLogin(){
+  const cls=num($('#cls').value), grp=parseInt($('#grp').value,10);
+  if(!/^\d{3}$/.test(cls)) return {err:'班級請填三位數，例如 609。'};
+  if(CLASSES.indexOf(cls)<0) return {err:'這個工具開放給 '+CLASSES.join('、')+' 班使用，請確認班級。'};
+  if(!(grp>=1&&grp<=8)) return {err:'請選擇組別。'};
+  return {cls,grp};
+}
+function checkResume(){
+  const r=readLogin(); const old=!r.err && load(r.cls,r.grp);
+  const can=!!(old && old.lv<=3);
+  $('#resumeBox').hidden=!can; $('#start').hidden=can;
+  $('#start').textContent=(old && old.lv>3)?'這組已經完成了，再做一次':'開始探究';
+  $('#lerr').textContent='';
+}
+$('#cls').addEventListener('input',checkResume); $('#grp').addEventListener('change',checkResume);
+const begin=()=>{ const r=readLogin(); if(r.err){ $('#lerr').textContent=r.err; return; } S=fresh(r.cls,r.grp); save(); go(); };
+$('#start').onclick=begin; $('#restart').onclick=begin;
+$('#resume').onclick=()=>{ const r=readLogin(); if(r.err){ $('#lerr').textContent=r.err; return; } S=load(r.cls,r.grp); save(); go(); };
+try{ const w=JSON.parse(localStorage.getItem(KEY+'-who')); if(w){ $('#cls').value=w.cls; $('#grp').value=String(w.grp); checkResume(); } }catch(e){}
+
+/* =====================================================================
+   第1關　公報解剖（6 題 × 5 分）
+   ===================================================================== */
+const FIELDS=[
+  {k:'號次',v:'③'},
+  {k:'姓名',v:'林小安'},
+  {k:'出生年月日',v:'○○年○月○日'},
+  {k:'推薦政黨',v:'無'},
+  {k:'學歷',v:'○○國小、○○國中、○○高中畢業'},
+  {k:'經歷',v:'社區志工隊長、守望相助隊隊員'},
+  {k:'政見',v:'1. 爭取在社區公園增設遮雨棚。<br>2. 每月舉辦一次社區淨街活動。'}
+];
+const L1Q=[
+  {type:'tap',id:'L1經歷',a:'經歷',title:'我想知道這位候選人「以前做過什麼事」，要看哪一欄？',why:'沒錯！「經歷」寫的是候選人以前做過的工作或服務。'},
+  {type:'tap',id:'L1政見',a:'政見',title:'我想知道他「當選以後想做什麼」，要看哪一欄？',why:'對！「政見」就是候選人對選民的承諾：當選後打算做哪些事。'},
+  {type:'tap',id:'L1政黨',a:'推薦政黨',title:'我想知道「有沒有政黨推薦他」，要看哪一欄？',why:'對！這一欄寫「無」，表示沒有政黨推薦。里長選舉常常有很多候選人沒有政黨推薦。'},
+  {type:'tap',id:'L1號次',a:'號次',title:'投票時，選票上會用一個數字幫你找到候選人。是哪一欄？',why:'答對了！號次是抽籤決定的，和候選人好不好沒有關係。'},
+  {type:'mcq',id:'L1誰寫',title:'公報上的學歷、經歷、政見，是誰提供的？',
+   o:[{t:'候選人自己提供的',a:1},{t:'選舉委員會調查以後寫的',a:0},{t:'記者採訪以後寫的',a:0}],
+   hint:'選舉委員會負責「印出來、寄到每一戶」，那內容是誰給的呢？',
+   why:'沒錯！選舉委員會把公報印好、寄到每一戶，但內容是候選人自己提供的。所以讀公報時，也可以再看看政見發表會、新聞或里辦公處的紀錄，多方查證。'},
+  {type:'mcq',id:'L1修路',title:'里裡有一條路破了大洞，里長通常怎麼處理？',
+   o:[{t:'里長自己拿錢請工人來修',a:0},{t:'向區公所或市政府反映，請負責的單位來修',a:1},{t:'等到下一次選舉再說',a:0}],
+   hint:'里長有很多事要靠區公所、市政府幫忙。修路的錢和工人，通常是誰的？',
+   why:'答對了！里長沒有自己的大筆經費，修路、路燈多半要向區公所或市政府反映、爭取。記住這件事，下一關會用到！'}
+];
+function bulletin(){
+  return `<div class="bul"><div class="bh">○○里 里長選舉公報（範例）</div><div class="fake">⚠ 這是老師做的練習用範例，人物是虛構的</div>
+    ${FIELDS.map(f=>`<button class="fld" data-k="${f.k}"><span class="k">${f.k}</span><span class="v">${f.v}</span></button>`).join('')}</div>`;
+}
+function L1(){
+  const st=S.l1;
+  if(st.i>=L1Q.length){
+    st.s=L1Q.reduce((n,q)=>n+(st.first[q.id]===1?5:(st.first[q.id]===0?2:0)),0); st.done=true; save();
+    $('#stage').innerHTML=`<div class="lvtitle"><h2>第1關　公報解剖</h2></div>
+      <div class="panel center q"><h3 style="font-size:24px">第1關完成！</h3>
+      <p style="font-size:20px">得分 <b style="color:var(--blue);font-size:30px">${st.s}</b>／30</p>
+      <div class="sum"><b>記住兩件事</b><ul><li>公報的內容是<b>候選人自己提供的</b>，可以再多方查證。</li><li>里長很多事要向區公所、市政府<b>爭取</b>。</li></ul></div>
+      <button class="big" id="nx" style="max-width:360px;margin:16px auto 0">前往第2關 →</button></div>`;
+    $('#nx').onclick=next; return;
+  }
+  const q=L1Q[st.i];
+  $('#stage').innerHTML=`<div class="lvtitle"><h2>第1關　公報解剖</h2><small>選舉委員會會在投票前把公報寄到每一戶</small></div>
+    <div class="task">先用一份「練習用範例公報」，認識公報上有哪些欄位。</div>
+    <div class="two"><div>${bulletin()}</div>
+    <div class="panel q"><span class="qnum">第 ${st.i+1}／${L1Q.length} 題</span><h3>${q.title}</h3>
+      ${q.type==='tap'?'<div class="small" style="font-weight:700">👈 請點左邊公報上的欄位</div>':`<div class="opts">${shuffle(q.o).map(o=>`<button data-a="${o.a}">${esc(o.t)}</button>`).join('')}</div>`}
+      <div class="fb" id="fb"></div><div id="nxBox"></div></div></div>`;
+  let done=false;
+  const ok=(el)=>{ done=true; if(st.first[q.id]===undefined) st.first[q.id]=1; save(); el.classList.add('ok');
+    $('#fb').className='fb good'; $('#fb').textContent='✔ '+q.why;
+    $('#nxBox').innerHTML='<button class="big" id="nq">下一題 →</button>'; $('#nq').onclick=()=>{ st.i++; save(); L1(); }; };
+  const no=(el)=>{ if(st.first[q.id]===undefined) st.first[q.id]=0; miss(q.id); el.classList.remove('no'); void el.offsetWidth; el.classList.add('no');
+    $('#fb').className='fb warn'; $('#fb').textContent=q.type==='tap'?'再看一次：這一欄寫的是「'+el.dataset.k+'」，和題目問的一樣嗎？':'再想想：'+q.hint; };
+  if(q.type==='tap') document.querySelectorAll('.fld').forEach(b=>b.onclick=()=>{ if(done) return; (b.dataset.k===q.a?ok:no)(b); });
+  else document.querySelectorAll('.opts button').forEach(b=>b.onclick=()=>{ if(done) return; (b.dataset.a==='1'?ok:no)(b); });
+}
+
+/* =====================================================================
+   第2關　動詞偵探（8 張卡 × 5 分；甲乙各 4 張，卡片不標示是誰的）
+   ===================================================================== */
+const BOX=[
+  {b:'自己辦',cls:'',d:'里辦公處自己就能安排、舉行'},
+  {b:'要爭取',cls:'b2',d:'要請區公所、市政府等單位決定或出錢'},
+  {b:'態度承諾',cls:'b3',d:'說的是做事的態度，不是一件具體的事'}
+];
+const VERBS=[
+  {id:'A1',v:'守護',b:'態度承諾',html:'持續<mark>守護</mark>學童安全，推動巡守、防災與民防服務。',why:'「守護」說的是一種用心和態度。'},
+  {id:'A3',v:'接受監督',b:'態度承諾',html:'里務公開透明，善用社群即時說明，<mark>接受</mark>里民<mark>監督</mark>。',why:'「接受監督」說的是做事要公開、讓大家檢查的態度。'},
+  {id:'A4',v:'做到',b:'態度承諾',html:'<mark>做到</mark>找得到人、聽得到聲音、看得到行動。',why:'「做到找得到人」說的是服務里民的態度。'},
+  {id:'A2',v:'追蹤',b:'要爭取',html:'<mark>追蹤</mark>改善道路坑洞、照明、公園及公共環境。',why:'修路、修路燈多半是區公所或市府派人施工，里長負責反映和「追蹤」進度。'},
+  {id:'B1',v:'爭取',b:'要爭取',html:'<mark>爭取</mark>全面優化萬坪公園與兒三公園遊具。',why:'「爭取」就是要請政府單位同意、出錢。'},
+  {id:'B3',v:'配合',b:'要爭取',html:'<mark>配合</mark>捷運萬大線，爭取直達捷運站的公車路線、加密班次。',why:'捷運和公車路線是市政府決定的，里長只能「配合」、爭取。'},
+  {id:'B7',v:'開辦',b:'自己辦',html:'<mark>開辦</mark>親子共學、健康養生及手機實用操作課程。',why:'課程可以由里辦公處自己安排「開辦」。'},
+  {id:'B8',v:'舉辦',b:'自己辦',html:'<mark>舉辦</mark>無人機法規與操作、手機拍照與影音剪輯等課程。',why:'講座可以由里辦公處自己「舉辦」。'}
+];
+let selId=null;
+function L2(){
+  const st=S.l2, left=st.order.filter(id=>!st.placed[id]);
+  if(left.length===0 && !st.done){
+    const right=VERBS.filter(v=>!st.firstWrong[v.id]).length;
+    st.s=right*5+(VERBS.length-right)*2; st.done=true; save();
+  }
+  if(st.done){
+    $('#stage').innerHTML=`<div class="lvtitle"><h2>第2關　動詞偵探</h2></div>
+      <div class="panel center q"><h3 style="font-size:24px">第2關完成！</h3>
+      <p style="font-size:20px">得分 <b style="color:var(--blue);font-size:30px">${st.s}</b>／40</p>
+      <div class="sum"><b>偵探筆記</b><ul><li>看到「<b>爭取、配合</b>」：這件事要靠政府單位，里長負責反映、催促。</li>
+      <li>看到「<b>開辦、舉辦</b>」：里辦公處自己就能做。</li><li>看到「<b>做到、守護</b>」：說的是態度，要再想想會用什麼方法做到。</li>
+      <li>三種都很常見，<b>沒有哪一種比較好</b>，重點是讀的時候分得出來。</li></ul></div>
+      <button class="big" id="nx" style="max-width:360px;margin:16px auto 0">前往第3關 →</button></div>`;
+    $('#nx').onclick=next; return;
+  }
+  $('#stage').innerHTML=`<div class="lvtitle"><h2>第2關　動詞偵探</h2><small>剩下 ${left.length} 張</small></div>
+    <div class="task">這些句子都來自南園里選舉公報（兩位候選人各 4 句，不標示是誰的）。看<mark style="background:#ffe28a">黃色的動詞</mark>，把卡片拖到正確的箱子。<br><span class="small">拖不動的話：先點卡片，再點箱子。</span></div>
+    <div class="tray" id="tray">${left.map(id=>{ const c=VERBS.find(v=>v.id===id); return `<div class="card${selId===id?' sel':''}" data-id="${id}">${c.html}</div>`; }).join('')}</div>
+    <div class="boxes">${BOX.map(x=>`<div class="box ${x.cls}" data-b="${x.b}"><h4>${x.b}</h4><p>${x.d}</p>
+      ${st.order.filter(id=>st.placed[id]===x.b).map(id=>`<div class="in">${esc(VERBS.find(v=>v.id===id).v)}</div>`).join('')}</div>`).join('')}</div>`;
+  bindDrag();
+}
+function place(id,b,el){
+  const st=S.l2, c=VERBS.find(x=>x.id===id);
+  if(c.b===b){ st.placed[id]=b; selId=null; save(); L2(); toast('✔ 正確！'+esc(c.why),2400); }
+  else { st.firstWrong[id]=1; miss('L2-'+id); save();
+    if(el){ el.classList.remove('no'); void el.offsetWidth; el.classList.add('no'); }
+    toast('再想想看：「<b>'+esc(c.v)+'</b>」這件事，里長自己就能辦嗎？還是要靠別人？或者說的是態度？',3000); }
+}
+function bindDrag(){
+  document.querySelectorAll('#tray .card').forEach(card=>{
+    let ghost=null, sx=0, sy=0, moved=false, over=null;
+    card.addEventListener('pointerdown',e=>{ sx=e.clientX; sy=e.clientY; moved=false; try{card.setPointerCapture(e.pointerId);}catch(_){} });
+    card.addEventListener('pointermove',e=>{
+      if(!card.hasPointerCapture(e.pointerId)) return;
+      if(!moved && Math.hypot(e.clientX-sx,e.clientY-sy)<8) return;
+      if(!moved){ moved=true; ghost=card.cloneNode(true); ghost.classList.add('ghost'); ghost.style.width=card.offsetWidth+'px'; document.body.appendChild(ghost); card.classList.add('lift'); }
+      ghost.style.left=(e.clientX-card.offsetWidth/2)+'px'; ghost.style.top=(e.clientY-24)+'px';
+      const t=document.elementFromPoint(e.clientX,e.clientY), bx=t&&t.closest('.box');
+      if(over&&over!==bx) over.classList.remove('over'); if(bx) bx.classList.add('over'); over=bx;
+    });
+    const end=()=>{
+      if(ghost){ ghost.remove(); ghost=null; card.classList.remove('lift'); if(over) over.classList.remove('over');
+        if(over){ const o=over; over=null; place(card.dataset.id,o.dataset.b,o); } return; }
+      if(!moved){ selId = selId===card.dataset.id ? null : card.dataset.id; document.querySelectorAll('#tray .card').forEach(c=>c.classList.toggle('sel',c.dataset.id===selId)); }
+    };
+    card.addEventListener('pointerup',end);
+    card.addEventListener('pointercancel',()=>{ if(ghost){ghost.remove();ghost=null;card.classList.remove('lift');} if(over){over.classList.remove('over');over=null;} });
+  });
+  document.querySelectorAll('.box').forEach(bx=>bx.addEventListener('click',()=>{ if(selId) place(selId,bx.dataset.b,bx); else toast('先點一張卡片，再點箱子。',1600); }));
+}
+
+/* =====================================================================
+   第3關　我是哪種里民？三把尺（每種角色：甲 2 條＋乙 2 條，卡片不標示是誰的）
+   計分：每條政見三把尺都評＋寫理由 5 分（共 20）、最在意＋理由 5 分、我的政見 5 分
+   ===================================================================== */
+const ROLES=[
+  {id:'kid',ic:'🎒',n:'上學的小學生',d:'每天走路上下學，放學會去公園玩',p:['A1','A2','B1','B12']},
+  {id:'elder',ic:'👵',n:'住附近的阿嬤',d:'晚上會出門散步，喜歡和朋友一起活動',p:['A4','A2','B9','B12']},
+  {id:'dog',ic:'🐕',n:'養狗的家庭',d:'每天帶狗散步，也要照顧狗狗的健康',p:['A2','A3','B2','B13']},
+  {id:'bus',ic:'🚌',n:'每天通勤的上班族',d:'每天搭公車、騎車去上班，很晚才回家',p:['A2','A3','B3','B4']},
+  {id:'rain',ic:'🌧️',n:'怕淹水的住戶',d:'家住低窪的地方，颱風天最擔心',p:['A1','A4','B5','B11']},
+  {id:'new',ic:'🏠',n:'剛搬來的新住戶',d:'還不認識鄰居，想知道里裡發生什麼事',p:['A3','A4','B11','B7']}
+];
+const RULERS=[
+  {k:'c',n:'📏 具體嗎？',d:'說得出地點、對象或做法嗎？',o:['很具體','有一點','看不出來']},
+  {k:'f',n:'📏 做得到嗎？',d:'里長自己能做，還是要靠別人幫忙？',o:['里長自己能做','要靠別人幫忙','看不出來']},
+  {k:'v',n:'📏 查得到嗎？',d:'四年後，能不能檢查有沒有做到？',o:['容易檢查','有一點難','很難檢查']}
+];
+const MINWHY=4;
+function rateDone(id){ const r=S.l3.r[id]||{}; return !!(r.c&&r.f&&r.v&&(r.why||'').trim().length>=MINWHY); }
+function score3(){
+  const st=S.l3; let s=st.order.filter(rateDone).length*5;
+  if(st.top && st.topWhy.trim().length>=6) s+=5;
+  if(st.mine.trim().length>=8) s+=5;
+  return s;
+}
+function L3(){
+  const st=S.l3; st.s=score3();
+  if(!st.role){
+    $('#stage').innerHTML=`<div class="lvtitle"><h2>第3關　我是哪種里民？</h2></div>
+      <div class="task">不同的里民，在意的事不一樣。請你們這一組選一個角色（或用老師分配的角色），用這個角色的眼光來讀政見。</div>
+      <div class="roles">${ROLES.map(r=>`<button class="role" data-r="${r.id}"><div class="ic">${r.ic}</div><b>${r.n}</b><small>${r.d}</small></button>`).join('')}</div>`;
+    document.querySelectorAll('.role').forEach(b=>b.onclick=()=>{ const r=ROLES.find(x=>x.id===b.dataset.r); st.role=r.id; st.order=shuffle(r.p); st.i=0; save(); live(true); L3(); });
+    return;
+  }
+  const R=ROLES.find(x=>x.id===st.role);
+  const prog=`<div class="prog">${st.order.map((id,i)=>`<span class="${st.step==='rate'&&i===st.i?'now':(rateDone(id)?'ok':'')}">政見 ${i+1}</span>`).join('')}
+    <span class="${st.step==='top'?'now':(st.top&&st.topWhy.trim().length>=6?'ok':'')}">最在意</span><span class="${st.step==='mine'?'now':(st.mine.trim().length>=8?'ok':'')}">我的政見</span></div>`;
+  const head=`<div class="lvtitle"><h2>第3關　${R.ic} ${R.n}</h2><small>${R.d}</small></div>${prog}`;
+
+  if(st.step==='rate'){
+    const id=st.order[st.i], r=st.r[id]||(st.r[id]={c:'',f:'',v:'',why:''});
+    $('#stage').innerHTML=head+`<div class="two"><div>
+      <div class="pol"><small>南園里選舉公報・政見 ${st.i+1}／${st.order.length}</small>${esc(POL[id].t)}</div>
+      <div class="task" style="margin:0">想一想：如果你是「${R.n}」，這條政見跟你有沒有關係？<br>三把尺都要量，最後寫一句理由。</div></div>
+      <div>${RULERS.map(x=>`<div class="ruler"><h4>${x.n} <span>${x.d}</span></h4><div class="seg">${x.o.map(o=>`<button data-k="${x.k}" data-o="${o}" class="${r[x.k]===o?'on':''}">${o}</button>`).join('')}</div></div>`).join('')}
+      <div class="ruler"><h4>✏️ 理由 <span>選一把尺，說說你為什麼這樣量</span></h4><textarea id="why" placeholder="例如：它有寫地點，所以很具體……">${esc(r.why)}</textarea></div>
+      <div class="fb" id="fb"></div>
+      <div class="row"><button class="big ghost" id="prev" style="flex:1" ${st.i===0?'disabled':''}>← 上一條</button><button class="big" id="nxr" style="flex:2">${st.i<st.order.length-1?'下一條 →':'量完了，下一步 →'}</button></div></div></div>`;
+    document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{ r[b.dataset.k]=b.dataset.o; save(); b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); });
+    $('#why').oninput=e=>{ r.why=e.target.value.slice(0,200); save(); };
+    $('#prev').onclick=()=>{ st.i=Math.max(0,st.i-1); save(); L3(); };
+    $('#nxr').onclick=()=>{
+      if(!(r.c&&r.f&&r.v)){ $('#fb').className='fb warn'; $('#fb').textContent='還有尺沒有量喔！三把尺都要選一個。'; return; }
+      if(r.why.trim().length<MINWHY){ $('#fb').className='fb warn'; $('#fb').textContent='理由再多寫一點點（至少 '+MINWHY+' 個字）。'; return; }
+      if(st.i<st.order.length-1) st.i++; else st.step='top';
+      save(); report(); L3(); window.scrollTo(0,0);
+    };
+    return;
+  }
+  if(st.step==='top'){
+    $('#stage').innerHTML=head+`<div class="panel q"><h3>如果你是「${R.n}」，這 4 條裡最在意哪一條？</h3>
+      <div class="small" style="margin-bottom:8px">沒有標準答案。這裡選的是「跟這個角色最有關係的事」，不是選哪一位候選人。</div>
+      <div class="pickl">${st.order.map(id=>`<button data-id="${id}" class="${st.top===id?'on':''}">${esc(POL[id].t)}</button>`).join('')}</div>
+      <h3 style="margin-top:14px">為什麼？</h3><textarea id="tw" placeholder="因為我是${R.n}，所以……">${esc(st.topWhy)}</textarea>
+      <div class="fb" id="fb"></div>
+      <div class="row"><button class="big ghost" id="prev" style="flex:1">← 回去看政見</button><button class="big" id="nxr" style="flex:2">下一步 →</button></div></div>`;
+    document.querySelectorAll('.pickl button').forEach(b=>b.onclick=()=>{ st.top=b.dataset.id; save(); document.querySelectorAll('.pickl button').forEach(x=>x.classList.toggle('on',x===b)); });
+    $('#tw').oninput=e=>{ st.topWhy=e.target.value.slice(0,200); save(); };
+    $('#prev').onclick=()=>{ st.step='rate'; st.i=st.order.length-1; save(); L3(); };
+    $('#nxr').onclick=()=>{
+      if(!st.top){ $('#fb').className='fb warn'; $('#fb').textContent='先選一條政見。'; return; }
+      if(st.topWhy.trim().length<6){ $('#fb').className='fb warn'; $('#fb').textContent='理由再多寫一點（至少 6 個字）。'; return; }
+      st.step='mine'; save(); report(); L3(); window.scrollTo(0,0);
+    };
+    return;
+  }
+  // 我的政見
+  $('#stage').innerHTML=head+`<div class="panel q"><h3>換你當候選人！</h3>
+    <p style="margin:0 0 8px">如果「${R.n}」要參選里長，請幫他寫一條政見，並試著讓它<b>過得了三把尺</b>：說得出地點或做法、知道誰來做、四年後查得到。</p>
+    <textarea id="mine" placeholder="例如：在○○路口加裝兩盞路燈，一年內完成……">${esc(st.mine)}</textarea>
+    <div class="fb" id="fb"></div>
+    <div class="row"><button class="big ghost" id="prev" style="flex:1">← 上一步</button><button class="big alt" id="fin" style="flex:2">完成，送給老師 ✔</button></div></div>`;
+  $('#mine').oninput=e=>{ st.mine=e.target.value.slice(0,200); save(); };
+  $('#prev').onclick=()=>{ st.step='top'; save(); L3(); };
+  $('#fin').onclick=()=>{
+    if(st.mine.trim().length<8){ $('#fb').className='fb warn'; $('#fb').textContent='政見再寫具體一點（至少 8 個字）。'; return; }
+    st.s=score3(); st.done=true; save(); next();
+  };
+}
+
+/* ===== 總成績 ===== */
+function result(){
+  if(S.l3.order.length) S.l3.s=score3();
+  const R=ROLES.find(x=>x.id===S.l3.role);
+  $('#stage').innerHTML=`<div class="res center">
+    <h2 style="font-size:30px;margin:10px 0">${S.early?'已交卷！':'三關完成！'}</h2>
+    <div class="score">${total()}<span style="font-size:26px"> 分</span></div>
+    <div class="small">${S.cls} 班 第 ${S.grp} 組${R?'｜角色：'+R.ic+' '+R.n:''}｜用時 ${fmt(secs())}</div>
+    <div class="brk"><div>第1關 公報解剖<b>${S.l1.s}</b>／30</div><div>第2關 動詞偵探<b>${S.l2.s}</b>／40</div><div>第3關 三把尺<b>${S.l3.s}</b>／30</div></div>
+    <div class="sum"><b>這一節課的重點</b><ul>
+      <li>公報是選舉委員會寄到每一戶的，但內容是<b>候選人自己提供的</b>，可以多方查證。</li>
+      <li>讀政見時看動詞：<b>爭取</b>要靠政府單位，<b>開辦、舉辦</b>里辦公處自己能做，<b>做到、守護</b>說的是態度。</li>
+      <li>用三把尺量政見：<b>具體嗎？做得到嗎？查得到嗎？</b></li>
+      <li>不同的里民在意不同的事。投票時，每個人要依照自己和社區的需要，自己做判斷。</li></ul></div>
+    <p style="font-weight:700">${GAS_URL?'作答已經傳給老師囉。':'請把這個畫面拿給老師看。'}</p>
+    <button class="big ghost" id="again" style="max-width:360px;margin:10px auto">回到首頁</button>
+    <div class="credit">由Zeiyen老師製作</div></div>`;
+  $('#again').onclick=()=>{ show('login'); checkResume(); };
+}
+</script>
+</body>
+</html>

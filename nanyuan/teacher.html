@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>讀懂選舉公報｜教師後台</title>
+<style>
+body{font-family:"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;background:#f6f4ee;color:#22303d;margin:0;padding:18px;font-size:16px}
+.wrap{max-width:1180px;margin:0 auto}
+h1{color:#2b5d9b;margin:0 0 4px;font-size:28px}
+.lead{margin:0 0 12px;color:#5b6875;font-weight:700}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:end;background:#fffefa;border:2px solid #dcd6c6;border-radius:12px;padding:12px}
+label{font-weight:700;font-size:14px}
+input,select{display:block;height:42px;font-size:17px;padding:0 10px;border:2px solid #22303d;border-radius:8px;background:#fff;margin-top:3px}
+button{height:42px;padding:0 18px;border:0;border-radius:8px;background:#2b5d9b;color:#fff;font-weight:700;font-size:16px;cursor:pointer}
+button.g{background:#2f7d5b}button.p{background:#7a4f9a}
+#msg{margin:10px 2px;font-weight:700;color:#c23b3b;min-height:1.5em}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:8px 0 14px}
+.cards div{background:#fffefa;border:2px solid #dcd6c6;border-radius:10px;padding:10px;text-align:center}
+.cards b{display:block;font-size:28px}
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;background:#fffefa}
+th,td{padding:8px 10px;border-bottom:1px solid #dcd6c6;text-align:center;font-variant-numeric:tabular-nums}
+th{background:#22303d;color:#f6f4ee;font-size:14px;white-space:nowrap}
+tr.done td:first-child{border-left:5px solid #3d8a4f}
+tr.ing td:first-child{border-left:5px solid #e8b23c}
+h2{font-size:22px;margin:24px 0 8px}
+.box{background:#fffefa;border:2px solid #dcd6c6;border-radius:12px;padding:12px;margin:10px 0}
+.box h2{margin:0 0 6px}
+.note{color:#5b6875;font-size:14px;margin-bottom:8px}
+.live{display:flex;flex-wrap:wrap;gap:8px}
+.live span{background:#dbe6f4;border-radius:8px;padding:6px 10px;font-weight:700}
+.live span.stale{opacity:.45}
+.roleSec{background:#fffefa;border:2px solid #dcd6c6;border-radius:14px;padding:12px 14px;margin:10px 0}
+.roleSec h3{margin:0 0 8px;font-size:22px}
+.grpCard{border-left:6px solid #e8b23c;background:#fff;border-radius:10px;padding:10px 12px;margin:8px 0}
+.grpCard .t{font-weight:900;font-size:19px}
+.grpCard .w{margin-top:4px}
+.grpCard details{margin-top:6px;font-size:14px}
+.grpCard details li{margin:3px 0}
+.tag{display:inline-block;background:#22303d;color:#fff;border-radius:99px;padding:0 10px;font-size:13px;font-weight:700;margin-right:6px}
+.miss{display:grid;gap:6px}
+.miss div{display:flex;gap:10px;align-items:center;background:#fffefa;border-radius:8px;padding:6px 10px}
+.miss i{height:14px;background:#c23b3b;border-radius:7px;display:block}
+.miss span{flex:1}
+.answers{display:grid;gap:6px}.answers div{background:#fffefa;border:1px solid #dcd6c6;border-radius:8px;padding:8px 12px}.answers b{color:#2f7d5b;margin-right:8px}
+.auto{display:flex;align-items:center;gap:6px;font-weight:700;font-size:14px;height:42px}
+.auto input{display:inline;height:auto;width:auto;margin:0}
+body.proj{font-size:21px}
+body.proj .private{display:none}
+body.proj .roleSec h3{font-size:30px}
+body.proj .grpCard .t{font-size:25px}
+</style>
+</head>
+<body><div class="wrap">
+<h1>讀懂選舉公報｜教師後台</h1>
+<p class="lead">與〈穿越清帝國大逃脫〉共用同一個後台與密碼，作答存在「南園里-成績」工作表。<br>
+為了維持中立，本頁不顯示任何「依候選人加總」的數字，政見也不標示是哪位候選人的。</p>
+<div class="bar">
+  <label>後台密碼<input id="key" type="password" autocomplete="off"></label>
+  <label>班級<select id="cls"><option value="">全部</option><option>608</option><option>609</option><option>610</option></select></label>
+  <label>顯示<select id="mode"><option value="last">每組最新一筆</option><option value="best">每組最高分</option></select></label>
+  <button id="go">讀取</button>
+  <span class="auto"><input type="checkbox" id="auto" checked>每 20 秒自動更新</span>
+  <button id="proj" class="p">投影模式（隱藏分數）</button>
+  <button id="csv" class="g private">下載 CSV</button>
+</div>
+<div id="msg"></div>
+<div class="private">
+<div class="cards" id="cards"></div>
+<div class="box"><h2>正在作答的組別</h2>
+  <div class="note">學生進入、換關、每量完一條政見時更新；超過 5 分鐘沒更新會變淡。</div>
+  <div class="live" id="live"></div></div>
+<div class="tbl"><table id="tb"></table></div>
+</div>
+<h2>各組角色最在意的政見</h2>
+<div class="note">可以投影出來，請各組說明：「我們這個角色，為什麼最在意這一條？」點「三把尺紀錄」看各組怎麼量。</div>
+<div id="roles"></div>
+<h2>換你當候選人：各組寫的政見</h2>
+<div class="answers" id="mine"></div>
+<div class="private">
+<h2>第2關　最常放錯的卡片（全班錯誤次數）</h2>
+<div class="miss" id="miss"></div>
+</div>
+</div>
+<script>
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzqfvkWjqjGsLnnDsFNqlfvwluKJmvKC1KPbZjzwebmnk8PfmVhxOeSMGQUrRAP2fkVAg/exec';
+const ROLES = {kid:'🎒 上學的小學生',elder:'👵 住附近的阿嬤',dog:'🐕 養狗的家庭',bus:'🚌 每天通勤的上班族',rain:'🌧️ 怕淹水的住戶','new':'🏠 剛搬來的新住戶'};
+const POL = {
+  A1:'持續守護學童安全，推動巡守、防災與民防服務。',A2:'追蹤改善道路坑洞、照明、公園及公共環境。',
+  A3:'里務公開透明，善用社群即時說明，接受里民監督。',A4:'做到找得到人、聽得到聲音、看得到行動。',
+  B1:'爭取全面優化萬坪公園與兒三公園遊具。',B2:'活化學府路綠帶部分區域，改為毛小孩友善場域。',
+  B3:'配合捷運萬大線，爭取直達捷運站的公車路線、加密班次，並增設 YouBike 2.0。',B4:'刨鋪路口柏油、強化夜間照明，爭取增設路口監視系統。',
+  B5:'優化學勤路滯洪池與佳園路箱涵排水分流，汛期前清淤。',B7:'開辦親子共學、健康養生及手機實用操作課程。',
+  B8:'舉辦無人機法規與操作、手機拍照與影音剪輯等課程。',B9:'活化銀髮俱樂部，開辦歌唱及健康律動課程。',
+  B11:'整合南園互聯網與 LINE@、FB 專頁，即時反映民意。',B12:'結合醫療機構定期辦理健檢與量血壓；推動學童上下學路段的愛心導護商店，舉辦 CPR 與 AED 訓練。',
+  B13:'辦理寵物狂犬病疫苗施打與晶片登記。'};
+const NAMES = {'L1經歷':'第1關－經歷欄','L1政見':'第1關－政見欄','L1政黨':'第1關－推薦政黨欄','L1號次':'第1關－號次欄',
+  'L1誰寫':'第1關－公報內容是誰提供的','L1修路':'第1關－里長怎麼處理路破洞',
+  'L2-A1':'第2關－守護','L2-A3':'第2關－接受監督','L2-A4':'第2關－做到','L2-A2':'第2關－追蹤',
+  'L2-B1':'第2關－爭取','L2-B3':'第2關－配合','L2-B7':'第2關－開辦','L2-B8':'第2關－舉辦'};
+const $ = s=>document.querySelector(s);
+const esc = s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt = s=>String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+let view = [];
+try{ $('#key').value=sessionStorage.getItem('ny-key')||''; }catch(e){}
+
+async function load(){
+  const key=$('#key').value.trim(); if(!key){ $('#msg').textContent='請輸入後台密碼。'; return; }
+  try{ sessionStorage.setItem('ny-key',key); }catch(e){}
+  $('#msg').textContent='讀取中……';
+  try{
+    const u=GAS_URL+'?game=nanyuan&key='+encodeURIComponent(key)+($('#cls').value?'&cls='+$('#cls').value:'');
+    const d=await (await fetch(u)).json();
+    if(!d.ok){ $('#msg').textContent=d.error==='key'?'密碼不正確（或試算表「設定」B1 還沒填）。':'讀取失敗。'; return; }
+    $('#msg').textContent='更新時間 '+new Date().toLocaleTimeString();
+    render(d.rows||[], d.live||[]);
+  }catch(e){ $('#msg').textContent='連不上後台：請確認 Apps Script 已更新到含南園里的新版本。'; }
+}
+function pick(rows){
+  const m={};
+  rows.forEach(r=>{ const k=r.cls+'-'+r.grp, o=m[k];
+    if(!o) m[k]=r;
+    else if($('#mode').value==='best' ? (r.score>o.score || (r.score===o.score && r.ts>o.ts)) : r.ts>o.ts) m[k]=r; });
+  return Object.values(m).sort((a,b)=>a.cls.localeCompare(b.cls)||a.grp-b.grp);
+}
+function render(rows, live){
+  view=pick(rows);
+  const done=view.filter(r=>r.done).length, avg=view.length?Math.round(view.reduce((n,r)=>n+r.score,0)/view.length):0;
+  $('#cards').innerHTML=`<div>組數<b>${view.length}</b></div><div>完成／交卷<b>${done}</b></div><div>平均分數<b>${avg}</b></div>`;
+  const now=Date.now();
+  $('#live').innerHTML=live.filter(l=>l.status==='作答中').sort((a,b)=>a.cls.localeCompare(b.cls)||a.grp-b.grp)
+    .map(l=>`<span class="${now-l.t>300000?'stale':''}">${l.cls} 第${l.grp}組・第${Math.min(3,l.lv)}關${l.role&&ROLES[l.role]?'・'+ROLES[l.role]:''}</span>`).join('')||'<span style="background:none">目前沒有正在作答的組別</span>';
+  $('#tb').innerHTML='<tr><th>班級</th><th>組別</th><th>角色</th><th>狀態</th><th>總分</th><th>第1關/30</th><th>第2關/40</th><th>第3關/30</th><th>用時</th><th>錯誤</th></tr>'+
+    view.map(r=>`<tr class="${r.done?'done':'ing'}"><td>${r.cls}</td><td>${r.grp}</td><td>${esc(ROLES[r.role]||'－')}</td><td>${r.done?(r.early?'提早交卷':'完成'):'作答中（'+r.cleared+'/3）'}</td>
+      <td><b>${r.score}</b></td><td>${r.s1}</td><td>${r.s2}</td><td>${r.s3}</td><td>${fmt(r.secs)}</td><td>${r.errors}</td></tr>`).join('');
+  // 依角色分組
+  const byRole={}; view.forEach(r=>{ if(r.role) (byRole[r.role]=byRole[r.role]||[]).push(r); });
+  $('#roles').innerHTML=Object.keys(ROLES).filter(k=>byRole[k]).map(k=>`<div class="roleSec"><h3>${ROLES[k]}</h3>${byRole[k].map(r=>{
+    const rl=r.rulers||{};
+    const det=Object.keys(rl).map(id=>{ const x=rl[id]; return `<li><b>${esc(POL[id]||id)}</b><br>具體：${esc(x.c||'－')}｜做得到：${esc(x.f||'－')}｜查得到：${esc(x.v||'－')}${x.why?'<br>理由：'+esc(x.why):''}</li>`; }).join('');
+    return `<div class="grpCard"><span class="tag">${r.cls} 第${r.grp}組</span>
+      ${r.top?`<div class="t">${esc(POL[r.top]||r.topText)}</div><div class="w">💬 ${esc(r.topWhy)}</div>`:'<div class="w" style="color:#5b6875">還沒選最在意的政見</div>'}
+      ${det?`<details><summary>三把尺紀錄</summary><ul>${det}</ul></details>`:''}</div>`; }).join('')}</div>`).join('')
+    || '<div class="note">還沒有組別選好角色。</div>';
+  $('#mine').innerHTML=view.filter(r=>r.mine).map(r=>`<div><b>${r.cls} 第${r.grp}組${ROLES[r.role]?'・'+ROLES[r.role]:''}</b>${esc(r.mine)}</div>`).join('')||'<div class="note">還沒有組別寫完。</div>';
+  const mc={};
+  view.forEach(r=>Object.entries(r.wrongBy||{}).forEach(([k,v])=>mc[k]=(mc[k]||0)+Number(v)));
+  const arr=Object.entries(mc).filter(e=>e[1]>0).sort((a,b)=>b[1]-a[1]).slice(0,10), mx=arr.length?arr[0][1]:1;
+  $('#miss').innerHTML=arr.map(([k,v])=>`<div><span>${esc(NAMES[k]||k)}</span><i style="width:${Math.max(8,v/mx*240)}px"></i><b>${v}</b></div>`).join('')||'<div class="note">還沒有錯誤紀錄。</div>';
+}
+function csv(){
+  const head=['班級','組別','角色','狀態','總分','第1關','第2關','第3關','用時秒','錯誤','最在意政見','理由','我的政見'];
+  const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  const lines=[head.join(',')].concat(view.map(r=>[r.cls,r.grp,ROLES[r.role]||'',r.done?(r.early?'提早交卷':'完成'):'作答中',r.score,r.s1,r.s2,r.s3,r.secs,r.errors,POL[r.top]||r.topText||'',r.topWhy,r.mine].map(q).join(',')));
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['﻿'+lines.join('\n')],{type:'text/csv'}));
+  a.download='南園里政見探究_'+($('#cls').value||'全部')+'.csv'; a.click();
+}
+$('#go').onclick=load; $('#csv').onclick=csv;
+$('#cls').onchange=load; $('#mode').onchange=load;
+$('#proj').onclick=()=>{ const on=document.body.classList.toggle('proj'); $('#proj').textContent=on?'結束投影模式':'投影模式（隱藏分數）'; };
+setInterval(()=>{ if($('#auto').checked && $('#key').value.trim()) load(); },20000);
+if($('#key').value) load();
+</script>
+</body>
+</html>
