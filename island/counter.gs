@@ -4,7 +4,10 @@
  * ?mode=read ：只讀人數
  * ?mode=msg&name=&role=&text= ：寫一則留言到「時光社會島・給島主的留言」試算表
  * 第一次使用：在編輯器選 setup 按「執行」，授權後記錄裡會出現試算表網址。
+ * 有新留言會寄信到 NOTIFY_EMAIL；不想收信就把它改成 ''。
  */
+var NOTIFY_EMAIL = 'zeiyenst@apps.ntpc.edu.tw';
+
 function doGet(e) {
   var p = (e && e.parameter) || {};
   if (p.mode === 'msg') return json_(saveMsg_(p));
@@ -34,8 +37,11 @@ function saveMsg_(p) {
     var today = Utilities.formatDate(new Date(), 'Asia/Taipei', 'yyyy-MM-dd');
     var n = props.getProperty('msgDay') === today ? Number(props.getProperty('msgCount') || 0) : 0;
     if (n >= 200) return { ok: false, why: '今天的留言信箱滿了，明天再來留言吧！' };
-    getSheet_().appendRow([new Date(), clean_(p.name, 20), clean_(p.role, 10), text]);
+    var name = clean_(p.name, 20), role = clean_(p.role, 10);
+    var sh = getSheet_();
+    sh.appendRow([new Date(), name, role, text]);
     props.setProperties({ msgDay: today, msgCount: String(n + 1) });
+    notify_(name, role, text, sh.getParent().getUrl());
     return { ok: true };
   } finally {
     lock.releaseLock();
@@ -58,6 +64,22 @@ function getSheet_() {
   sh.setColumnWidth(4, 420);
   props.setProperty('sheetId', ss.getId());
   return sh;
+}
+
+function notify_(name, role, text, url) {
+  if (!NOTIFY_EMAIL) return;
+  try {
+    MailApp.sendEmail({
+      to: NOTIFY_EMAIL,
+      subject: '時光社會島：' + (name || '一位旅客') + '（' + (role || '旅客') + '）留言給你',
+      body: text + '\n\n——\n暱稱：' + (name || '（沒填）') + '\n身分：' + (role || '（沒選）') + '\n所有留言：' + url,
+      name: '時光社會島'
+    });
+  } catch (err) {}
+}
+
+function testMail() {
+  notify_('測試', '其他', '這是時光社會島留言通知的測試信，收到就代表通知開好了！', getSheet_().getParent().getUrl());
 }
 
 function setup() {
