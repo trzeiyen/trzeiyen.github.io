@@ -372,9 +372,9 @@ let yan;
   x.textAlign='center';x.textBaseline='middle';x.fillText('島主嫣嫣的家',256,68);tx.needsUpdate=true});
  /* 嫣嫣：咖啡色頭髮、斜瀏海、小包頭、島主王冠、抱著地球儀 */
  yan=new THREE.Group();yan.position.set(-1.6,0,2.5);yan.scale.setScalar(1.55);g.add(yan);
- [-.12,.12].forEach(x=>add(B(.15,.5,.17),'#3b3b4f',x,.25,0,yan));
- add(C(.24,.42,.75,10),'#2b7a78',0,.82,0,yan);
- add(C(.26,.28,.45,10),'#ffffff',0,1.25,0,yan);
+ [-.11,.11].forEach(x=>{add(C(.1,.11,.9,8),'#e3cfa8',x,.55,0,yan);add(B(.17,.1,.26),'#5a3a22',x,.05,.04,yan)});
+ add(C(.24,.24,.22,10),'#e3cfa8',0,1.0,0,yan);
+ add(C(.25,.27,.5,10),'#ffffff',0,1.3,0,yan);
  [-.33,.33].forEach(x=>{const a=add(C(.07,.08,.5,6),'#ffffff',x,1.18,.12,yan);a.rotation.x=-.9;a.rotation.z=x>0?.3:-.3});
  add(S(.3,1),'#ffd9b8',0,1.72,0,yan);
  [-.1,.1].forEach(x=>{add(S(.045),'#2a1a10',x,1.74,.27,yan).castShadow=false;add(S(.055),'#ff9eb5',x*1.6,1.64,.24,yan).castShadow=false});
