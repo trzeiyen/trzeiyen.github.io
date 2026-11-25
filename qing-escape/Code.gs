@@ -172,7 +172,7 @@ function hanGet_(q) {
 
 /* ===================== 讀懂選舉公報：南園里政見探究（nanyuan） ===================== */
 const NY = '南園里-成績';
-const NY_HEAD = ['時間','sid','班級','組別','角色','完成關卡','全部完成','提早交卷','總分','第1關','第2關','第3關','用時秒','錯誤','各題錯誤(JSON)','三把尺(JSON)','最在意(代碼)','最在意政見','最在意理由','我的政見'];
+const NY_HEAD = ['時間','sid','班級','組別','角色','完成關卡','全部完成','提早交卷','總分','第1關','第2關','第3關','用時秒','錯誤','各題錯誤(JSON)','三把尺(JSON)','最在意(代碼)','最在意政見','最在意理由','我的政見','測驗類型','測驗作答'];
 const NY_LIVE = '南園里-即時';
 const NY_LIVE_HEAD = ['sid','最後更新','班級','組別','角色','所在關卡','狀態'];
 const NY_ROLES = ['kid','elder','dog','bus','rain','new'];
@@ -208,7 +208,9 @@ function nyPost_(d) {
     Number(d.score) || 0, Number(d.s1) || 0, Number(d.s2) || 0, Number(d.s3) || 0,
     Number(d.secs) || 0, Number(d.errors) || 0, JSON.stringify(d.wrongBy || {}).slice(0, 2000),
     nyRulers_(d.rulers), String(d.top || '').replace(/[^A-Za-z0-9]/g, '').slice(0, 4),
-    txt_(d.topText, 120), txt_(d.topWhy, 200), txt_(d.mine, 200)]);
+    txt_(d.topText, 120), txt_(d.topWhy, 200), txt_(d.mine, 200),
+    NY_ROLES.indexOf(d.qtype) >= 0 ? d.qtype : '',
+    (Array.isArray(d.qans) ? d.qans : []).slice(0, 6).map(t => NY_ROLES.indexOf(t) >= 0 ? t : '').join(',')]);
   return json_({ ok: true });
 }
 function nyGet_(q) {
@@ -220,7 +222,7 @@ function nyGet_(q) {
     .map(r => ({ ts: new Date(r[0]).getTime(), sid: String(r[1]), cls: String(r[2]), grp: Number(r[3]) || 0, role: String(r[4] || ''),
       cleared: Number(r[5]) || 0, done: r[6] === 'Y', early: r[7] === 'Y', score: Number(r[8]) || 0,
       s1: Number(r[9]) || 0, s2: Number(r[10]) || 0, s3: Number(r[11]) || 0, secs: Number(r[12]) || 0, errors: Number(r[13]) || 0,
-      wrongBy: safe_(r[14]), rulers: safe_(un(r[15])), top: String(r[16] || ''), topText: un(r[17]), topWhy: un(r[18]), mine: un(r[19]) }));
+      wrongBy: safe_(r[14]), rulers: safe_(un(r[15])), top: String(r[16] || ''), topText: un(r[17]), topWhy: un(r[18]), mine: un(r[19]), qtype: String(r[20] || ''), qans: String(r[21] || '').split(',').filter(x => x) }));
   const lsh = ss.getSheetByName(NY_LIVE), since = Date.now() - 12 * 3600 * 1000;
   const live = (lsh && lsh.getLastRow() > 1 ? lsh.getRange(2, 1, lsh.getLastRow() - 1, NY_LIVE_HEAD.length).getValues() : [])
     .filter(r => r[1] instanceof Date && r[1].getTime() > since)

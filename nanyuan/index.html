@@ -127,9 +127,9 @@ textarea{width:100%;min-height:84px;font:inherit;font-size:19px;padding:10px;bor
     <div class="sub">南園里里長選舉公報・政見探究（三關）</div>
     <div class="rule">🤝 這不是投票，也不比較誰比較好。<br>我們只練習：拿到公報時，怎麼讀懂一條政見。</div>
     <ol>
-      <li>第1關　公報解剖（約 8 分鐘）</li>
+      <li>第1關　公報解剖（約 6 分鐘）</li>
       <li>第2關　動詞偵探（約 10 分鐘）</li>
-      <li>第3關　我是哪種里民？三把尺（約 15 分鐘）</li>
+      <li>第3關　我是哪種里民？小測驗＋三把尺（約 17 分鐘）</li>
     </ol>
     <div class="row">
       <label>班級<input id="cls" inputmode="numeric" maxlength="3" placeholder="609" autocomplete="off"></label>
@@ -169,7 +169,7 @@ textarea{width:100%;min-height:84px;font:inherit;font-size:19px;padding:10px;bor
 // 與〈穿越清帝國大逃脫〉共用同一個 Apps Script（成績存在「南園里-成績」工作表）
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbzqfvkWjqjGsLnnDsFNqlfvwluKJmvKC1KPbZjzwebmnk8PfmVhxOeSMGQUrRAP2fkVAg/exec';
 const GAME_ID = 'nanyuan';
-const KEY = 'nanyuan-v1';
+const KEY = 'nanyuan-v2';
 const CLASSES = ['608','609','610'];
 
 /* ===== 公報政見（請對照原始公報 PDF 確認文字）=====
@@ -206,7 +206,7 @@ function fresh(cls,grp){
   return {cls,grp,sid:Date.now().toString(36)+Math.random().toString(36).slice(2,6),start:Date.now(),end:0,lv:1,early:false,errors:0,wrongBy:{},
     l1:{i:0,first:{},s:0,done:false},
     l2:{order:shuffle(VERBS.map(v=>v.id)),placed:{},firstWrong:{},s:0,done:false},
-    l3:{role:'',order:[],i:0,r:{},top:'',topWhy:'',mine:'',step:'rate',s:0,done:false}};
+    l3:{qi:0,qa:[],type:'',type2:'',quizDone:false,picking:false,role:'',order:[],i:0,r:{},top:'',topWhy:'',mine:'',step:'rate',s:0,done:false}};
 }
 function miss(k){ S.errors++; S.wrongBy[k]=(S.wrongBy[k]||0)+1; save(); }
 function secs(){ return Math.floor(((S.end||Date.now())-S.start)/1000); }
@@ -222,7 +222,7 @@ function rulersOut(){
 }
 function report(){
   post(Object.assign(base(),{cleared:cleared(),score:total(),s1:S.l1.s,s2:S.l2.s,s3:S.l3.s,secs:secs(),errors:S.errors,wrongBy:S.wrongBy,
-    rulers:rulersOut(),top:S.l3.top,topText:S.l3.top&&POL[S.l3.top]?POL[S.l3.top].t:'',topWhy:S.l3.topWhy,mine:S.l3.mine}));
+    rulers:rulersOut(),top:S.l3.top,topText:S.l3.top&&POL[S.l3.top]?POL[S.l3.top].t:'',topWhy:S.l3.topWhy,mine:S.l3.mine,qtype:S.l3.type,qans:S.l3.qa}));
 }
 let liveAt=0,liveSig='';
 function live(force){
@@ -279,7 +279,7 @@ $('#resume').onclick=()=>{ const r=readLogin(); if(r.err){ $('#lerr').textConten
 try{ const w=JSON.parse(localStorage.getItem(KEY+'-who')); if(w){ $('#cls').value=w.cls; $('#grp').value=String(w.grp); checkResume(); } }catch(e){}
 
 /* =====================================================================
-   第1關　公報解剖（6 題 × 5 分）
+   第1關　公報解剖（4 題 × 5 分）
    ===================================================================== */
 const FIELDS=[
   {k:'號次',v:'③'},
@@ -293,8 +293,6 @@ const FIELDS=[
 const L1Q=[
   {type:'tap',id:'L1經歷',a:'經歷',title:'我想知道這位候選人「以前做過什麼事」，要看哪一欄？',why:'沒錯！「經歷」寫的是候選人以前做過的工作或服務。'},
   {type:'tap',id:'L1政見',a:'政見',title:'我想知道他「當選以後想做什麼」，要看哪一欄？',why:'對！「政見」就是候選人對選民的承諾：當選後打算做哪些事。'},
-  {type:'tap',id:'L1政黨',a:'推薦政黨',title:'我想知道「有沒有政黨推薦他」，要看哪一欄？',why:'對！這一欄寫「無」，表示沒有政黨推薦。里長選舉常常有很多候選人沒有政黨推薦。'},
-  {type:'tap',id:'L1號次',a:'號次',title:'投票時，選票上會用一個數字幫你找到候選人。是哪一欄？',why:'答對了！號次是抽籤決定的，和候選人好不好沒有關係。'},
   {type:'mcq',id:'L1誰寫',title:'公報上的學歷、經歷、政見，是誰提供的？',
    o:[{t:'候選人自己提供的',a:1},{t:'選舉委員會調查以後寫的',a:0},{t:'記者採訪以後寫的',a:0}],
    hint:'選舉委員會負責「印出來、寄到每一戶」，那內容是誰給的呢？',
@@ -314,7 +312,7 @@ function L1(){
     st.s=L1Q.reduce((n,q)=>n+(st.first[q.id]===1?5:(st.first[q.id]===0?2:0)),0); st.done=true; save();
     $('#stage').innerHTML=`<div class="lvtitle"><h2>第1關　公報解剖</h2></div>
       <div class="panel center q"><h3 style="font-size:24px">第1關完成！</h3>
-      <p style="font-size:20px">得分 <b style="color:var(--blue);font-size:30px">${st.s}</b>／30</p>
+      <p style="font-size:20px">得分 <b style="color:var(--blue);font-size:30px">${st.s}</b>／20</p>
       <div class="sum"><b>記住兩件事</b><ul><li>公報的內容是<b>候選人自己提供的</b>，可以再多方查證。</li><li>里長很多事要向區公所、市政府<b>爭取</b>。</li></ul></div>
       <button class="big" id="nx" style="max-width:360px;margin:16px auto 0">前往第2關 →</button></div>`;
     $('#nx').onclick=next; return;
@@ -410,7 +408,7 @@ function bindDrag(){
 
 /* =====================================================================
    第3關　我是哪種里民？三把尺（每種角色：甲 2 條＋乙 2 條，卡片不標示是誰的）
-   計分：每條政見三把尺都評＋寫理由 5 分（共 20）、最在意＋理由 5 分、我的政見 5 分
+   計分：每條政見三把尺都評＋寫理由 7 分（共 28）、最在意＋理由 6 分、我的政見 6 分；小測驗不計分
    ===================================================================== */
 const ROLES=[
   {id:'kid',ic:'🎒',n:'上學的小學生',d:'每天走路上下學，放學會去公園玩',p:['A1','A2','B1','B12']},
@@ -426,22 +424,86 @@ const RULERS=[
   {k:'v',n:'📏 查得到嗎？',d:'四年後，能不能檢查有沒有做到？',o:['容易檢查','有一點難','很難檢查']}
 ];
 const MINWHY=4;
+/* 小測驗：6 題 × 4 選項，每種類型剛好出現 4 次（公平）；不計分、不對應任何候選人 */
+const TYPES={
+  kid:{n:'安全守護型',ic:'🛡️',d:'你們最在意大家走在路上安不安全，尤其是孩子上下學。'},
+  bus:{n:'交通便利型',ic:'🚌',d:'你們最在意出門方不方便：公車、路燈、去捷運站的路。'},
+  dog:{n:'毛孩友善型',ic:'🐾',d:'你們最在意動物也能在社區裡好好生活。'},
+  rain:{n:'防災安心型',ic:'☂️',d:'你們最在意颱風、大雨來的時候，家裡和社區安不安全。'},
+  elder:{n:'健康樂活型',ic:'🌿',d:'你們最在意大家身體健康、長輩有地方活動。'},
+  'new':{n:'鄰里連結型',ic:'🤝',d:'你們最在意鄰居彼此認識，有事情找得到人。'}
+};
+const QUIZ=[
+  {q:'放學走出校門，你們最希望里裡哪裡變得更好？',o:[['上下學的路更安全','kid'],['搭公車、騎 YouBike 更方便','bus'],['有地方可以帶狗狗散步','dog'],['下大雨時路面不積水','rain']]},
+  {q:'如果里辦公處辦一場活動，你們最想參加哪一個？',o:[['免費健康檢查、量血壓','elder'],['認識鄰居的社區派對','new'],['寵物健康講座','dog'],['防災演練','rain']]},
+  {q:'晚上走在里裡，你們最在意什麼？',o:[['路燈夠不夠亮','bus'],['有沒有人巡守、看顧','kid'],['公園適不適合長輩散步','elder'],['會不會遇到認識的鄰居打招呼','new']]},
+  {q:'颱風快要來了，你們最希望發生什麼事？',o:[['排水溝提早清乾淨','rain'],['里裡的群組馬上發通知','new'],['家裡的長輩有人關心','elder'],['公車照常、路況即時更新','bus']]},
+  {q:'你們最想要里裡多一個什麼？',o:[['新的公園遊具','kid'],['毛小孩活動區','dog'],['長輩唱歌、運動的教室','elder'],['更方便去捷運站的交通','bus']]},
+  {q:'你們覺得一位好里長，最重要的是什麼？',o:[['有事找得到人、馬上回應','new'],['先把危險的地方處理好','kid'],['照顧人，也照顧動物','dog'],['平常就做好防災準備','rain']]}
+];
+function quizResult(){
+  const c={}; S.l3.qa.forEach(t=>c[t]=(c[t]||0)+1);
+  const order=Object.keys(TYPES).sort((a,b)=>(c[b]||0)-(c[a]||0));
+  const top=c[order[0]]||0;
+  return {c,ties:order.filter(k=>(c[k]||0)===top),order};
+}
+function roleScreen(st){
+  const rec=st.type;
+  $('#stage').innerHTML=`<div class="lvtitle"><h2>第3關　選一個角色</h2></div>
+    <div class="task">推薦角色已經標出來了。你們也可以換成別的角色（或用老師分配的角色）。</div>
+    <div class="roles">${ROLES.map(r=>`<button class="role" data-r="${r.id}" style="${r.id===rec?'border-width:4px;border-color:var(--gold);background:#fff8e1':''}">${r.id===rec?'<div class="small" style="font-weight:900;color:#9a6a00">⭐ 推薦</div>':''}<div class="ic">${r.ic}</div><b>${r.n}</b><small>${r.d}</small></button>`).join('')}</div>`;
+  document.querySelectorAll('.role').forEach(b=>b.onclick=()=>setRole(b.dataset.r));
+}
+function setRole(id){ const st=S.l3, r=ROLES.find(x=>x.id===id); st.role=r.id; st.order=shuffle(r.p); st.i=0; st.picking=false; save(); live(true); report(); L3(); }
+function quiz(st){
+  if(st.qi<QUIZ.length){
+    const q=QUIZ[st.qi];
+    $('#stage').innerHTML=`<div class="lvtitle"><h2>第3關　你們是哪一型里民？</h2><small>小測驗・不計分・沒有對錯</small></div>
+      <div class="task">全組一起討論，選一個最多人同意的答案。<br><span class="small">如果意見不一樣，說說看為什麼你在意這件事。</span></div>
+      <div class="panel q"><span class="qnum">第 ${st.qi+1}／${QUIZ.length} 題</span><h3 style="font-size:22px">${q.q}</h3>
+      <div class="pickl">${q.o.map((o,i)=>`<button data-i="${i}" style="font-size:19px">${esc(o[0])}</button>`).join('')}</div>
+      ${st.qi>0?'<button class="big ghost" id="qback" style="max-width:240px">← 上一題</button>':''}</div>`;
+    document.querySelectorAll('.pickl button').forEach(b=>b.onclick=()=>{ st.qa[st.qi]=q.o[+b.dataset.i][1]; st.qi++; save(); quiz(st); });
+    if($('#qback')) $('#qback').onclick=()=>{ st.qi--; st.qa.length=st.qi; save(); quiz(st); };
+    return;
+  }
+  const R0=quizResult();
+  if(!st.type){ st.type=R0.ties.length===1?R0.ties[0]:''; st.type2=R0.order.find(k=>k!==R0.ties[0]&&R0.c[k])||''; save(); }
+  if(!st.type){
+    $('#stage').innerHTML=`<div class="lvtitle"><h2>第3關　平手了！</h2></div>
+      <div class="panel q center"><h3 style="font-size:22px">你們同時是這 ${R0.ties.length} 種類型，討論一下，哪一個最像你們？</h3>
+      <div class="roles" style="margin-top:10px">${R0.ties.map(k=>`<button class="role" data-t="${k}"><div class="ic">${TYPES[k].ic}</div><b>${TYPES[k].n}</b><small>${TYPES[k].d}</small></button>`).join('')}</div></div>`;
+    document.querySelectorAll('.role').forEach(b=>b.onclick=()=>{ st.type=b.dataset.t; st.type2=R0.ties.find(k=>k!==st.type)||''; save(); quiz(st); });
+    return;
+  }
+  const T=TYPES[st.type], R=ROLES.find(x=>x.id===st.type), T2=st.type2&&TYPES[st.type2];
+  const bars=R0.order.filter(k=>R0.c[k]).map(k=>`<div style="display:flex;align-items:center;gap:8px;margin:4px 0;font-weight:700"><span style="width:130px">${TYPES[k].ic} ${TYPES[k].n}</span><i style="display:block;height:14px;border-radius:7px;background:${k===st.type?'var(--gold)':'#cfd8e3'};width:${R0.c[k]*40}px"></i>${R0.c[k]}</div>`).join('');
+  $('#stage').innerHTML=`<div class="lvtitle"><h2>第3關　測驗結果</h2></div>
+    <div class="two"><div class="panel center" style="border:3px solid var(--gold);background:#fff8e1">
+      <div style="font-size:70px;line-height:1.2">${T.ic}</div><div class="small" style="font-weight:700">你們這一組是</div>
+      <div style="font-size:34px;font-weight:900">${T.n}</div><p style="font-size:19px;margin:6px 0">${T.d}</p>
+      ${T2?`<div class="small">第二名：${T2.ic} ${T2.n}</div>`:''}</div>
+    <div><div class="panel"><b>你們的選擇分布</b>${bars}</div>
+      <div class="sum" style="margin-top:12px"><b>📌 這個結果是什麼意思？</b><ul>
+        <li>它說的是<b>你們在意什麼</b>，不是叫你們選哪一位候選人。</li>
+        <li>讀政見時，可以先找「有沒有寫到我在意的事」，再用三把尺量一量。</li>
+        <li>每個人在意的事不一樣，所以<b>沒有一種類型比較好</b>。</li></ul></div>
+      <p style="font-weight:700;margin:12px 0 0">推薦角色：${R.ic} ${R.n}</p>
+      <button class="big" id="useR">用這個角色讀政見 →</button>
+      <button class="big ghost" id="otherR">換一個角色</button></div></div>`;
+  $('#useR').onclick=()=>{ st.quizDone=true; setRole(R.id); };
+  $('#otherR').onclick=()=>{ st.quizDone=true; st.picking=true; save(); roleScreen(st); };
+}
 function rateDone(id){ const r=S.l3.r[id]||{}; return !!(r.c&&r.f&&r.v&&(r.why||'').trim().length>=MINWHY); }
 function score3(){
-  const st=S.l3; let s=st.order.filter(rateDone).length*5;
-  if(st.top && st.topWhy.trim().length>=6) s+=5;
-  if(st.mine.trim().length>=8) s+=5;
+  const st=S.l3; let s=st.order.filter(rateDone).length*7;
+  if(st.top && st.topWhy.trim().length>=6) s+=6;
+  if(st.mine.trim().length>=8) s+=6;
   return s;
 }
 function L3(){
   const st=S.l3; st.s=score3();
-  if(!st.role){
-    $('#stage').innerHTML=`<div class="lvtitle"><h2>第3關　我是哪種里民？</h2></div>
-      <div class="task">不同的里民，在意的事不一樣。請你們這一組選一個角色（或用老師分配的角色），用這個角色的眼光來讀政見。</div>
-      <div class="roles">${ROLES.map(r=>`<button class="role" data-r="${r.id}"><div class="ic">${r.ic}</div><b>${r.n}</b><small>${r.d}</small></button>`).join('')}</div>`;
-    document.querySelectorAll('.role').forEach(b=>b.onclick=()=>{ const r=ROLES.find(x=>x.id===b.dataset.r); st.role=r.id; st.order=shuffle(r.p); st.i=0; save(); live(true); L3(); });
-    return;
-  }
+  if(!st.role){ if(st.picking) roleScreen(st); else quiz(st); return; }
   const R=ROLES.find(x=>x.id===st.role);
   const prog=`<div class="prog">${st.order.map((id,i)=>`<span class="${st.step==='rate'&&i===st.i?'now':(rateDone(id)?'ok':'')}">政見 ${i+1}</span>`).join('')}
     <span class="${st.step==='top'?'now':(st.top&&st.topWhy.trim().length>=6?'ok':'')}">最在意</span><span class="${st.step==='mine'?'now':(st.mine.trim().length>=8?'ok':'')}">我的政見</span></div>`;
@@ -505,8 +567,8 @@ function result(){
   $('#stage').innerHTML=`<div class="res center">
     <h2 style="font-size:30px;margin:10px 0">${S.early?'已交卷！':'三關完成！'}</h2>
     <div class="score">${total()}<span style="font-size:26px"> 分</span></div>
-    <div class="small">${S.cls} 班 第 ${S.grp} 組${R?'｜角色：'+R.ic+' '+R.n:''}｜用時 ${fmt(secs())}</div>
-    <div class="brk"><div>第1關 公報解剖<b>${S.l1.s}</b>／30</div><div>第2關 動詞偵探<b>${S.l2.s}</b>／40</div><div>第3關 三把尺<b>${S.l3.s}</b>／30</div></div>
+    <div class="small">${S.cls} 班 第 ${S.grp} 組${S.l3.type?'｜'+TYPES[S.l3.type].ic+' '+TYPES[S.l3.type].n:''}${R?'｜角色：'+R.ic+' '+R.n:''}｜用時 ${fmt(secs())}</div>
+    <div class="brk"><div>第1關 公報解剖<b>${S.l1.s}</b>／20</div><div>第2關 動詞偵探<b>${S.l2.s}</b>／40</div><div>第3關 三把尺<b>${S.l3.s}</b>／40</div></div>
     <div class="sum"><b>這一節課的重點</b><ul>
       <li>公報是選舉委員會寄到每一戶的，但內容是<b>候選人自己提供的</b>，可以多方查證。</li>
       <li>讀政見時看動詞：<b>爭取</b>要靠政府單位，<b>開辦、舉辦</b>里辦公處自己能做，<b>做到、守護</b>說的是態度。</li>
