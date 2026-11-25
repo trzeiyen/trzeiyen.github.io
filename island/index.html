@@ -58,6 +58,12 @@ header p{margin:6px 0 0;font-weight:700;font-size:15px;color:#0d4a6b;background:
 .go{grid-row:1/span 3;grid-column:2;background:var(--sun);color:var(--ink);padding:10px 16px;text-decoration:none;display:inline-flex;align-items:center;white-space:nowrap;box-shadow:0 3px 0 #e0a92e}
 .go.soft{background:#e8f4fb;box-shadow:0 3px 0 #c5dfee}
 .loading{position:fixed;inset:0;display:grid;place-items:center;font-weight:900;font-size:20px;color:#fff;text-shadow:0 2px 6px rgba(0,60,100,.4);pointer-events:none;transition:opacity .5s}
+header .vis{display:block;width:max-content;margin-top:6px;background:#7a4a2a;color:#fff3d6;font-size:14px}
+.bubble{position:absolute;left:0;top:0;max-width:min(240px,70vw);background:#fff;color:var(--ink);font-weight:700;font-size:15px;line-height:1.45;
+  padding:8px 12px;border-radius:16px;box-shadow:0 4px 14px rgba(0,40,80,.22);pointer-events:none;opacity:0;transition:opacity .25s;white-space:normal}
+.bubble b{display:block;font-size:13px;color:#0d6b94}
+.bubble::after{content:"";position:absolute;left:50%;bottom:-7px;margin-left:-7px;border:7px solid transparent;border-bottom:0;border-top-color:#fff}
+.bubble.on{opacity:1}
 @media(min-width:820px) and (orientation:landscape){
   .sheet{left:auto;right:16px;top:16px;bottom:16px;width:400px;max-height:none;border-radius:26px;transform:translateX(calc(100% + 40px))}
   .sheet.open{transform:none}.sheet .top{border-radius:26px 26px 0 0}.list{padding-bottom:18px}}
@@ -69,10 +75,11 @@ header p{margin:6px 0 0;font-weight:700;font-size:15px;color:#0d4a6b;background:
 <body>
 <canvas id="c" aria-label="3D 小島，可拖曳旋轉"></canvas>
 <div class="loading" id="loading">小島浮出海面中…</div>
-<header><h1>時光社會島</h1><p>Zeiyen 老師的社會科學習島</p></header>
+<header><h1>時光社會島</h1><p>Zeiyen 老師的社會科學習島</p><p class="vis" id="vis" hidden></p></header>
 <div class="hint">繞島一圈，從史前走到現代・點建築進入</div>
 <div class="labels" id="labels"></div>
 <nav class="nav" id="nav" aria-label="快速前往"></nav>
+<div class="labels" id="bubbles"></div>
 <div class="credit">Zeiyen老師製作</div>
 <section class="sheet" id="sheet" aria-live="polite">
   <div class="top" id="sheetTop">
@@ -181,6 +188,20 @@ const ZONES=[
   items:[
    {t:'teacher24hr｜國小導師的一天',g:'3D 體驗遊戲',d:'從早上進教室到半夜回 LINE，扮演導師過完一整天。',u:H+'teacher24hr/'},
    {t:'Zeiyen 老師的工具箱',g:'所有作品',d:'島上全部的作品，都在這裡找得到。',u:H,soft:1}]}
+];
+/* 訪客計數：部署 GAS（counter.gs）後，把網頁應用程式網址貼在這裡 */
+const COUNTER_URL='';
+/* 小島民：名字、衣服顏色、帽子、走路方向與速度、會說的話 */
+const NPCS=[
+ {name:'水手小航',shirt:'#1d6fd6',hat:'sailor',a:0,dir:1,sp:.05,lines:[
+  '海上那艘帆船，點它就能到熱蘭遮城港口！','1624 年荷蘭人來到大員，大員就是現在臺南的安平喔。','想當船長嗎？去港口玩「大航海時代」！']},
+ {name:'小站長',shirt:'#2f5d45',hat:'cap',a:1.8,dir:-1,sp:.04,lines:[
+  '日治火車站的火車在等你，點車站就能上車！','縱貫鐵路在 1908 年全線通車，南來北往方便多了。','火車站的鐘一直在轉，時間不等人喔！']},
+ {name:'部落小獵人',shirt:'#b5523b',hat:'feather',a:3.4,dir:1,sp:.035,lines:[
+  '史前部落有兩個任務等你來挑戰。','石板屋用一片片石板蓋成，冬暖夏涼！','原住民族會配合季節捕魚打獵，讓動物有時間長大。']},
+ {name:'小記者',shirt:'#ef476f',hat:'beret',a:4.9,dir:-1,sp:.045,lines:[
+  '民主經濟城有 13 個作品，是全島最多的！','遇到詐騙要找誰？去「中央地方分工小偵探」查查看。','繞完全島，記得到地球儀廣場挑戰總複習！']},
+ {name:'星星貓',cat:1,a:2.6,dir:1,sp:.06,lines:['喵～天文台上面有星星在閃。','喵！小小銀行的金幣一直轉，好想抓。','喵嗚～心靈小屋很溫暖，累了可以進去坐坐。']}
 ];
 /* ================================================ */
 
@@ -357,7 +378,36 @@ const anim=[];
  cone.rotation.z=Math.PI/2;cone.position.x=7;beam.add(cone);anim.push(t=>beam.rotation.y=t*.9)}
 
 /* 樹、棕櫚、花：避開建築與環道 */
-const busy=ZONES.map(z=>[z.x,z.z,z.center?5:(z.id==='jp'?5.6:4.4)]);
+/* 訪客木牌 */
+const SIGN_A=.9,SIGN_R=19.4,sx=Math.cos(SIGN_A)*SIGN_R,sz=Math.sin(SIGN_A)*SIGN_R;
+const sign=new THREE.Group();sign.position.set(sx,G,sz);sign.lookAt(0,G,0);scene.add(sign);
+[-1.7,1.7].forEach(x=>add(C(.14,.16,2.8,6),'#7a4a2a',x,1.4,0,sign));
+add(B(4.2,2.1,.2),'#a0683e',0,2.1,0,sign);
+const signCv=document.createElement('canvas');signCv.width=640;signCv.height=320;
+const signTex=new THREE.CanvasTexture(signCv);signTex.colorSpace=THREE.SRGBColorSpace;
+const face=new THREE.Mesh(new THREE.PlaneGeometry(3.9,1.95),new THREE.MeshBasicMaterial({map:signTex}));
+face.position.set(0,2.1,-.11);face.rotation.y=Math.PI;sign.add(face);
+function drawSign(j){const x=signCv.getContext('2d');
+ x.fillStyle='#c98b55';x.fillRect(0,0,640,320);
+ x.strokeStyle='rgba(110,60,25,.35)';x.lineWidth=3;for(let i=1;i<6;i++){x.beginPath();x.moveTo(0,i*53);x.lineTo(640,i*53+6);x.stroke()}
+ x.strokeStyle='#6b3d1c';x.lineWidth=14;x.strokeRect(7,7,626,306);
+ x.fillStyle='#3b1f0b';x.textAlign='center';x.textBaseline='middle';
+ const f='"Noto Sans TC",sans-serif';
+ x.font='900 58px '+f;x.fillText('歡迎光臨時光社會島',320,j?105:130);
+ if(j){x.font='900 50px '+f;x.fillStyle='#7a1f1f';x.fillText(`今日旅客 ${j.today} 人`,320,190);
+  x.font='700 38px '+f;x.fillStyle='#3b1f0b';x.fillText(`累計 ${j.total} 人來過`,320,255)}
+ else{x.font='700 40px '+f;x.fillText('點建築，開始時光旅行！',320,215)}
+ signTex.needsUpdate=true}
+(document.fonts?document.fonts.ready:Promise.resolve()).then(()=>drawSign(null));
+async function countVisit(){if(!COUNTER_URL)return;
+ const day=new Date().toLocaleDateString('sv',{timeZone:'Asia/Taipei'});let mode='hit';
+ try{const k='island-visit-'+day;if(localStorage.getItem(k))mode='read';else localStorage.setItem(k,'1')}catch(e){}
+ try{const r=await fetch(COUNTER_URL+'?mode='+mode);const j=await r.json();if(typeof j.total!=='number')return;
+  await (document.fonts?document.fonts.ready:0);drawSign(j);
+  const v=document.getElementById('vis');v.textContent=`今日旅客 ${j.today} 人・累計 ${j.total} 人`;v.hidden=false}catch(e){}}
+countVisit();
+
+const busy=ZONES.map(z=>[z.x,z.z,z.center?5:(z.id==='jp'?5.6:4.4)]);busy.push([sx,sz,2.6]);
 const spokes=ZONES.filter(z=>z.r>RING+1);
 const free=(x,z,pad=0)=>{const r=Math.hypot(x,z);if(r>6.6&&r<9.4)return false;
  if(busy.some(([bx,bz,br])=>Math.hypot(x-bx,z-bz)<br+pad))return false;
@@ -382,6 +432,27 @@ add(B(2.6,.7,1.1),'#8d5a3b',0,.35,0,boat);add(prism(1.1,.9,.7),'#8d5a3b',1.3,.35
 add(B(2.4,.12,.95),'#d9a76a',0,.75,0,boat);add(C(.07,.07,3,6),'#5a3a22',0,2.2,0,boat);
 add(prism(1.8,2.4,.06),'#ffffff',-.1,1,0,boat).rotation.y=Math.PI/2;add(B(.6,.35,.03),'#ef476f',.3,3.55,0,boat);
 boat.scale.setScalar(1.3);
+
+/* 小島民：沿著時光環道散步 */
+const npcs=NPCS.map((n,i)=>{const g=new THREE.Group();g.userData.npc=i;scene.add(g);clickables.push(g);
+ const body=new THREE.Group();g.add(body);const legs=[];
+ if(n.cat){add(B(.9,.45,.4),'#f4a261',0,.45,0,body).scale.set(1,1,1);
+  add(S(.32,1),'#f4a261',.5,.8,0,body);[-.12,.12].forEach(z=>add(new THREE.ConeGeometry(.1,.22,4),'#f4a261',.55,1.1,z,body));
+  [-.32,.32].forEach(x=>[-.13,.13].forEach(z=>{const l=add(B(.12,.3,.12),'#e07b39',x,.15,z,body);legs.push(l)}));
+  const tl=add(B(.1,.6,.1),'#e07b39',-.5,.7,0,body);tl.rotation.z=.6;body.rotation.y=-Math.PI/2}
+ else{[-.13,.13].forEach(x=>{const l=add(B(.16,.5,.18),'#33414e',x,.25,0,body);l.geometry.translate(0,-.25+.25,0);legs.push(l)});
+  add(C(.28,.32,.7,8),n.shirt,0,.85,0,body);
+  add(S(.3,1),'#ffd9b8',0,1.45,0,body);
+  [-.09,.09].forEach(x=>add(S(.04),'#222',x,1.5,.27,body).castShadow=false);
+  if(n.hat==='sailor'){add(C(.32,.32,.12,10),'#ffffff',0,1.72,0,body);add(C(.33,.33,.04,10),'#1d6fd6',0,1.68,0,body)}
+  if(n.hat==='cap'){add(C(.3,.3,.18,10),'#1c1c1c',0,1.72,0,body);add(B(.34,.04,.2),'#1c1c1c',0,1.65,.27,body)}
+  if(n.hat==='feather'){add(C(.31,.31,.08,10),'#e63946',0,1.62,0,body);add(B(.06,.4,.02),'#ffd166',0,1.85,-.2,body)}
+  if(n.hat==='beret'){const b=add(C(.33,.3,.12,10),'#ef476f',.06,1.74,0,body);b.rotation.z=.2}}
+ g.scale.setScalar(1.25);return {n,g,body,legs,a:n.a}});
+const bubbles=document.getElementById('bubbles');
+npcs.forEach(o=>{const d=document.createElement('div');d.className='bubble';bubbles.appendChild(d);o.el=d;o.until=0;o.k=0});
+function say(i){const o=npcs[i];o.el.innerHTML=`<b>${o.n.name}</b>${o.n.lines[o.k%o.n.lines.length]}`;o.k++;o.until=performance.now()+4500}
+let nextAuto=performance.now()+5000;
 
 /* 雲 */
 const clouds=[];
@@ -423,10 +494,10 @@ addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
 /* 點擊 3D 建築 */
 const ray=new THREE.Raycaster(),ptr=new THREE.Vector2();let down=null;
 function pick(e){ptr.set(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1);ray.setFromCamera(ptr,camera);
- const h=ray.intersectObjects(clickables,true)[0];if(!h)return null;let o=h.object;while(o&&!o.userData.zone)o=o.parent;return o?o.userData.zone:null}
+ const h=ray.intersectObjects(clickables,true)[0];if(!h)return null;let o=h.object;while(o&&!o.userData.zone&&o.userData.npc==null)o=o.parent;if(!o)return null;return o.userData.npc!=null?'npc:'+o.userData.npc:o.userData.zone}
 canvas.addEventListener('pointerdown',e=>{down={x:e.clientX,y:e.clientY,t:performance.now()}});
 canvas.addEventListener('pointerup',e=>{if(!down)return;
- if(Math.hypot(e.clientX-down.x,e.clientY-down.y)<8&&performance.now()-down.t<600){const id=pick(e);id?openZone(id):closeSheet()}down=null});
+ if(Math.hypot(e.clientX-down.x,e.clientY-down.y)<8&&performance.now()-down.t<600){const id=pick(e);if(id&&id.startsWith('npc:'))say(+id.slice(4));else id?openZone(id):closeSheet()}down=null});
 canvas.addEventListener('pointermove',e=>{if(e.pointerType==='mouse'&&!down)canvas.style.cursor=pick(e)?'pointer':'grab'});
 
 function resize(){renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.fov=innerWidth<innerHeight?58:40;camera.updateProjectionMatrix()}
@@ -451,6 +522,17 @@ function frame(){const t=reduce?0:clock.getElapsedTime();
    if(vis)shown.push({x:o.x,y:o.y,w,h});
    o.el.style.opacity=vis?1:0;o.el.style.pointerEvents=vis?'auto':'none';
    o.el.style.transform=`translate(${o.x}px,${o.y}px) translate(-50%,-130%)`});
+ const now=performance.now();
+ npcs.forEach((o,i)=>{const talking=now<o.until;if(!talking&&!reduce)o.a+=o.n.dir*o.n.sp*.016;
+  const r=8+(i%2?.35:-.35),x=Math.cos(o.a)*r,z=Math.sin(o.a)*r;o.g.position.set(x,G+(talking?0:Math.abs(Math.sin(t*8+i))*.06),z);
+  if(talking)o.g.lookAt(camera.position.x,G,camera.position.z);else o.g.rotation.set(0,Math.atan2(-Math.sin(o.a)*o.n.dir,Math.cos(o.a)*o.n.dir),0);
+  o.legs.forEach((l,k)=>l.rotation.x=talking?0:Math.sin(t*8+k*Math.PI)*.5);
+  v.set(x,G+(o.n.cat?2:3),z).project(camera);
+  const vis=talking&&v.z<1&&Math.abs(v.x)<1&&Math.abs(v.y)<1;o.el.classList.toggle('on',vis);
+  o.el.style.transform=`translate(${(v.x*.5+.5)*innerWidth}px,${(-v.y*.5+.5)*innerHeight}px) translate(-50%,-110%)`});
+ if(now>nextAuto&&!sheet.classList.contains('open')){nextAuto=now+9000;
+  const seen=npcs.map((o,i)=>{v.copy(o.g.position).project(camera);return v.z<1&&Math.abs(v.x)<.8&&Math.abs(v.y)<.8?i:-1}).filter(i=>i>=0);
+  if(seen.length)say(seen[(Math.random()*seen.length)|0])}
  requestAnimationFrame(frame)}
 frame();
 document.getElementById('loading').style.opacity=0;
