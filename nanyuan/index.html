@@ -18,7 +18,8 @@ button{font:inherit;cursor:pointer;touch-action:manipulation;color:inherit}
 .rule{background:var(--blue2);border-radius:12px;padding:8px 12px;font-weight:700;font-size:15px;margin:8px 0 12px}
 .lg ol{margin:0 0 14px;padding-left:22px;color:var(--ink2);font-size:16px}
 .row{display:flex;gap:10px;flex-wrap:wrap}
-.row label{flex:1 1 140px;font-weight:700;font-size:15px}
+.row label{flex:1 1 110px;font-weight:700;font-size:15px}
+.row label.opt{color:var(--ink2)}
 .row input,.row select{display:block;width:100%;height:54px;margin-top:4px;font-size:22px;text-align:center;border:2px solid var(--ink);border-radius:12px;background:#fff}
 .big{display:block;width:100%;min-height:56px;margin-top:14px;border:0;border-radius:14px;background:var(--blue);color:#fff;font-weight:900;font-size:21px;box-shadow:0 4px 0 #1b3f6c}
 .big:active{transform:translateY(3px);box-shadow:0 1px 0 #1b3f6c}
@@ -27,13 +28,20 @@ button{font:inherit;cursor:pointer;touch-action:manipulation;color:inherit}
 .big:disabled{opacity:.45}
 .err{color:var(--bad);font-weight:700;min-height:1.6em;margin-top:8px}
 .credit{text-align:center;margin-top:14px;font-size:14px;color:var(--ink2);font-weight:700}
-header.top{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:10px;padding:10px max(14px,env(safe-area-inset-left));background:var(--ink);color:#fff;flex-wrap:wrap}
+header.top{position:sticky;top:0;z-index:10;row-gap:6px;display:flex;align-items:center;gap:10px;padding:10px max(14px,env(safe-area-inset-left));background:var(--ink);color:#fff;flex-wrap:wrap}
 header.top b{font-size:18px}
 .steps{display:flex;gap:6px;flex:1;justify-content:center;flex-wrap:wrap}
 .steps span{padding:3px 12px;border-radius:99px;background:rgba(255,255,255,.14);font-size:14px;font-weight:700;white-space:nowrap}
 .steps span.now{background:var(--gold);color:var(--ink)}
 .steps span.ok{background:var(--ok)}
 .meta{font-size:14px;font-weight:700;white-space:nowrap}
+@media(max-width:860px){
+  header.top{position:static;padding:8px 12px}
+  header.top b{flex:1 1 auto}
+  .steps{order:3;flex:1 1 100%;justify-content:flex-start}
+  .steps span{font-size:13px;padding:2px 10px}
+  .two>.q{order:-1}
+}
 #early{border:2px solid #fff;background:transparent;color:#fff;border-radius:10px;padding:4px 12px;font-weight:700;font-size:14px}
 main{max-width:1180px;margin:0 auto;padding:16px max(14px,env(safe-area-inset-left)) 40px}
 .lvtitle{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:4px 0 6px}
@@ -133,7 +141,9 @@ textarea{width:100%;min-height:84px;font:inherit;font-size:19px;padding:10px;bor
     </ol>
     <div class="row">
       <label>班級<input id="cls" inputmode="numeric" maxlength="3" placeholder="609" autocomplete="off"></label>
-      <label>組別<select id="grp"><option value="">請選擇</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option></select></label>
+      <label>座號<input id="seat" inputmode="numeric" maxlength="2" placeholder="1" autocomplete="off"></label>
+      <label class="opt">第2位座號<input id="m1" inputmode="numeric" maxlength="2" placeholder="選填" autocomplete="off"></label>
+      <label class="opt">第3位座號<input id="m2" inputmode="numeric" maxlength="2" placeholder="選填" autocomplete="off"></label>
     </div>
     <div class="err" id="lerr"></div>
     <div id="resumeBox" hidden>
@@ -169,7 +179,7 @@ textarea{width:100%;min-height:84px;font:inherit;font-size:19px;padding:10px;bor
 // 與〈穿越清帝國大逃脫〉共用同一個 Apps Script（成績存在「南園里-成績」工作表）
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbzqfvkWjqjGsLnnDsFNqlfvwluKJmvKC1KPbZjzwebmnk8PfmVhxOeSMGQUrRAP2fkVAg/exec';
 const GAME_ID = 'nanyuan';
-const KEY = 'nanyuan-v2';
+const KEY = 'nanyuan-v3';
 const CLASSES = ['608','609','610'];
 
 /* ===== 公報政見（請對照原始公報 PDF 確認文字）=====
@@ -199,11 +209,11 @@ const shuffle = a=>{ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.fl
 let S = null;
 
 /* ===== 狀態與保存 ===== */
-function skey(cls,grp){ return KEY+'-'+cls+'-'+grp; }
-function save(){ try{ localStorage.setItem(skey(S.cls,S.grp), JSON.stringify(S)); localStorage.setItem(KEY+'-who', JSON.stringify({cls:S.cls,grp:S.grp})); }catch(e){} }
-function load(cls,grp){ try{ return JSON.parse(localStorage.getItem(skey(cls,grp))); }catch(e){ return null; } }
-function fresh(cls,grp){
-  return {cls,grp,sid:Date.now().toString(36)+Math.random().toString(36).slice(2,6),start:Date.now(),end:0,lv:1,early:false,errors:0,wrongBy:{},
+function skey(cls,seat){ return KEY+'-'+cls+'-'+seat; }
+function save(){ try{ localStorage.setItem(skey(S.cls,S.seat), JSON.stringify(S)); localStorage.setItem(KEY+'-who', JSON.stringify({cls:S.cls,seat:S.seat,mates:S.mates})); }catch(e){} }
+function load(cls,seat){ try{ return JSON.parse(localStorage.getItem(skey(cls,seat))); }catch(e){ return null; } }
+function fresh(cls,seat,mates){
+  return {cls,seat,mates,sid:Date.now().toString(36)+Math.random().toString(36).slice(2,6),start:Date.now(),end:0,lv:1,early:false,errors:0,wrongBy:{},
     l1:{i:0,first:{},s:0,done:false},
     l2:{order:shuffle(VERBS.map(v=>v.id)),placed:{},firstWrong:{},s:0,done:false},
     l3:{qi:0,qa:[],type:'',type2:'',quizDone:false,picking:false,role:'',order:[],i:0,r:{},top:'',topWhy:'',mine:'',step:'rate',s:0,done:false}};
@@ -216,7 +226,7 @@ function cleared(){ return [S.l1.done,S.l2.done,S.l3.done].filter(Boolean).lengt
 
 /* ===== 上傳 ===== */
 function post(body){ if(!GAS_URL) return; try{ fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body),keepalive:true}).catch(()=>{}); }catch(e){} }
-function base(){ return {game:GAME_ID,sid:S.sid,cls:S.cls,grp:S.grp,role:S.l3.role,lv:S.lv,done:S.lv>3,early:S.early}; }
+function base(){ return {game:GAME_ID,sid:S.sid,cls:S.cls,seat:S.seat,mates:S.mates,role:S.l3.role,lv:S.lv,done:S.lv>3,early:S.early}; }
 function rulersOut(){
   const o={}; Object.keys(S.l3.r).forEach(id=>{ const r=S.l3.r[id]; o[id]={c:r.c||'',f:r.f||'',v:r.v||'',why:(r.why||'').slice(0,200)}; }); return o;
 }
@@ -235,10 +245,11 @@ setInterval(live,5000);
 
 /* ===== 畫面框架 ===== */
 function show(id){ document.querySelectorAll('.screen').forEach(e=>e.classList.toggle('on',e.id===id)); window.scrollTo(0,0); }
+const who=()=>[S.seat].concat(S.mates||[]).join('、')+' 號';
 function header(){
   const names=['第1關 公報解剖','第2關 動詞偵探','第3關 三把尺'];
   $('#steps').innerHTML=names.map((n,i)=>`<span class="${S.lv===i+1?'now':(S.lv>i+1?'ok':'')}">${S.lv>i+1?'✓ ':''}${n}</span>`).join('');
-  $('#meta').textContent=`${S.cls} 班 第 ${S.grp} 組｜${total()} 分｜${fmt(secs())}`;
+  $('#meta').textContent=`${S.cls} 班 ${who()}｜${total()} 分｜${fmt(secs())}`;
   $('#early').hidden = S.lv>3;
 }
 setInterval(()=>{ if(S && $('#game').classList.contains('on')) header(); },1000);
@@ -259,24 +270,25 @@ $('#mYes').onclick=()=>{ $('#modal').classList.remove('on'); S.early=true; S.lv=
 /* ===== 登入 ===== */
 const num=v=>String(v||'').replace(/\D/g,'');
 function readLogin(){
-  const cls=num($('#cls').value), grp=parseInt($('#grp').value,10);
+  const cls=num($('#cls').value), seat=parseInt(num($('#seat').value),10);
+  const mates=[$('#m1').value,$('#m2').value].map(v=>parseInt(num(v),10)).filter(n=>n>0&&n<=45&&n!==seat);
   if(!/^\d{3}$/.test(cls)) return {err:'班級請填三位數，例如 609。'};
   if(CLASSES.indexOf(cls)<0) return {err:'這個工具開放給 '+CLASSES.join('、')+' 班使用，請確認班級。'};
-  if(!(grp>=1&&grp<=8)) return {err:'請選擇組別。'};
-  return {cls,grp};
+  if(!(seat>=1&&seat<=45)) return {err:'座號請填 1～45。'};
+  return {cls,seat,mates:[...new Set(mates)]};
 }
 function checkResume(){
-  const r=readLogin(); const old=!r.err && load(r.cls,r.grp);
+  const r=readLogin(); const old=!r.err && load(r.cls,r.seat);
   const can=!!(old && old.lv<=3);
   $('#resumeBox').hidden=!can; $('#start').hidden=can;
   $('#start').textContent=(old && old.lv>3)?'這組已經完成了，再做一次':'開始探究';
   $('#lerr').textContent='';
 }
-$('#cls').addEventListener('input',checkResume); $('#grp').addEventListener('change',checkResume);
-const begin=()=>{ const r=readLogin(); if(r.err){ $('#lerr').textContent=r.err; return; } S=fresh(r.cls,r.grp); save(); go(); };
+$('#cls').addEventListener('input',checkResume); $('#seat').addEventListener('input',checkResume);
+const begin=()=>{ const r=readLogin(); if(r.err){ $('#lerr').textContent=r.err; return; } S=fresh(r.cls,r.seat,r.mates); save(); go(); };
 $('#start').onclick=begin; $('#restart').onclick=begin;
-$('#resume').onclick=()=>{ const r=readLogin(); if(r.err){ $('#lerr').textContent=r.err; return; } S=load(r.cls,r.grp); save(); go(); };
-try{ const w=JSON.parse(localStorage.getItem(KEY+'-who')); if(w){ $('#cls').value=w.cls; $('#grp').value=String(w.grp); checkResume(); } }catch(e){}
+$('#resume').onclick=()=>{ const r=readLogin(); if(r.err){ $('#lerr').textContent=r.err; return; } S=load(r.cls,r.seat); if(r.mates.length) S.mates=r.mates; save(); go(); };
+try{ const w=JSON.parse(localStorage.getItem(KEY+'-who')); if(w){ $('#cls').value=w.cls; $('#seat').value=w.seat; if(w.mates&&w.mates[0])$('#m1').value=w.mates[0]; if(w.mates&&w.mates[1])$('#m2').value=w.mates[1]; checkResume(); } }catch(e){}
 
 /* =====================================================================
    第1關　公報解剖（4 題 × 5 分）
@@ -322,7 +334,7 @@ function L1(){
     <div class="task">先用一份「練習用範例公報」，認識公報上有哪些欄位。</div>
     <div class="two"><div>${bulletin()}</div>
     <div class="panel q"><span class="qnum">第 ${st.i+1}／${L1Q.length} 題</span><h3>${q.title}</h3>
-      ${q.type==='tap'?'<div class="small" style="font-weight:700">👈 請點左邊公報上的欄位</div>':`<div class="opts">${shuffle(q.o).map(o=>`<button data-a="${o.a}">${esc(o.t)}</button>`).join('')}</div>`}
+      ${q.type==='tap'?'<div class="small" style="font-weight:700">👆 請點公報上的欄位</div>':`<div class="opts">${shuffle(q.o).map(o=>`<button data-a="${o.a}">${esc(o.t)}</button>`).join('')}</div>`}
       <div class="fb" id="fb"></div><div id="nxBox"></div></div></div>`;
   let done=false;
   const ok=(el)=>{ done=true; if(st.first[q.id]===undefined) st.first[q.id]=1; save(); el.classList.add('ok');
@@ -459,7 +471,7 @@ function quiz(st){
   if(st.qi<QUIZ.length){
     const q=QUIZ[st.qi];
     $('#stage').innerHTML=`<div class="lvtitle"><h2>第3關　你們是哪一型里民？</h2><small>小測驗・不計分・沒有對錯</small></div>
-      <div class="task">全組一起討論，選一個最多人同意的答案。<br><span class="small">如果意見不一樣，說說看為什麼你在意這件事。</span></div>
+      <div class="task">一起用這台平板的同學討論一下，選一個大家都同意的答案。<br><span class="small">只有一個人的話，就選你自己最在意的。意見不一樣時，說說看為什麼你在意這件事。</span></div>
       <div class="panel q"><span class="qnum">第 ${st.qi+1}／${QUIZ.length} 題</span><h3 style="font-size:22px">${q.q}</h3>
       <div class="pickl">${q.o.map((o,i)=>`<button data-i="${i}" style="font-size:19px">${esc(o[0])}</button>`).join('')}</div>
       ${st.qi>0?'<button class="big ghost" id="qback" style="max-width:240px">← 上一題</button>':''}</div>`;
@@ -480,7 +492,7 @@ function quiz(st){
   const bars=R0.order.filter(k=>R0.c[k]).map(k=>`<div style="display:flex;align-items:center;gap:8px;margin:4px 0;font-weight:700"><span style="width:130px">${TYPES[k].ic} ${TYPES[k].n}</span><i style="display:block;height:14px;border-radius:7px;background:${k===st.type?'var(--gold)':'#cfd8e3'};width:${R0.c[k]*40}px"></i>${R0.c[k]}</div>`).join('');
   $('#stage').innerHTML=`<div class="lvtitle"><h2>第3關　測驗結果</h2></div>
     <div class="two"><div class="panel center" style="border:3px solid var(--gold);background:#fff8e1">
-      <div style="font-size:70px;line-height:1.2">${T.ic}</div><div class="small" style="font-weight:700">你們這一組是</div>
+      <div style="font-size:70px;line-height:1.2">${T.ic}</div><div class="small" style="font-weight:700">你們是</div>
       <div style="font-size:34px;font-weight:900">${T.n}</div><p style="font-size:19px;margin:6px 0">${T.d}</p>
       ${T2?`<div class="small">第二名：${T2.ic} ${T2.n}</div>`:''}</div>
     <div><div class="panel"><b>你們的選擇分布</b>${bars}</div>
@@ -567,7 +579,7 @@ function result(){
   $('#stage').innerHTML=`<div class="res center">
     <h2 style="font-size:30px;margin:10px 0">${S.early?'已交卷！':'三關完成！'}</h2>
     <div class="score">${total()}<span style="font-size:26px"> 分</span></div>
-    <div class="small">${S.cls} 班 第 ${S.grp} 組${S.l3.type?'｜'+TYPES[S.l3.type].ic+' '+TYPES[S.l3.type].n:''}${R?'｜角色：'+R.ic+' '+R.n:''}｜用時 ${fmt(secs())}</div>
+    <div class="small">${S.cls} 班 ${who()}${S.l3.type?'｜'+TYPES[S.l3.type].ic+' '+TYPES[S.l3.type].n:''}${R?'｜角色：'+R.ic+' '+R.n:''}｜用時 ${fmt(secs())}</div>
     <div class="brk"><div>第1關 公報解剖<b>${S.l1.s}</b>／20</div><div>第2關 動詞偵探<b>${S.l2.s}</b>／40</div><div>第3關 三把尺<b>${S.l3.s}</b>／40</div></div>
     <div class="sum"><b>這一節課的重點</b><ul>
       <li>公報是選舉委員會寄到每一戶的，但內容是<b>候選人自己提供的</b>，可以多方查證。</li>

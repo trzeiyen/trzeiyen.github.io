@@ -60,7 +60,7 @@ body.proj .grpCard .t{font-size:25px}
 <div class="bar">
   <label>後台密碼<input id="key" type="password" autocomplete="off"></label>
   <label>班級<select id="cls"><option value="">全部</option><option>608</option><option>609</option><option>610</option></select></label>
-  <label>顯示<select id="mode"><option value="last">每組最新一筆</option><option value="best">每組最高分</option></select></label>
+  <label>顯示<select id="mode"><option value="last">每台最新一筆</option><option value="best">每台最高分</option></select></label>
   <button id="go">讀取</button>
   <span class="auto"><input type="checkbox" id="auto" checked>每 20 秒自動更新</span>
   <button id="proj" class="p">投影模式（隱藏分數）</button>
@@ -69,18 +69,18 @@ body.proj .grpCard .t{font-size:25px}
 <div id="msg"></div>
 <div class="private">
 <div class="cards" id="cards"></div>
-<div class="box"><h2>正在作答的組別</h2>
+<div class="box"><h2>正在作答的同學</h2>
   <div class="note">學生進入、換關、每量完一條政見時更新；超過 5 分鐘沒更新會變淡。</div>
   <div class="live" id="live"></div></div>
 <div class="tbl"><table id="tb"></table></div>
 </div>
-<h2>各組角色最在意的政見</h2>
-<div class="note">可以投影出來，請各組說明：「我們這個角色，為什麼最在意這一條？」點「三把尺紀錄」看各組怎麼量。</div>
+<h2>各角色最在意的政見</h2>
+<div class="note">可以投影出來，請同學說明：「我們這個角色，為什麼最在意這一條？」點「三把尺紀錄」看怎麼量。</div>
 <div id="roles"></div>
 <h2>全班的里民類型</h2>
-<div class="note">測驗結果只代表各組在意的事，不對應任何候選人。可以問全班：「為什麼大家在意的事不一樣？」</div>
+<div class="note">測驗結果只代表同學在意的事，不對應任何候選人。可以問全班：「為什麼大家在意的事不一樣？」</div>
 <div class="miss" id="types"></div>
-<h2>換你當候選人：各組寫的政見</h2>
+<h2>換你當候選人：同學寫的政見</h2>
 <div class="answers" id="mine"></div>
 <div class="private">
 <h2>第2關　最常放錯的卡片（全班錯誤次數）</h2>
@@ -108,6 +108,7 @@ const $ = s=>document.querySelector(s);
 const esc = s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const fmt = s=>String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
 let view = [];
+const seats = r=>[r.seat].concat(r.mates||[]).join('、')+' 號';
 try{ $('#key').value=sessionStorage.getItem('ny-key')||''; }catch(e){}
 
 async function load(){
@@ -124,43 +125,43 @@ async function load(){
 }
 function pick(rows){
   const m={};
-  rows.forEach(r=>{ const k=r.cls+'-'+r.grp, o=m[k];
+  rows.forEach(r=>{ const k=r.cls+'-'+r.seat, o=m[k];
     if(!o) m[k]=r;
     else if($('#mode').value==='best' ? (r.score>o.score || (r.score===o.score && r.ts>o.ts)) : r.ts>o.ts) m[k]=r; });
-  return Object.values(m).sort((a,b)=>a.cls.localeCompare(b.cls)||a.grp-b.grp);
+  return Object.values(m).sort((a,b)=>a.cls.localeCompare(b.cls)||a.seat-b.seat);
 }
 function render(rows, live){
   view=pick(rows);
   const done=view.filter(r=>r.done).length, avg=view.length?Math.round(view.reduce((n,r)=>n+r.score,0)/view.length):0;
-  $('#cards').innerHTML=`<div>組數<b>${view.length}</b></div><div>完成／交卷<b>${done}</b></div><div>平均分數<b>${avg}</b></div>`;
+  $('#cards').innerHTML=`<div>平板數<b>${view.length}</b></div><div>完成／交卷<b>${done}</b></div><div>平均分數<b>${avg}</b></div>`;
   const now=Date.now();
-  $('#live').innerHTML=live.filter(l=>l.status==='作答中').sort((a,b)=>a.cls.localeCompare(b.cls)||a.grp-b.grp)
-    .map(l=>`<span class="${now-l.t>300000?'stale':''}">${l.cls} 第${l.grp}組・第${Math.min(3,l.lv)}關${l.role&&ROLES[l.role]?'・'+ROLES[l.role]:''}</span>`).join('')||'<span style="background:none">目前沒有正在作答的組別</span>';
-  $('#tb').innerHTML='<tr><th>班級</th><th>組別</th><th>測驗類型</th><th>角色</th><th>狀態</th><th>總分</th><th>第1關/20</th><th>第2關/40</th><th>第3關/40</th><th>用時</th><th>錯誤</th></tr>'+
-    view.map(r=>`<tr class="${r.done?'done':'ing'}"><td>${r.cls}</td><td>${r.grp}</td><td>${esc(TYPES[r.qtype]||'－')}</td><td>${esc(ROLES[r.role]||'－')}</td><td>${r.done?(r.early?'提早交卷':'完成'):'作答中（'+r.cleared+'/3）'}</td>
+  $('#live').innerHTML=live.filter(l=>l.status==='作答中').sort((a,b)=>a.cls.localeCompare(b.cls)||a.seat-b.seat)
+    .map(l=>`<span class="${now-l.t>300000?'stale':''}">${l.cls}・${seats(l)}・第${Math.min(3,l.lv)}關${l.role&&ROLES[l.role]?'・'+ROLES[l.role]:''}</span>`).join('')||'<span style="background:none">目前沒有正在作答的同學</span>';
+  $('#tb').innerHTML='<tr><th>班級</th><th>座號</th><th>測驗類型</th><th>角色</th><th>狀態</th><th>總分</th><th>第1關/20</th><th>第2關/40</th><th>第3關/40</th><th>用時</th><th>錯誤</th></tr>'+
+    view.map(r=>`<tr class="${r.done?'done':'ing'}"><td>${r.cls}</td><td>${seats(r)}</td><td>${esc(TYPES[r.qtype]||'－')}</td><td>${esc(ROLES[r.role]||'－')}</td><td>${r.done?(r.early?'提早交卷':'完成'):'作答中（'+r.cleared+'/3）'}</td>
       <td><b>${r.score}</b></td><td>${r.s1}</td><td>${r.s2}</td><td>${r.s3}</td><td>${fmt(r.secs)}</td><td>${r.errors}</td></tr>`).join('');
   // 依角色分組
   const byRole={}; view.forEach(r=>{ if(r.role) (byRole[r.role]=byRole[r.role]||[]).push(r); });
   $('#roles').innerHTML=Object.keys(ROLES).filter(k=>byRole[k]).map(k=>`<div class="roleSec"><h3>${ROLES[k]}</h3>${byRole[k].map(r=>{
     const rl=r.rulers||{};
     const det=Object.keys(rl).map(id=>{ const x=rl[id]; return `<li><b>${esc(POL[id]||id)}</b><br>具體：${esc(x.c||'－')}｜做得到：${esc(x.f||'－')}｜查得到：${esc(x.v||'－')}${x.why?'<br>理由：'+esc(x.why):''}</li>`; }).join('');
-    return `<div class="grpCard"><span class="tag">${r.cls} 第${r.grp}組</span>${r.qtype?`<span class="small" style="font-weight:700">測驗：${esc(TYPES[r.qtype]||"")}${r.qtype!==r.role?"（換了角色）":""}</span>`:""}
+    return `<div class="grpCard"><span class="tag">${r.cls}・${seats(r)}</span>${r.qtype?`<span class="small" style="font-weight:700">測驗：${esc(TYPES[r.qtype]||"")}${r.qtype!==r.role?"（換了角色）":""}</span>`:""}
       ${r.top?`<div class="t">${esc(POL[r.top]||r.topText)}</div><div class="w">💬 ${esc(r.topWhy)}</div>`:'<div class="w" style="color:#5b6875">還沒選最在意的政見</div>'}
       ${det?`<details><summary>三把尺紀錄</summary><ul>${det}</ul></details>`:''}</div>`; }).join('')}</div>`).join('')
-    || '<div class="note">還沒有組別選好角色。</div>';
-  $('#mine').innerHTML=view.filter(r=>r.mine).map(r=>`<div><b>${r.cls} 第${r.grp}組${ROLES[r.role]?'・'+ROLES[r.role]:''}</b>${esc(r.mine)}</div>`).join('')||'<div class="note">還沒有組別寫完。</div>';
+    || '<div class="note">還沒有人選好角色。</div>';
+  $('#mine').innerHTML=view.filter(r=>r.mine).map(r=>`<div><b>${r.cls}・${seats(r)}${ROLES[r.role]?'・'+ROLES[r.role]:''}</b>${esc(r.mine)}</div>`).join('')||'<div class="note">還沒有人寫完。</div>';
   const tc={}; view.forEach(r=>{ if(r.qtype) tc[r.qtype]=(tc[r.qtype]||0)+1; });
   const tmx=Math.max(1,...Object.values(tc));
-  $('#types').innerHTML=Object.keys(TYPES).map(k=>`<div><span>${TYPES[k]}</span><i style="width:${(tc[k]||0)/tmx*240+4}px;background:#e8b23c"></i><b>${tc[k]||0} 組</b></div>`).join('');
+  $('#types').innerHTML=Object.keys(TYPES).map(k=>`<div><span>${TYPES[k]}</span><i style="width:${(tc[k]||0)/tmx*240+4}px;background:#e8b23c"></i><b>${tc[k]||0}</b></div>`).join('');
   const mc={};
   view.forEach(r=>Object.entries(r.wrongBy||{}).forEach(([k,v])=>mc[k]=(mc[k]||0)+Number(v)));
   const arr=Object.entries(mc).filter(e=>e[1]>0).sort((a,b)=>b[1]-a[1]).slice(0,10), mx=arr.length?arr[0][1]:1;
   $('#miss').innerHTML=arr.map(([k,v])=>`<div><span>${esc(NAMES[k]||k)}</span><i style="width:${Math.max(8,v/mx*240)}px"></i><b>${v}</b></div>`).join('')||'<div class="note">還沒有錯誤紀錄。</div>';
 }
 function csv(){
-  const head=['班級','組別','測驗類型','角色','狀態','總分','第1關','第2關','第3關','用時秒','錯誤','最在意政見','理由','我的政見'];
+  const head=['班級','座號','測驗類型','角色','狀態','總分','第1關','第2關','第3關','用時秒','錯誤','最在意政見','理由','我的政見'];
   const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
-  const lines=[head.join(',')].concat(view.map(r=>[r.cls,r.grp,TYPES[r.qtype]||'',ROLES[r.role]||'',r.done?(r.early?'提早交卷':'完成'):'作答中',r.score,r.s1,r.s2,r.s3,r.secs,r.errors,POL[r.top]||r.topText||'',r.topWhy,r.mine].map(q).join(',')));
+  const lines=[head.join(',')].concat(view.map(r=>[r.cls,seats(r),TYPES[r.qtype]||'',ROLES[r.role]||'',r.done?(r.early?'提早交卷':'完成'):'作答中',r.score,r.s1,r.s2,r.s3,r.secs,r.errors,POL[r.top]||r.topText||'',r.topWhy,r.mine].map(q).join(',')));
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['﻿'+lines.join('\n')],{type:'text/csv'}));
   a.download='南園里政見探究_'+($('#cls').value||'全部')+'.csv'; a.click();
 }
