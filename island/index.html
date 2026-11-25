@@ -173,6 +173,11 @@ const ZONES=[
    {t:'互動教材設計幫手',g:'想自己做互動網頁的老師',d:'點一點選項整理需求，拿到可以貼給 AI 的指令。',u:H+'material-helper/'},
    {t:'行為翻譯機・導師版',g:'導師・輔導紀錄',d:'把行為觀察轉成家長版、親師紀錄和輔導策略，只在本機運算。',u:H+'behavior-translator/'},
    {t:'演說名言佳句查詢',g:'語文競賽',d:'依演說題目分類的名言資料庫，附查證等級。',u:H+'speech-quotes/index.html'}]},
+ {id:'host',name:'島主小屋',era:'島主嫣嫣',color:'#e76f51',who:'島主嫣嫣',outer:3.5,faceOut:1,lh:7.6,
+  intro:'嗨！我是島主嫣嫣，是國小的社會科老師。島上每一個作品都是我做給學生的互動教材，希望你在這裡玩得開心，也愛上社會課！',
+  items:[
+   {t:'Zeiyen 老師的工具箱',g:'島主的所有作品',d:'島上全部的作品都收在這裡，也會最先看到新作品。',u:H,soft:1},
+   {t:'teacher24hr｜國小導師的一天',g:'島主做的 3D 小遊戲',d:'想知道老師的一天在忙什麼？來當一天導師看看！',u:H+'teacher24hr/'}]},
  {id:'astro',name:'星耀天文台',era:'老師用',color:'#2b3a8c',who:'老師區',outer:2.5,lh:7.4,
   intro:'抬頭看看星星，順便排好今天的行程。',
   items:[
@@ -204,6 +209,9 @@ const NPCS=[
  {name:'星星貓',cat:1,a:2.6,dir:1,sp:.06,lines:['喵～天文台上面有星星在閃。','喵！小小銀行的金幣一直轉，好想抓。','喵嗚～心靈小屋很溫暖，累了可以進去坐坐。']}
 ];
 /* ================================================ */
+const dayNo=Math.floor((Date.now()+8*3600e3)/864e5);
+const PICKS=ZONES.filter(z=>z.ring!=null||z.center).flatMap(z=>z.items.map(it=>({...it,zone:z.name})));
+const PICK=PICKS[(dayNo*7)%PICKS.length];
 
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const canvas=document.getElementById('c');
@@ -256,7 +264,7 @@ ZONES.forEach(z=>{let r=0,a=0;
  z.x=Math.cos(a)*r;z.z=Math.sin(a)*r;z.a=a;z.r=r});
 const clickables=[],groups={};
 function zone(id){const z=ZONES.find(q=>q.id===id);const g=new THREE.Group();g.position.set(z.x,G,z.z);
- if(!z.center)g.lookAt(0,G,0);g.userData.zone=id;scene.add(g);groups[id]=g;clickables.push(g);
+ if(!z.center)g.lookAt(0,G,0);if(z.faceOut)g.rotateY(Math.PI);g.userData.zone=id;scene.add(g);groups[id]=g;clickables.push(g);
  if(z.r>RING+1){const len=z.r-8.8-2.6,sp=add(B(2,.06,len),'#f6e7c1',0,G+.01,0);sp.castShadow=false;
    const mid=8.8+len/2;sp.position.set(Math.cos(z.a)*mid,G+.01,Math.sin(z.a)*mid);sp.rotation.y=-z.a+Math.PI/2}
  return g}
@@ -346,6 +354,48 @@ const anim=[];
  const gear=add(new THREE.TorusGeometry(.6,.22,6,8),'#6c7a89',0,3.1,2.35,g);
  const sm=[];for(let i=0;i<5;i++){const s=add(S(.35),'#ffffff',1.5,4.8,-.9,g,{transparent:true,opacity:.8});s.castShadow=false;s.material=s.material.clone();s.userData.p=i/5;sm.push(s)}
  anim.push(t=>{gear.rotation.z=t*1.5;sm.forEach(s=>{const q=(s.userData.p+t*.25)%1;s.position.y=4.8+q*3;s.position.x=1.5+q*.8;s.scale.setScalar(.6+q*1.2);s.material.opacity=.85*(1-q)})})}
+/* 島主小屋與島主嫣嫣 */
+let yan;
+{const g=zone('host');
+ add(B(4.6,.3,3.8),'#e9d8c4',0,.15,0,g);
+ add(B(4,2.4,3),'#fff1e0',0,1.5,-.3,g);
+ const r=add(prism(5,1.8,3.8),'#e76f51',0,2.7,-.3,g);r.scale.set(.9,1,1);
+ add(B(.6,1.4,.6),'#b5523b',1.3,3.6,-1,g);
+ add(B(1.1,1.6,.12),'#8d5a3b',0,1.1,1.22,g);add(S(.07),'#ffd166',.35,1.1,1.3,g);
+ [-1.35,1.35].forEach(x=>{add(B(.8,.8,.1),'#bfe9ff',x,1.7,1.22,g);add(B(1,.25,.3),'#8d5a3b',x,1.2,1.35,g);
+  [-.3,0,.3].forEach((o,k)=>add(S(.12),['#ff6b9a','#ffd166','#ff8c42'][k],x+o,1.4,1.38,g).castShadow=false)});
+ const cv=document.createElement('canvas');cv.width=512;cv.height=128;
+ const tx=new THREE.CanvasTexture(cv);tx.colorSpace=THREE.SRGBColorSpace;
+ const board=new THREE.Mesh(new THREE.PlaneGeometry(2.4,.6),new THREE.MeshBasicMaterial({map:tx}));board.position.set(0,2.4,1.24);g.add(board);
+ (document.fonts?document.fonts.ready:Promise.resolve()).then(()=>{const x=cv.getContext('2d');x.fillStyle='#8d5a3b';x.fillRect(0,0,512,128);
+  x.strokeStyle='#5a3a22';x.lineWidth=10;x.strokeRect(5,5,502,118);x.fillStyle='#fff3d6';x.font='900 64px "Noto Sans TC",sans-serif';
+  x.textAlign='center';x.textBaseline='middle';x.fillText('島主嫣嫣的家',256,68);tx.needsUpdate=true});
+ /* 嫣嫣：咖啡色頭髮、斜瀏海、小包頭、島主王冠、抱著地球儀 */
+ yan=new THREE.Group();yan.position.set(-1.6,0,2.5);yan.scale.setScalar(1.55);g.add(yan);
+ [-.12,.12].forEach(x=>add(B(.15,.5,.17),'#3b3b4f',x,.25,0,yan));
+ add(C(.24,.42,.75,10),'#2b7a78',0,.82,0,yan);
+ add(C(.26,.28,.45,10),'#ffffff',0,1.25,0,yan);
+ [-.33,.33].forEach(x=>{const a=add(C(.07,.08,.5,6),'#ffffff',x,1.18,.12,yan);a.rotation.x=-.9;a.rotation.z=x>0?.3:-.3});
+ add(S(.3,1),'#ffd9b8',0,1.72,0,yan);
+ [-.1,.1].forEach(x=>{add(S(.045),'#2a1a10',x,1.74,.27,yan).castShadow=false;add(S(.055),'#ff9eb5',x*1.6,1.64,.24,yan).castShadow=false});
+ add(B(.12,.03,.03),'#c2185b',0,1.6,.29,yan).castShadow=false;
+ add(new THREE.SphereGeometry(.33,14,10,0,Math.PI*2,0,Math.PI*.4),'#6b4226',0,1.73,-.02,yan);
+ add(new THREE.SphereGeometry(.335,14,10,Math.PI*1.1,Math.PI*.8,Math.PI*.35,Math.PI*.45),'#6b4226',0,1.72,-.02,yan);
+ const bang=add(B(.42,.1,.12),'#6b4226',-.03,1.9,.24,yan);bang.rotation.z=-.35;bang.rotation.x=-.3;
+ add(S(.16,1),'#6b4226',0,2.06,-.12,yan);
+ const crown=new THREE.Group();crown.position.set(.04,2.1,.08);crown.rotation.z=-.12;yan.add(crown);
+ add(C(.17,.17,.1,10),'#ffcc33',0,0,0,crown,{metalness:.5,roughness:.4});
+ for(let i=0;i<5;i++){const a=i/5*Math.PI*2;add(new THREE.ConeGeometry(.045,.13,4),'#ffcc33',Math.cos(a)*.15,.1,Math.sin(a)*.15,crown,{metalness:.5,roughness:.4})}
+ add(S(.035),'#ef476f',0,.06,.17,crown).castShadow=false;
+ const gl=new THREE.Group();gl.position.set(0,1.05,.42);yan.add(gl);
+ add(S(.2,1),'#3a9bff',0,0,0,gl);for(let i=0;i<4;i++){const l=add(S(.08),'#6fd06a',0,0,0,gl);l.position.setFromSphericalCoords(.17,1+i*.4,i*1.7)}
+ anim.push(t=>{gl.rotation.y=t*.8;yan.position.y=Math.abs(Math.sin(t*1.5))*.05})}
+const hostBub=document.createElement('div');hostBub.className='bubble';document.getElementById('bubbles').appendChild(hostBub);
+let hostUntil=0,hostK=0;
+const HOST_LINES=['歡迎來到時光社會島！我是島主嫣嫣～',`今天推薦你玩「${PICK.t}」，它在${PICK.zone}喔！`,
+ '從史前部落開始，繞島一圈就能走到現代！','玩累了，可以去心靈小屋坐坐～','有新作品，我會蓋在島上，常回來看看！'];
+function sayHost(txt){hostBub.innerHTML=`<b>島主嫣嫣</b>${txt||HOST_LINES[hostK++%HOST_LINES.length]}`;hostUntil=performance.now()+5500}
+setTimeout(()=>sayHost(`歡迎來到時光社會島！我是島主嫣嫣～今天推薦你玩「${PICK.t}」！`),1800);
 /* 星耀天文台 */
 {const g=zone('astro');
  add(C(2,2.2,.5,16),'#dfe6f2',0,.25,0,g);
@@ -452,7 +502,7 @@ const npcs=NPCS.map((n,i)=>{const g=new THREE.Group();g.userData.npc=i;scene.add
 const bubbles=document.getElementById('bubbles');
 npcs.forEach(o=>{const d=document.createElement('div');d.className='bubble';bubbles.appendChild(d);o.el=d;o.until=0;o.k=0});
 function say(i){const o=npcs[i];o.el.innerHTML=`<b>${o.n.name}</b>${o.n.lines[o.k%o.n.lines.length]}`;o.k++;o.until=performance.now()+4500}
-let nextAuto=performance.now()+5000;
+let nextAuto=performance.now()+9000;
 
 /* 雲 */
 const clouds=[];
@@ -462,7 +512,7 @@ for(let i=0;i<9;i++){const g=new THREE.Group();const a=i/9*6.283,r=100+rnd()*30;
 
 /* 名牌、導覽列 */
 const labels=document.getElementById('labels'),nav=document.getElementById('nav');
-const navOrder=[...ZONES].sort((p,q)=>(p.ring??(p.center?7:8+p.outer))-(q.ring??(q.center?7:8+q.outer)));
+const key=z=>z.id==='host'?-1:(z.ring??(z.center?7:8+z.outer));const navOrder=[...ZONES].sort((p,q)=>key(p)-key(q));
 const tags=ZONES.map(z=>{const b=document.createElement('button');b.className='tag';
  b.innerHTML=`<i style="background:${z.color}"></i>${z.name}${z.ring!=null?`<small>${z.era}</small>`:''}`;
  b.addEventListener('click',()=>openZone(z.id));labels.appendChild(b);return {z,el:b}});
@@ -478,9 +528,10 @@ function openZone(id){const z=ZONES.find(q=>q.id===id);
  document.getElementById('sWho').textContent=z.ring!=null?`${z.era}・${z.who}`:z.who;
  document.getElementById('sIntro').textContent=z.intro;
  const list=document.getElementById('sList');list.scrollTop=0;
- list.innerHTML=z.items.map(it=>`<div class="item"><h3>${esc(it.t)}</h3><span class="g">${esc(it.g)}</span><p>${esc(it.d)}</p>
+ const items=z.id==='host'?[{...PICK,g:`今日推薦・${PICK.zone}`},...z.items]:z.items;
+ list.innerHTML=items.map(it=>`<div class="item"><h3>${esc(it.t)}</h3><span class="g">${esc(it.g)}</span><p>${esc(it.d)}</p>
   <a class="go${it.soft?' soft':''}" href="${esc(it.u)}" target="_blank" rel="noopener">${it.soft?'看看':'出發'}</a></div>`).join('');
- sheet.classList.add('open');controls.autoRotate=false;
+ sheet.classList.add('open');controls.autoRotate=false;if(id==='host')sayHost();
  const tgt=new THREE.Vector3(z.x,G+1,z.z);
  const dir=camera.position.clone().sub(controls.target).setY(0).normalize();
  const wide=innerWidth>=820&&innerWidth>innerHeight;
@@ -530,6 +581,9 @@ function frame(){const t=reduce?0:clock.getElapsedTime();
   v.set(x,G+(o.n.cat?2:3),z).project(camera);
   const vis=talking&&v.z<1&&Math.abs(v.x)<1&&Math.abs(v.y)<1;o.el.classList.toggle('on',vis);
   o.el.style.transform=`translate(${(v.x*.5+.5)*innerWidth}px,${(-v.y*.5+.5)*innerHeight}px) translate(-50%,-110%)`});
+ {yan.getWorldPosition(v);v.y+=4;v.project(camera);
+  const vis=now<hostUntil&&v.z<1&&Math.abs(v.x)<1&&Math.abs(v.y)<1;hostBub.classList.toggle('on',vis);
+  hostBub.style.transform=`translate(${(v.x*.5+.5)*innerWidth}px,${(-v.y*.5+.5)*innerHeight}px) translate(-50%,-110%)`}
  if(now>nextAuto&&!sheet.classList.contains('open')){nextAuto=now+9000;
   const seen=npcs.map((o,i)=>{v.copy(o.g.position).project(camera);return v.z<1&&Math.abs(v.x)<.8&&Math.abs(v.y)<.8?i:-1}).filter(i=>i>=0);
   if(seen.length)say(seen[(Math.random()*seen.length)|0])}
