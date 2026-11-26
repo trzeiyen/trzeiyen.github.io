@@ -193,7 +193,7 @@ function nyPost_(d) {
   const mates = (Array.isArray(d.mates) ? d.mates : []).slice(0, 2).map(n => Math.max(0, Math.min(99, parseInt(n, 10) || 0))).filter(n => n).join(',');
   const sid = String(d.sid || '').replace(/[^a-z0-9]/gi, '').slice(0, 20);
   const role = NY_ROLES.indexOf(d.role) >= 0 ? d.role : '';
-  const ed = d.ed === 'council' ? 'council' : 'li';
+  const ed = d.ed === 'council' || d.ed === 'mayor' ? d.ed : 'li';
   const lv = Math.max(1, Math.min(4, Number(d.lv) || 1));
   const status = d.done ? (d.early ? '提早交卷' : '全部完成') : '作答中';
   if (sid) {

@@ -26,8 +26,8 @@ button{font:inherit;cursor:pointer;touch-action:manipulation;color:inherit}
 .big.alt{background:var(--green);box-shadow:0 4px 0 #1d5a3f}
 .big.ghost{background:#fff;color:var(--ink);border:2px solid var(--ink);box-shadow:none;min-height:48px;font-size:17px}
 .big:disabled{opacity:.45}
-.edpick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:4px 0 14px}
-.edpick button{min-height:76px;border:3px solid var(--ink);border-radius:16px;background:#fff;font-weight:900;font-size:19px;line-height:1.3;padding:8px}
+.edpick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:4px 0 14px}
+.edpick button{min-height:76px;border:3px solid var(--ink);border-radius:16px;background:#fff;font-weight:900;font-size:18px;line-height:1.3;padding:8px}
 .edpick button small{display:block;font-size:13px;color:var(--ink2);font-weight:700}
 .edpick button.on{background:var(--gold);box-shadow:0 4px 0 var(--ink)}
 .facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px}
@@ -146,10 +146,10 @@ textarea{width:100%;min-height:84px;font:inherit;font-size:19px;padding:10px;bor
 <section class="screen on" id="login">
   <div class="lg">
     <h1>讀懂<br><span>選舉公報</span></h1>
-    <div class="sub">樹林區南園里・新北市議員第8選區　政見探究（三關）</div>
+    <div class="sub">南園里長・第8選區議員・新北市長　政見探究（三關）</div>
     <div class="rule">🤝 這不是投票，也不比較誰比較好。<br>我們只練習：拿到公報時，怎麼讀懂一條政見。</div>
     <div class="small" style="font-weight:900;color:var(--ink)">先選一篇：</div>
-    <div class="edpick"><button data-ed="li">🏘️ 里長篇<small>樹林區南園里・2 位候選人</small></button><button data-ed="council">🏛️ 議員篇<small>第8選區・12 位候選人</small></button></div>
+    <div class="edpick"><button data-ed="li">🏘️ 里長篇<small>樹林區南園里・2 位候選人</small></button><button data-ed="council">🏛️ 議員篇<small>第8選區・12 位候選人</small></button><button data-ed="mayor">🏙️ 市長篇<small>新北市・3 位候選人</small></button></div>
     <ol id="edList"><li>第1關　公報解剖（約 6 分鐘）</li><li>第2關　動詞偵探（約 10 分鐘）</li><li>第3關　小測驗＋三把尺（約 17 分鐘）</li></ol>
     <div class="row">
       <label>班級<input id="cls" inputmode="numeric" maxlength="3" placeholder="609" autocomplete="off"></label>
@@ -245,11 +245,35 @@ const POL_C = {
   K23:{t:'將自行車納入大眾運輸轉乘核心，優化捷運與火車站周邊的騎乘環境。'},       // 12號
   K24:{t:'督促市府盤點在地閒置用地，嚴格把關社宅興建進度與營運品質。'}           // 12號
 };
+/* ===== 市長篇：新北市第5屆市長選舉（3 位候選人，選出 1 位）=====
+   公平原則：第2關每位候選人 3 句（三個主題各 1 句）、第3關每個角色每位候選人 1 句；畫面不標示姓名、號次、政黨。
+   2號的第1條（婚姻制度）、第8條、第9條沒有選入，其餘各條文字依公報節錄。 */
+const POL_M = {
+  M01:{t:'福利照顧：育兒全方位、貼心顧長輩、減輕醫療負擔、增加老人福利。'},          // 1號
+  M02:{t:'新北市推動台語文、英語文為主的教育、文藝、職場！'},                        // 2號
+  M03:{t:'大型室內親子館：全年齡親子共玩，雨天也能安心玩。'},                        // 3號
+  M04:{t:'進步社會：支撐「照顧者」、接住弱勢者。'},                                  // 1號
+  M05:{t:'與中央政府定期會議，合力處理新北市各項重大市政！'},                        // 2號
+  M06:{t:'敬老卡點數可購物，使用更方便，生活更自在。'},                              // 3號
+  M07:{t:'區域均衡：新北29區，區區有特色、衛星變繁星。'},                            // 1號
+  M08:{t:'限制大車只能行駛大馬路；新（鋪）道路劃設鐵馬專用道！'},                    // 2號
+  M09:{t:'新北運動幣：每人500元，全齡一起動起來。'},                                 // 3號
+  M10:{t:'八里輕軌；永和、中和交通減壓。'},                                          // 1號
+  M12:{t:'軌道建設123：一加速、兩快線、三連通，完善跨市捷運路網，打造30分鐘雙北核心生活圈。'}, // 3號
+  M13:{t:'AI城市：提升市府效能、串連AI廊帶、升級百工百業、建構安全防災網。'},        // 1號
+  M14:{t:'增加新北市轄各級學校附近、及路口監視系統！'},                              // 2號
+  M15:{t:'都更5夠力：成立都更推動委員會，主動協助、排除障礙、加速更新，讓新北住得更安全。'}, // 3號
+  M16:{t:'多元文化：不同族群、語言、宗教、文化，得到市府支持，並存共榮。'},          // 1號
+  M17:{t:'爭取國際賽事、國際會議在新北市舉辦！'},                                    // 2號
+  M18:{t:'運動中心免費臨托：爸媽放心運動、孩子安心遊戲。'}                           // 3號
+};
 const ED = {
   li:{name:'里長篇',place:'南園里',who:'里民',src:'南園里選舉公報（兩位候選人各 4 句，不標示是誰的）',
       steps:['第1關 公報解剖','第2關 動詞偵探','第3關 三把尺']},
   council:{name:'議員篇',place:'第8選區',who:'市民',src:'新北市議員第8選區選舉公報（12 位候選人各 1 句，不標示是誰的）',
-      steps:['第1關 誰負責什麼','第2關 動詞偵探','第3關 三把尺']}
+      steps:['第1關 誰負責什麼','第2關 動詞偵探','第3關 三把尺']},
+  mayor:{name:'市長篇',place:'新北市長',who:'市民',src:'新北市長選舉公報（3 位候選人各 3 句，不標示是誰的）',
+      steps:['第1關 誰負責什麼','第2關 政見分類','第3關 三把尺']}
 };
 let E=ED.li, POL=POL_LI, BOX, VERBS, ROLES, RULERS, WHYS, QUIZ, MINE_TPL;
 const $ = s=>document.querySelector(s);
@@ -308,7 +332,7 @@ function toast(html,ms){ const t=$('#toast'); t.innerHTML=html; t.classList.add(
 function go(){
   $('#toast').classList.remove('on'); clearTimeout(toastT);
   show('game'); header(); live(true);
-  if(S.lv===1) (S.ed==='council'?L1C:L1)(); else if(S.lv===2) L2(); else if(S.lv===3) L3(); else result();
+  if(S.lv===1) (S.ed==='li'||!S.ed?L1:L1C)(); else if(S.lv===2) L2(); else if(S.lv===3) L3(); else result();
 }
 function next(){ S.lv++; if(S.lv>3) S.end=Date.now(); save(); report(); go(); }
 
@@ -321,7 +345,7 @@ $('#mYes').onclick=()=>{ $('#modal').classList.remove('on'); S.early=true; S.lv=
 const num=v=>String(v||'').replace(/\D/g,'');
 let pickedEd='';
 function pickEd(ed){ pickedEd=ed; document.querySelectorAll('.edpick button').forEach(b=>b.classList.toggle('on',b.dataset.ed===ed));
-  $('#edList').innerHTML=(ed==='council'?['第1關　誰負責什麼？（約 8 分鐘）','第2關　議員版動詞偵探（約 12 分鐘）','第3關　小測驗＋三把尺（約 17 分鐘）']
+  $('#edList').innerHTML=(ed==='mayor'?['第1關　誰負責什麼？（約 8 分鐘）','第2關　政見分類（約 8 分鐘）','第3關　小測驗＋三把尺（約 15 分鐘）']:ed==='council'?['第1關　誰負責什麼？（約 8 分鐘）','第2關　議員版動詞偵探（約 12 分鐘）','第3關　小測驗＋三把尺（約 17 分鐘）']
     :['第1關　公報解剖（約 6 分鐘）','第2關　動詞偵探（約 10 分鐘）','第3關　小測驗＋三把尺（約 17 分鐘）']).map(t=>'<li>'+t+'</li>').join('');
   checkResume(); }
 document.querySelectorAll('.edpick button').forEach(b=>b.onclick=()=>pickEd(b.dataset.ed));
@@ -425,15 +449,25 @@ const L1CQ=[
   {id:'C圈選',title:'選議員時，一張選票可以圈幾位候選人？',o:[{t:'只能圈 1 位',a:1},{t:'可以圈 9 位',a:0},{t:'想圈幾位都可以',a:0}],
    hint:'公報最後的投票須知寫著：圈選 2 人以上的選票無效。',why:'答對了！雖然選出 9 位，但每個人只能圈 1 位，圈 2 位以上就是廢票。'}
 ];
+const L1MQ=[
+  {id:'M席次',title:'新北市長這次有 3 位候選人，最後會選出幾位市長？',o:[{t:'1 位',a:1},{t:'2 位',a:0},{t:'3 位都當選',a:0}],
+   hint:'一個城市只有一位市長。',why:'答對了！市長只選 1 位，得票最多的人當選。'},
+  {id:'M預算',title:'市長想做的計畫要花錢，預算要經過誰同意？',o:[{t:'市議會（議員）',a:1},{t:'里長',a:0},{t:'不用任何人同意',a:0}],
+   hint:'想想第一部分的卡片：誰負責「審查市政府要花多少錢」？',why:'沒錯！市長帶市府做事，但預算要經過議會審查。所以市長的政見，常常也需要議會支持。'},
+  {id:'M圈選',title:'選市長時，一張選票可以圈幾位候選人？',o:[{t:'只能圈 1 位',a:1},{t:'可以圈 3 位',a:0},{t:'想圈幾位都可以',a:0}],
+   hint:'公報最後的投票須知寫著：圈選 2 人以上的選票無效。',why:'答對了！圈 2 位以上就是廢票。'}
+];
+const l1q=()=>S.ed==='mayor'?L1MQ:L1CQ;
 function l1cScore(){
-  const st=S.l1, n=WHO.length+L1CQ.length;
+  const L1CQ=l1q(), st=S.l1, n=WHO.length+L1CQ.length;
   const right=WHO.filter(w=>st.placed[w.id]&&!st.firstWrong[w.id]).length+L1CQ.filter(q=>st.first[q.id]===1).length;
   const retry=WHO.filter(w=>st.placed[w.id]&&st.firstWrong[w.id]).length+L1CQ.filter(q=>st.first[q.id]===0).length;
   return Math.round(20*(right+0.4*retry)/n);
 }
 function L1C(){
-  const st=S.l1, left=st.order.filter(id=>!st.placed[id]);
-  const facts=`<div class="facts"><div>選區<b style="font-size:18px">土城・樹林<br>三峽・鶯歌</b></div><div>候選人<b>12 位</b></div><div>應選<b>9 席</b></div><div>婦女保障<b>2 席</b></div></div>`;
+  const L1CQ=l1q(), st=S.l1, left=st.order.filter(id=>!st.placed[id]);
+  const facts=S.ed==='mayor'?`<div class="facts"><div>選區<b style="font-size:20px">新北市<br>29 區</b></div><div>候選人<b>3 位</b></div><div>應選<b>1 位</b></div><div>任期<b>4 年</b></div></div>`
+    :`<div class="facts"><div>選區<b style="font-size:18px">土城・樹林<br>三峽・鶯歌</b></div><div>候選人<b>12 位</b></div><div>應選<b>9 席</b></div><div>婦女保障<b>2 席</b></div></div>`;
   if(left.length){
     $('#stage').innerHTML=`<div class="lvtitle"><h2>第1關　誰負責什麼？</h2><small>剩下 ${left.length} 張</small></div>${facts}
       <div class="task">議員、里長、市政府，各做什麼事？把卡片拖到正確的箱子。<br><span class="small">拖不動的話：先點卡片，再點箱子。</span></div>
@@ -448,7 +482,7 @@ function L1C(){
   }
   if(st.i<L1CQ.length){
     const q=L1CQ[st.i];
-    $('#stage').innerHTML=`<div class="lvtitle"><h2>第1關　議員選舉怎麼選？</h2></div>${facts}
+    $('#stage').innerHTML=`<div class="lvtitle"><h2>第1關　${S.ed==='mayor'?'市長':'議員'}選舉怎麼選？</h2></div>${facts}
       <div class="panel q"><span class="qnum">第 ${st.i+1}／${L1CQ.length} 題</span><h3>${q.title}</h3>
       <div class="opts">${shuffle(q.o).map(o=>`<button data-a="${o.a}">${esc(o.t)}</button>`).join('')}</div><div class="fb" id="fb"></div><div id="nxBox"></div></div>`;
     let done=false;
@@ -462,7 +496,7 @@ function L1C(){
   $('#stage').innerHTML=`<div class="lvtitle"><h2>第1關　誰負責什麼？</h2></div>
     <div class="panel center q"><h3 style="font-size:24px">第1關完成！</h3>
     <p style="font-size:20px">得分 <b style="color:var(--blue);font-size:30px">${st.s}</b>／20</p>
-    <div class="sum"><b>記住這件事</b><ul><li>真正去蓋捷運、發補助的是<b>市政府</b>。</li><li>議員的工作是<b>審預算、質詢、訂規定、監督市府</b>，也會幫地方「爭取」。</li><li>所以讀議員的政見時，可以想想：<b>議員要用什麼方法讓這件事發生？</b></li></ul></div>
+    <div class="sum"><b>記住這件事</b><ul><li>真正去蓋捷運、發補助的是<b>市政府</b>，帶領市政府的是<b>市長</b>。</li><li>議員的工作是<b>審預算、質詢、訂規定、監督市府</b>，也會幫地方「爭取」。</li><li>${S.ed==='mayor'?'所以讀市長的政見時，可以想想：<b>要花多少錢？議會會同意嗎？</b>':'所以讀議員的政見時，可以想想：<b>議員要用什麼方法讓這件事發生？</b>'}</li></ul></div>
     <button class="big" id="nx" style="max-width:360px;margin:16px auto 0">前往第2關 →</button></div>`;
   $('#nx').onclick=next;
 }
@@ -504,6 +538,22 @@ const VERBS_C=[
   {id:'V11',v:'路平燈明水溝通',b:'只寫目標',html:'<mark>路平．燈明．水溝通</mark>。',why:'這句寫出希望社區變成的樣子，沒有寫議員要怎麼做。'},                    // 11號
   {id:'V12',v:'督促',b:'監督市府',html:'<mark>督促</mark>市府盤點在地閒置用地，嚴格把關社宅興建進度與營運品質。',why:'「督促、把關」都是在監督市政府。'}                        // 12號
 ];
+const BOX_M=[
+  {b:'交通建設',cls:'',d:'捷運、道路、單車、交通'},
+  {b:'照顧安全',cls:'b2',d:'育兒、長輩、弱勢、安全'},
+  {b:'城市發展',cls:'b3',d:'產業、文化、城市活動'}
+];
+const VERBS_M=[
+  {id:'X01',v:'交通減壓',b:'交通建設',html:'八里輕軌；永和、中和交通減壓。',why:'輕軌和交通減壓，都是交通建設。'},                                                   // 1號
+  {id:'X02',v:'福利照顧',b:'照顧安全',html:'福利照顧：育兒全方位、貼心顧長輩、減輕醫療負擔、增加老人福利。',why:'照顧孩子和長輩，屬於照顧。'},                         // 1號
+  {id:'X03',v:'產業升級',b:'城市發展',html:'產業升級：簡政便民、傳產加值、加速園區開發、活絡商圈老街。',why:'產業、園區、商圈，都是讓城市發展。'},                       // 1號
+  {id:'X04',v:'鐵馬專用道',b:'交通建設',html:'限制大車只能行駛大馬路；新（鋪）道路劃設鐵馬專用道！',why:'大車怎麼走、單車道，都是交通。'},                               // 2號
+  {id:'X05',v:'監視系統',b:'照顧安全',html:'增加新北市轄各級學校附近、及路口監視系統！',why:'學校附近和路口的監視器，是為了安全。'},                               // 2號
+  {id:'X06',v:'國際賽事',b:'城市發展',html:'爭取國際賽事、國際會議在新北市舉辦！',why:'辦國際活動，是讓城市被看見、帶動發展。'},                                   // 2號
+  {id:'X07',v:'軌道建設',b:'交通建設',html:'軌道建設123：完善跨市捷運路網，打造30分鐘雙北核心生活圈。',why:'捷運路網是交通建設。'},                                   // 3號
+  {id:'X08',v:'育嬰留停',b:'照顧安全',html:'育嬰留停薪資補足100%，安心陪伴孩子，收入不減。',why:'讓爸媽能在家照顧孩子，屬於照顧。'},                                 // 3號
+  {id:'X09',v:'巨蛋城科學城',b:'城市發展',html:'南有巨蛋城、北有科學城：南打造新北巨蛋城與溪南新都心，北發展淡海科學城。',why:'新都心、科學城，都是城市發展。'}      // 3號
+];
 let selId=null;
 function L2(){
   const st=S.l2, left=st.order.filter(id=>!st.placed[id]);
@@ -512,19 +562,21 @@ function L2(){
     st.s=Math.round(40*(right+0.4*(VERBS.length-right))/VERBS.length); st.done=true; save();
   }
   if(st.done){
-    $('#stage').innerHTML=`<div class="lvtitle"><h2>第2關　動詞偵探</h2></div>
+    $('#stage').innerHTML=`<div class="lvtitle"><h2>${E.steps[1].replace('第2關 ','第2關　')}</h2></div>
       <div class="panel center q"><h3 style="font-size:24px">第2關完成！</h3>
       <p style="font-size:20px">得分 <b style="color:var(--blue);font-size:30px">${st.s}</b>／40</p>
-      <div class="sum"><b>偵探筆記</b><ul>${S.ed==='council'?`<li>看到「<b>監督、督促</b>」：議員盯著市政府把事情做好。</li>
+      <div class="sum"><b>${S.ed==='mayor'?'分類筆記':'偵探筆記'}</b><ul>${S.ed==='mayor'?`<li>三位候選人在<b>交通、照顧、城市發展</b>三個主題都有提出政見。</li>
+      <li>同一個主題，每個人想的做法不一樣：有人寫大方向，有人寫具體數字。</li>`
+      :S.ed==='council'?`<li>看到「<b>監督、督促</b>」：議員盯著市政府把事情做好。</li>
       <li>看到「<b>爭取、推動</b>」：議員請市政府出錢、把事情排進計畫。</li><li>只寫出<b>目標</b>的句子：可以再想想議員要用什麼方法做到。</li>`
       :`<li>看到「<b>爭取、配合</b>」：這件事要靠政府單位，里長負責反映、催促。</li>
       <li>看到「<b>開辦、舉辦</b>」：里辦公處自己就能做。</li><li>看到「<b>做到、守護</b>」：說的是態度，要再想想會用什麼方法做到。</li>`}
-      <li>三種都很常見，<b>沒有哪一種比較好</b>，重點是讀的時候分得出來。</li></ul></div>
+      <li>${S.ed==='mayor'?'三個主題都很重要，<b>沒有哪一類比較好</b>，看的是你最在意什麼。':'三種都很常見，<b>沒有哪一種比較好</b>，重點是讀的時候分得出來。'}</li></ul></div>
       <button class="big" id="nx" style="max-width:360px;margin:16px auto 0">前往第3關 →</button></div>`;
     $('#nx').onclick=next; return;
   }
-  $('#stage').innerHTML=`<div class="lvtitle"><h2>第2關　動詞偵探</h2><small>剩下 ${left.length} 張</small></div>
-    <div class="task">這些句子都來自${E.src}。看<mark style="background:#ffe28a">黃色的動詞</mark>，把卡片拖到正確的箱子。<br><span class="small">拖不動的話：先點卡片，再點箱子。</span></div>
+  $('#stage').innerHTML=`<div class="lvtitle"><h2>第2關　${S.ed==='mayor'?'政見分類':'動詞偵探'}</h2><small>剩下 ${left.length} 張</small></div>
+    <div class="task">這些句子都來自${E.src}。${S.ed==='mayor'?'這句政見主要在說哪一類的事？把卡片拖到正確的箱子。':'看<mark style="background:#ffe28a">黃色的動詞</mark>，把卡片拖到正確的箱子。'}<br><span class="small">拖不動的話：先點卡片，再點箱子。</span></div>
     <div class="tray" id="tray">${left.map(id=>{ const c=VERBS.find(v=>v.id===id); return `<div class="card${selId===id?' sel':''}" data-id="${id}">${c.html}</div>`; }).join('')}</div>
     <div class="boxes">${BOX.map(x=>`<div class="box ${x.cls}" data-b="${x.b}"><h4>${x.b}</h4><p>${x.d}</p>
       ${st.order.filter(id=>st.placed[id]===x.b).map(id=>`<div class="in">${esc(VERBS.find(v=>v.id===id).v)}</div>`).join('')}</div>`).join('')}</div>`;
@@ -535,7 +587,7 @@ function place(id,b,el){
   if(c.b===b){ st.placed[id]=b; selId=null; save(); L2(); toast('✔ 正確！'+esc(c.why),2400); }
   else { st.firstWrong[id]=1; miss('L2-'+id); save();
     if(el){ el.classList.remove('no'); void el.offsetWidth; el.classList.add('no'); }
-    toast(S.ed==='council'?'再想想看：「<b>'+esc(c.v)+'</b>」是在盯著市政府、請市政府去做，還是只寫出想要的結果？':'再想想看：「<b>'+esc(c.v)+'</b>」這件事，里長自己就能辦嗎？還是要靠別人？或者說的是態度？',3000); }
+    toast(S.ed==='mayor'?'再想想看：這句政見主要是在說交通、照顧安全，還是城市發展？':S.ed==='council'?'再想想看：「<b>'+esc(c.v)+'</b>」是在盯著市政府、請市政府去做，還是只寫出想要的結果？':'再想想看：「<b>'+esc(c.v)+'</b>」這件事，里長自己就能辦嗎？還是要靠別人？或者說的是態度？',3000); }
 }
 function bindDrag(onPlace){
   document.querySelectorAll('#tray .card').forEach(card=>{
@@ -565,12 +617,12 @@ function bindDrag(onPlace){
    計分：每條政見三把尺都評＋寫理由 7 分（共 28）、最在意＋理由 6 分、我的政見 6 分；小測驗不計分
    ===================================================================== */
 const ROLES_BASE=[
-  {id:'kid',ic:'🎒',n:'上學的小學生',d:'每天走路上下學，放學會去公園玩',p:['A1','A2','B1','B12'],pc:['K03','K07','K16','K22']},
-  {id:'elder',ic:'👵',n:'住附近的阿嬤',d:'晚上會出門散步，喜歡和朋友一起活動',p:['A4','A2','B9','B12'],pc:['K01','K13','K05','K12']},
-  {id:'dog',ic:'🐕',n:'養狗的家庭',d:'每天帶狗散步，也要照顧狗狗的健康',p:['A2','A3','B2','B13'],pc:['K10','K11','K15','K20']},
-  {id:'bus',ic:'🚌',n:'每天通勤的上班族',d:'每天搭公車、騎車去上班，很晚才回家',p:['A2','A3','B3','B4'],pc:['K17','K23','K06','K04'],dc:'每天搭捷運、公車或騎車去上班'},
-  {id:'rain',ic:'🌧️',n:'怕淹水的住戶',d:'家住低窪的地方，颱風天最擔心',p:['A1','A4','B5','B11'],pc:['K19','K08','K09','K21']},
-  {id:'new',ic:'🏠',n:'剛搬來的新住戶',d:'還不認識鄰居，想知道里裡發生什麼事',p:['A3','A4','B11','B7'],pc:['K18','K14','K24','K02'],dc:'剛搬到這一區，想找地方認識鄰居'}
+  {id:'kid',ic:'🎒',n:'上學的小學生',d:'每天走路上下學，放學會去公園玩',p:['A1','A2','B1','B12'],pc:['K03','K07','K16','K22'],pm:['M01','M02','M03']},
+  {id:'elder',ic:'👵',n:'住附近的阿嬤',d:'晚上會出門散步，喜歡和朋友一起活動',p:['A4','A2','B9','B12'],pc:['K01','K13','K05','K12'],pm:['M04','M05','M06']},
+  {id:'dog',ic:'🐕',n:'養狗的家庭',d:'每天帶狗散步，也要照顧狗狗的健康',p:['A2','A3','B2','B13'],pc:['K10','K11','K15','K20'],pm:['M07','M08','M09'],dm:'帶狗散步、愛去公園（這次市長公報沒有直接寫到動物）'},
+  {id:'bus',ic:'🚌',n:'每天通勤的上班族',d:'每天搭公車、騎車去上班，很晚才回家',p:['A2','A3','B3','B4'],pc:['K17','K23','K06','K04'],dc:'每天搭捷運、公車或騎車去上班',pm:['M10','M08','M12']},
+  {id:'rain',ic:'🌧️',n:'怕淹水的住戶',d:'家住低窪的地方，颱風天最擔心',p:['A1','A4','B5','B11'],pc:['K19','K08','K09','K21'],pm:['M13','M14','M15']},
+  {id:'new',ic:'🏠',n:'剛搬來的新住戶',d:'還不認識鄰居，想知道里裡發生什麼事',p:['A3','A4','B11','B7'],pc:['K18','K14','K24','K02'],dc:'剛搬到這一區，想找地方認識鄰居',pm:['M16','M17','M18'],dm:'剛搬來新北，想認識新朋友、參加活動'}
 ];
 const RULERS_LI=[
   {k:'c',n:'📏 具體嗎？',d:'說得出地點、對象或做法嗎？',o:['很具體','有一點','看不出來']},
@@ -654,19 +706,27 @@ function quiz(st){
 const TOP_TPL=['因為我每天都會{做什麼事}，這條跟我最有關係。','因為我最擔心{什麼問題}，這條可以幫上忙。','因為這條寫得很清楚，有寫到{什麼內容}。','因為如果做到了，{什麼地方或誰}會變得更好。'];
 const MINE_TPL_LI=['我會在{哪裡}{做什麼}，{什麼時候}以前完成。','我會每{多久}舉辦一次{什麼活動}，讓{誰}受惠。','我會向區公所爭取{什麼}，在{什麼時候}以前完成。'];
 const MINE_TPL_C=['我會監督市政府{做什麼}，在{什麼時候}以前完成。','我會爭取經費，在{哪裡}{蓋什麼或做什麼}。','我會在議會提案，讓{誰}可以{得到什麼幫助}。'];
+const MINE_TPL_M=['如果我當市長，我會在{哪裡}{蓋什麼或做什麼}，{什麼時候}以前完成。','如果我當市長，我會發給{誰}{什麼補助}。','如果我當市長，我會讓{誰}可以更方便地{做什麼}。'];
+const RULERS_M=[
+  {k:'c',n:'📏 具體嗎？',d:'說得出地點、對象或做法嗎？',o:['很具體','有一點','看不出來']},
+  {k:'f',n:'📏 做得到嗎？',d:'市長帶市府去做，但花錢要議會同意預算',o:['市府就能做','還要議會或中央同意','看不出來']},
+  {k:'v',n:'📏 查得到嗎？',d:'四年後，能不能檢查有沒有做到？',o:['容易檢查','有一點難','很難檢查']}
+];
 const RULERS_C=[
   {k:'c',n:'📏 具體嗎？',d:'說得出地點、對象或做法嗎？',o:['很具體','有一點','看不出來']},
   {k:'f',n:'📏 誰去做？',d:'議員負責監督、爭取；真正動手做的是誰？',o:['議員就能推動','要靠市政府做','看不出來']},
   {k:'v',n:'📏 查得到嗎？',d:'四年後，能不能檢查有沒有做到？',o:['容易檢查','有一點難','很難檢查']}
 ];
 function useEd(ed){
-  const c = ed==='council';
-  E=ED[c?'council':'li']; POL=c?POL_C:POL_LI; BOX=c?BOX_C:BOX_LI; VERBS=c?VERBS_C:VERBS_LI;
-  ROLES=ROLES_BASE.map(r=>Object.assign({},r,{p:c?r.pc:r.p,d:c&&r.dc?r.dc:r.d}));
-  RULERS=c?RULERS_C:RULERS_LI;
-  WHYS=c?WHYS_LI.map(w=>w.replace('要靠區公所或市政府才做得到','要靠市政府才做得到').replace('里辦公處自己就能辦','議員能在議會監督或爭取')):WHYS_LI;
-  QUIZ=c?QUIZ_LI.map(q=>({q:q.q.replace('里裡','我們這一區').replace('里辦公處','市政府').replace('一位好里長','一位好議員'),o:q.o.map(o=>[o[0].replace('里裡','這一區'),o[1]])})):QUIZ_LI;
-  MINE_TPL=c?MINE_TPL_C:MINE_TPL_LI;
+  const c = ed==='council', m = ed==='mayor';
+  E=ED[c?'council':m?'mayor':'li']; POL=c?POL_C:m?POL_M:POL_LI; BOX=c?BOX_C:m?BOX_M:BOX_LI; VERBS=c?VERBS_C:m?VERBS_M:VERBS_LI;
+  ROLES=ROLES_BASE.map(r=>Object.assign({},r,{p:c?r.pc:m?r.pm:r.p,d:(c&&r.dc)||(m&&r.dm)||r.d}));
+  RULERS=c?RULERS_C:m?RULERS_M:RULERS_LI;
+  WHYS=c?WHYS_LI.map(w=>w.replace('要靠區公所或市政府才做得到','要靠市政府才做得到').replace('里辦公處自己就能辦','議員能在議會監督或爭取'))
+      :m?WHYS_LI.map(w=>w.replace('要靠區公所或市政府才做得到','要議會同意預算才做得到').replace('里辦公處自己就能辦','市府自己就能辦')):WHYS_LI;
+  const area=c?'我們這一區':'新北市', office=c?'議員':'市長';
+  QUIZ=(c||m)?QUIZ_LI.map(q=>({q:q.q.replace('里裡',area).replace('里辦公處','市政府').replace('一位好里長','一位好'+office),o:q.o.map(o=>[o[0].replace('里裡',c?'這一區':'新北市'),o[1]])})):QUIZ_LI;
+  MINE_TPL=c?MINE_TPL_C:m?MINE_TPL_M:MINE_TPL_LI;
 }
 useEd('li');
 const BLANK_MAX=12;
@@ -689,7 +749,7 @@ function tplUI(box,list,o,onChange){
 }
 function rateDone(id){ const r=S.l3.r[id]||{}; return !!(r.c&&r.f&&r.v&&(r.why||'').trim().length>=MINWHY); }
 function score3(){
-  const st=S.l3; let s=st.order.filter(rateDone).length*7;
+  const st=S.l3; let s=st.order.length?Math.round(28*st.order.filter(rateDone).length/st.order.length):0;
   if(st.top && st.topWhy.trim().length>=6) s+=6;
   if(st.mine.trim().length>=8) s+=6;
   return s;
@@ -725,7 +785,7 @@ function L3(){
     return;
   }
   if(st.step==='top'){
-    $('#stage').innerHTML=head+`<div class="panel q"><h3>如果你是「${R.n}」，這 4 條裡最在意哪一條？</h3>
+    $('#stage').innerHTML=head+`<div class="panel q"><h3>如果你是「${R.n}」，這 ${st.order.length} 條裡最在意哪一條？</h3>
       <div class="small" style="margin-bottom:8px">沒有標準答案。這裡選的是「跟這個角色最有關係的事」，不是選哪一位候選人。</div>
       <div class="pickl">${st.order.map(id=>`<button data-id="${id}" class="${st.top===id?'on':''}">${esc(POL[id].t)}</button>`).join('')}</div>
       <h3 style="margin-top:14px">為什麼？</h3><div id="tw"></div>
@@ -768,7 +828,7 @@ function result(){
     <div class="brk"><div>${E.steps[0]}<b>${S.l1.s}</b>／20</div><div>${E.steps[1]}<b>${S.l2.s}</b>／40</div><div>第3關 三把尺<b>${S.l3.s}</b>／40</div></div>
     <div class="sum"><b>這一節課的重點</b><ul>
       <li>公報是選舉委員會寄到每一戶的，但內容是<b>候選人自己提供的</b>，可以多方查證。</li>
-      ${S.ed==='council'?'<li>議員不自己蓋東西：讀政見時看動詞，<b>監督、督促</b>是盯著市政府，<b>爭取、推動</b>是請市政府去做。</li><li>第8選區選出 9 位議員，其中至少 2 位女性；每個人只能圈 1 位。</li>'
+      ${S.ed==='mayor'?'<li>市長帶領市政府做事，但花錢要<b>議會同意預算</b>。</li><li>新北市長只選 1 位；每個人只能圈 1 位。</li>':S.ed==='council'?'<li>議員不自己蓋東西：讀政見時看動詞，<b>監督、督促</b>是盯著市政府，<b>爭取、推動</b>是請市政府去做。</li><li>第8選區選出 9 位議員，其中至少 2 位女性；每個人只能圈 1 位。</li>'
         :'<li>讀政見時看動詞：<b>爭取</b>要靠政府單位，<b>開辦、舉辦</b>里辦公處自己能做，<b>做到、守護</b>說的是態度。</li>'}
       <li>用三把尺量政見：<b>具體嗎？做得到嗎？查得到嗎？</b></li>
       <li>不同的${E.who}在意不同的事。投票時，每個人要依照自己和社區的需要，自己做判斷。</li></ul></div>
