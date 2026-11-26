@@ -172,7 +172,7 @@ async function load(){
   try{ sessionStorage.setItem('ny-key',key); }catch(e){}
   $('#msg').textContent='讀取中……';
   try{
-    const u=GAS_URL+'?game=nanyuan&key='+encodeURIComponent(key)+($('#cls').value?'&cls='+$('#cls').value:'');
+    const u=GAS_URL+'?game=nanyuan&key='+encodeURIComponent(key);
     const d=await (await fetch(u)).json();
     if(!d.ok){ $('#msg').textContent=d.error==='key'?'密碼不正確（或試算表「設定」B1 還沒填）。':'讀取失敗。'; return; }
     const old=(d.rows||[]).some(r=>'solved' in r||'room' in r)||(d.live||[]).some(l=>'solved' in l);
@@ -189,6 +189,7 @@ function pick(rows){
   return Object.values(m).sort((a,b)=>a.cls.localeCompare(b.cls)||a.seat-b.seat);
 }
 function render(rows, live){
+  const clf=$('#cls').value; if(clf){ rows=rows.filter(r=>String(r.cls)===clf); live=live.filter(l=>String(l.cls)===clf); }
   const edf=$('#ed').value; if(edf){ rows=rows.filter(r=>(r.ed||'li')===edf); live=live.filter(l=>(l.ed||'li')===edf); }
   view=pick(rows);
   const done=view.filter(r=>r.done).length, avg=view.length?Math.round(view.reduce((n,r)=>n+r.score,0)/view.length):0;
@@ -225,7 +226,7 @@ function csv(){
   a.download='南園里政見探究_'+($('#cls').value||'全部')+'.csv'; a.click();
 }
 $('#go').onclick=load; $('#csv').onclick=csv;
-$('#cls').onchange=load; $('#ed').onchange=()=>{ if(lastData) render(lastData.rows||[],lastData.live||[]); }; $('#mode').onchange=load;
+$('#cls').onchange=()=>{ if(lastData) render(lastData.rows||[],lastData.live||[]); }; $('#ed').onchange=()=>{ if(lastData) render(lastData.rows||[],lastData.live||[]); }; $('#mode').onchange=load;
 $('#proj').onclick=()=>{ const on=document.body.classList.toggle('proj'); $('#proj').textContent=on?'結束投影模式':'投影模式（隱藏分數）'; };
 setInterval(()=>{ if($('#auto').checked && $('#key').value.trim()) load(); },20000);
 if($('#key').value) load();
