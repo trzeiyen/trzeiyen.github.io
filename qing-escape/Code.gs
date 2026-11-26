@@ -175,7 +175,7 @@ const NY = '南園里-成績';
 const NY_HEAD = ['時間','sid','班級','座號','角色','完成關卡','全部完成','提早交卷','總分','第1關','第2關','第3關','用時秒','錯誤','各題錯誤(JSON)','三把尺(JSON)','最在意(代碼)','最在意政見','最在意理由','我的政見','測驗類型','測驗作答','同組座號','篇'];
 const NY_LIVE = '南園里-即時';
 const NY_LIVE_HEAD = ['sid','最後更新','班級','座號','角色','所在關卡','狀態','同組座號','篇'];
-const NY_ROLES = ['kid','elder','dog','bus','rain','new'];
+const NY_ROLES = ['kid','learn','sport','elder','dog','bus','rain','new'];
 function nyRulers_(o) {
   const out = {}, okv = /^[\u4e00-\u9fffA-Za-z]{0,8}$/;
   if (o && typeof o === 'object') Object.keys(o).slice(0, 8).forEach(k => {
