@@ -172,9 +172,9 @@ function hanGet_(q) {
 
 /* ===================== 讀懂選舉公報：南園里政見探究（nanyuan） ===================== */
 const NY = '南園里-成績';
-const NY_HEAD = ['時間','sid','班級','座號','角色','完成關卡','全部完成','提早交卷','總分','第1關','第2關','第3關','用時秒','錯誤','各題錯誤(JSON)','三把尺(JSON)','最在意(代碼)','最在意政見','最在意理由','我的政見','測驗類型','測驗作答','同組座號'];
+const NY_HEAD = ['時間','sid','班級','座號','角色','完成關卡','全部完成','提早交卷','總分','第1關','第2關','第3關','用時秒','錯誤','各題錯誤(JSON)','三把尺(JSON)','最在意(代碼)','最在意政見','最在意理由','我的政見','測驗類型','測驗作答','同組座號','篇'];
 const NY_LIVE = '南園里-即時';
-const NY_LIVE_HEAD = ['sid','最後更新','班級','座號','角色','所在關卡','狀態','同組座號'];
+const NY_LIVE_HEAD = ['sid','最後更新','班級','座號','角色','所在關卡','狀態','同組座號','篇'];
 const NY_ROLES = ['kid','elder','dog','bus','rain','new'];
 function nyRulers_(o) {
   const out = {}, okv = /^[\u4e00-\u9fffA-Za-z]{0,8}$/;
@@ -193,6 +193,7 @@ function nyPost_(d) {
   const mates = (Array.isArray(d.mates) ? d.mates : []).slice(0, 2).map(n => Math.max(0, Math.min(99, parseInt(n, 10) || 0))).filter(n => n).join(',');
   const sid = String(d.sid || '').replace(/[^a-z0-9]/gi, '').slice(0, 20);
   const role = NY_ROLES.indexOf(d.role) >= 0 ? d.role : '';
+  const ed = d.ed === 'council' ? 'council' : 'li';
   const lv = Math.max(1, Math.min(4, Number(d.lv) || 1));
   const status = d.done ? (d.early ? '提早交卷' : '全部完成') : '作答中';
   if (sid) {
@@ -200,7 +201,7 @@ function nyPost_(d) {
     const ids = n > 1 ? sh.getRange(2, 1, n - 1, 1).getValues() : [];
     let row = -1;
     for (let i = ids.length - 1; i >= 0; i--) if (String(ids[i][0]) === sid) { row = i + 2; break; }
-    const v = [sid, new Date(), cls, seat, role, lv, status, mates];
+    const v = [sid, new Date(), cls, seat, role, lv, status, mates, ed];
     if (row > 0) sh.getRange(row, 1, 1, v.length).setValues([v]); else sh.appendRow(v);
   }
   if (d.type === 'live') return json_({ ok: true });
@@ -211,7 +212,7 @@ function nyPost_(d) {
     nyRulers_(d.rulers), String(d.top || '').replace(/[^A-Za-z0-9]/g, '').slice(0, 4),
     txt_(d.topText, 120), txt_(d.topWhy, 200), txt_(d.mine, 200),
     NY_ROLES.indexOf(d.qtype) >= 0 ? d.qtype : '',
-    (Array.isArray(d.qans) ? d.qans : []).slice(0, 6).map(t => NY_ROLES.indexOf(t) >= 0 ? t : '').join(','), mates]);
+    (Array.isArray(d.qans) ? d.qans : []).slice(0, 6).map(t => NY_ROLES.indexOf(t) >= 0 ? t : '').join(','), mates, ed]);
   return json_({ ok: true });
 }
 function nyGet_(q) {
@@ -223,12 +224,12 @@ function nyGet_(q) {
     .map(r => ({ ts: new Date(r[0]).getTime(), sid: String(r[1]), cls: String(r[2]), seat: Number(r[3]) || 0, role: String(r[4] || ''),
       cleared: Number(r[5]) || 0, done: r[6] === 'Y', early: r[7] === 'Y', score: Number(r[8]) || 0,
       s1: Number(r[9]) || 0, s2: Number(r[10]) || 0, s3: Number(r[11]) || 0, secs: Number(r[12]) || 0, errors: Number(r[13]) || 0,
-      wrongBy: safe_(r[14]), rulers: safe_(un(r[15])), top: String(r[16] || ''), topText: un(r[17]), topWhy: un(r[18]), mine: un(r[19]), qtype: String(r[20] || ''), qans: String(r[21] || '').split(',').filter(x => x), mates: String(r[22] || '').split(',').map(Number).filter(n => n) }));
+      wrongBy: safe_(r[14]), rulers: safe_(un(r[15])), top: String(r[16] || ''), topText: un(r[17]), topWhy: un(r[18]), mine: un(r[19]), qtype: String(r[20] || ''), qans: String(r[21] || '').split(',').filter(x => x), mates: String(r[22] || '').split(',').map(Number).filter(n => n), ed: String(r[23] || 'li') }));
   const lsh = ss.getSheetByName(NY_LIVE), since = Date.now() - 12 * 3600 * 1000;
   const live = (lsh && lsh.getLastRow() > 1 ? lsh.getRange(2, 1, lsh.getLastRow() - 1, NY_LIVE_HEAD.length).getValues() : [])
     .filter(r => r[1] instanceof Date && r[1].getTime() > since)
     .filter(r => !q.cls || String(r[2]) === String(q.cls))
     .map(r => ({ sid: String(r[0]), t: r[1].getTime(), cls: String(r[2]), seat: Number(r[3]) || 0, role: String(r[4] || ''), lv: Number(r[5]) || 1, status: String(r[6]),
-      mates: String(r[7] || '').split(',').map(Number).filter(n => n) }));
+      mates: String(r[7] || '').split(',').map(Number).filter(n => n), ed: String(r[8] || 'li') }));
   return json_({ ok: true, rows: rows, live: live });
 }

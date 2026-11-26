@@ -59,6 +59,7 @@ body.proj .grpCard .t{font-size:25px}
 為了維持中立，本頁不顯示任何「依候選人加總」的數字，政見也不標示是哪位候選人的。</p>
 <div class="bar">
   <label>後台密碼<input id="key" type="password" autocomplete="off"></label>
+  <label>篇<select id="ed"><option value="">全部</option><option value="li">里長篇</option><option value="council">議員篇</option></select></label>
   <label>班級<select id="cls"><option value="">全部</option><option>608</option><option>609</option><option>610</option></select></label>
   <label>顯示<select id="mode"><option value="last">每台最新一筆</option><option value="best">每台最高分</option></select></label>
   <button id="go">讀取</button>
@@ -99,15 +100,43 @@ const POL = {
   B5:'優化學勤路滯洪池與佳園路箱涵排水分流，汛期前清淤。',B7:'開辦親子共學、健康養生及手機實用操作課程。',
   B8:'舉辦無人機法規與操作、手機拍照與影音剪輯等課程。',B9:'活化銀髮俱樂部，開辦歌唱及健康律動課程。',
   B11:'整合南園互聯網與 LINE@、FB 專頁，即時反映民意。',B12:'結合醫療機構定期辦理健檢與量血壓；推動學童上下學路段的愛心導護商店，舉辦 CPR 與 AED 訓練。',
-  B13:'辦理寵物狂犬病疫苗施打與晶片登記。'};
+  B13:'辦理寵物狂犬病疫苗施打與晶片登記。',
+  K01:'65歲以上長輩裝假牙最高補助5萬元。',
+  K02:'推動青年育兒宅租期20年。',
+  K03:'引入新視覺減速標線，提升道路辨識與行車安全。',
+  K04:'強化社區周邊 YouBike 站點普及化，解決短程運具需求。',
+  K05:'擴大長照喘息服務，減輕家庭負擔。',
+  K06:'整合捷運、公車、YouBike，提升轉乘便利。',
+  K07:'爭取經費改善老舊校舍並補強耐震。',
+  K08:'嚴格落實施工期間的防鄰損、防淹、防噪及交通安全監督。',
+  K09:'樹林三期防洪計畫。',
+  K10:'設立公有動物醫院，完善毛孩醫療保障。',
+  K11:'興建寵物公園，讓毛小孩及飼主有良好的休憩環境。',
+  K12:'敬老卡增加至1000點，額度以年度累積。',
+  K13:'推動65歲以上長者免費施打帶狀疱疹（皮蛇）疫苗。',
+  K14:'公共設施保留地解編後，闢建公園、停車場及多功能活動中心。',
+  K15:'設立符合動物福利的「社區型公園」，推廣動物保護與生命教育。',
+  K16:'守護校園食安，提高國產、在地食材比例，補足師資及校園人力。',
+  K17:'監督捷運土城樹林線如期如質完工。',
+  K18:'增設各區活動中心。',
+  K19:'因應極端氣候，加強區域排水系統。',
+  K20:'要求市府增加親子、長者及寵物共融特色公園。',
+  K21:'路平．燈明．水溝通。',
+  K22:'在地優質教育。',
+  K23:'將自行車納入大眾運輸轉乘核心，優化捷運與火車站周邊的騎乘環境。',
+  K24:'督促市府盤點在地閒置用地，嚴格把關社宅興建進度與營運品質。'};
 const NAMES = {'L1經歷':'第1關－經歷欄','L1政見':'第1關－政見欄',
   'L1誰寫':'第1關－公報內容是誰提供的','L1修路':'第1關－里長怎麼處理路破洞',
   'L2-A1':'第2關－守護','L2-A3':'第2關－接受監督','L2-A4':'第2關－做到','L2-A2':'第2關－追蹤',
-  'L2-B1':'第2關－爭取','L2-B3':'第2關－配合','L2-B7':'第2關－開辦','L2-B8':'第2關－舉辦'};
+  'L2-B1':'第2關－爭取','L2-B3':'第2關－配合','L2-B7':'第2關－開辦','L2-B8':'第2關－舉辦',
+  'L1-w1':'議員篇第1關－報修路燈','L1-w2':'議員篇第1關－里民活動','L1-w3':'議員篇第1關－審預算','L1-w4':'議員篇第1關－質詢','L1-w5':'議員篇第1關－訂規定','L1-w6':'議員篇第1關－監督工程','L1-w7':'議員篇第1關－蓋捷運','L1-w8':'議員篇第1關－發敬老卡',
+  'C席次':'議員篇第1關－選出幾位','C婦保':'議員篇第1關－婦女保障名額','C圈選':'議員篇第1關－一張票圈幾位',
+  'L2-V01':'議員篇第2關－提高到','L2-V02':'議員篇第2關－已爭取','L2-V03':'議員篇第2關－監督、督促','L2-V04':'議員篇第2關－嚴格監督','L2-V05':'議員篇第2關－爭取運動中心','L2-V06':'議員篇第2關－爭取假牙補助','L2-V07':'議員篇第2關－推動疫苗','L2-V08':'議員篇第2關－推動鐵路地下化','L2-V09':'議員篇第2關－監督捷運','L2-V10':'議員篇第2關－督促公托公幼','L2-V11':'議員篇第2關－路平燈明水溝通','L2-V12':'議員篇第2關－督促社宅'};
 const $ = s=>document.querySelector(s);
 const esc = s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const fmt = s=>String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
-let view = [];
+let view = [], lastData=null;
+const EDN={li:'里長篇',council:'議員篇'};
 const seats = r=>[r.seat].concat(r.mates||[]).join('、')+' 號';
 try{ $('#key').value=sessionStorage.getItem('ny-key')||''; }catch(e){}
 
@@ -120,32 +149,33 @@ async function load(){
     const d=await (await fetch(u)).json();
     if(!d.ok){ $('#msg').textContent=d.error==='key'?'密碼不正確（或試算表「設定」B1 還沒填）。':'讀取失敗。'; return; }
     $('#msg').textContent='更新時間 '+new Date().toLocaleTimeString();
-    render(d.rows||[], d.live||[]);
+    lastData=d; render(d.rows||[], d.live||[]);
   }catch(e){ $('#msg').textContent='連不上後台：請確認 Apps Script 已更新到含南園里的新版本。'; }
 }
 function pick(rows){
   const m={};
-  rows.forEach(r=>{ const k=r.cls+'-'+r.seat, o=m[k];
+  rows.forEach(r=>{ const k=(r.ed||'li')+'-'+r.cls+'-'+r.seat, o=m[k];
     if(!o) m[k]=r;
     else if($('#mode').value==='best' ? (r.score>o.score || (r.score===o.score && r.ts>o.ts)) : r.ts>o.ts) m[k]=r; });
   return Object.values(m).sort((a,b)=>a.cls.localeCompare(b.cls)||a.seat-b.seat);
 }
 function render(rows, live){
+  const edf=$('#ed').value; if(edf){ rows=rows.filter(r=>(r.ed||'li')===edf); live=live.filter(l=>(l.ed||'li')===edf); }
   view=pick(rows);
   const done=view.filter(r=>r.done).length, avg=view.length?Math.round(view.reduce((n,r)=>n+r.score,0)/view.length):0;
   $('#cards').innerHTML=`<div>平板數<b>${view.length}</b></div><div>完成／交卷<b>${done}</b></div><div>平均分數<b>${avg}</b></div>`;
   const now=Date.now();
   $('#live').innerHTML=live.filter(l=>l.status==='作答中').sort((a,b)=>a.cls.localeCompare(b.cls)||a.seat-b.seat)
-    .map(l=>`<span class="${now-l.t>300000?'stale':''}">${l.cls}・${seats(l)}・第${Math.min(3,l.lv)}關${l.role&&ROLES[l.role]?'・'+ROLES[l.role]:''}</span>`).join('')||'<span style="background:none">目前沒有正在作答的同學</span>';
-  $('#tb').innerHTML='<tr><th>班級</th><th>座號</th><th>測驗類型</th><th>角色</th><th>狀態</th><th>總分</th><th>第1關/20</th><th>第2關/40</th><th>第3關/40</th><th>用時</th><th>錯誤</th></tr>'+
-    view.map(r=>`<tr class="${r.done?'done':'ing'}"><td>${r.cls}</td><td>${seats(r)}</td><td>${esc(TYPES[r.qtype]||'－')}</td><td>${esc(ROLES[r.role]||'－')}</td><td>${r.done?(r.early?'提早交卷':'完成'):'作答中（'+r.cleared+'/3）'}</td>
+    .map(l=>`<span class="${now-l.t>300000?'stale':''}">${EDN[l.ed||'li']}・${l.cls}・${seats(l)}・第${Math.min(3,l.lv)}關${l.role&&ROLES[l.role]?'・'+ROLES[l.role]:''}</span>`).join('')||'<span style="background:none">目前沒有正在作答的同學</span>';
+  $('#tb').innerHTML='<tr><th>篇</th><th>班級</th><th>座號</th><th>測驗類型</th><th>角色</th><th>狀態</th><th>總分</th><th>第1關/20</th><th>第2關/40</th><th>第3關/40</th><th>用時</th><th>錯誤</th></tr>'+
+    view.map(r=>`<tr class="${r.done?'done':'ing'}"><td>${EDN[r.ed||'li']}</td><td>${r.cls}</td><td>${seats(r)}</td><td>${esc(TYPES[r.qtype]||'－')}</td><td>${esc(ROLES[r.role]||'－')}</td><td>${r.done?(r.early?'提早交卷':'完成'):'作答中（'+r.cleared+'/3）'}</td>
       <td><b>${r.score}</b></td><td>${r.s1}</td><td>${r.s2}</td><td>${r.s3}</td><td>${fmt(r.secs)}</td><td>${r.errors}</td></tr>`).join('');
   // 依角色分組
   const byRole={}; view.forEach(r=>{ if(r.role) (byRole[r.role]=byRole[r.role]||[]).push(r); });
   $('#roles').innerHTML=Object.keys(ROLES).filter(k=>byRole[k]).map(k=>`<div class="roleSec"><h3>${ROLES[k]}</h3>${byRole[k].map(r=>{
     const rl=r.rulers||{};
     const det=Object.keys(rl).map(id=>{ const x=rl[id]; return `<li><b>${esc(POL[id]||id)}</b><br>具體：${esc(x.c||'－')}｜做得到：${esc(x.f||'－')}｜查得到：${esc(x.v||'－')}${x.why?'<br>理由：'+esc(x.why):''}</li>`; }).join('');
-    return `<div class="grpCard"><span class="tag">${r.cls}・${seats(r)}</span>${r.qtype?`<span class="small" style="font-weight:700">測驗：${esc(TYPES[r.qtype]||"")}${r.qtype!==r.role?"（換了角色）":""}</span>`:""}
+    return `<div class="grpCard"><span class="tag">${EDN[r.ed||'li']}・${r.cls}・${seats(r)}</span>${r.qtype?`<span class="small" style="font-weight:700">測驗：${esc(TYPES[r.qtype]||"")}${r.qtype!==r.role?"（換了角色）":""}</span>`:""}
       ${r.top?`<div class="t">${esc(POL[r.top]||r.topText)}</div><div class="w">💬 ${esc(r.topWhy)}</div>`:'<div class="w" style="color:#5b6875">還沒選最在意的政見</div>'}
       ${det?`<details><summary>三把尺紀錄</summary><ul>${det}</ul></details>`:''}</div>`; }).join('')}</div>`).join('')
     || '<div class="note">還沒有人選好角色。</div>';
@@ -159,14 +189,14 @@ function render(rows, live){
   $('#miss').innerHTML=arr.map(([k,v])=>`<div><span>${esc(NAMES[k]||k)}</span><i style="width:${Math.max(8,v/mx*240)}px"></i><b>${v}</b></div>`).join('')||'<div class="note">還沒有錯誤紀錄。</div>';
 }
 function csv(){
-  const head=['班級','座號','測驗類型','角色','狀態','總分','第1關','第2關','第3關','用時秒','錯誤','最在意政見','理由','我的政見'];
+  const head=['篇','班級','座號','測驗類型','角色','狀態','總分','第1關','第2關','第3關','用時秒','錯誤','最在意政見','理由','我的政見'];
   const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
-  const lines=[head.join(',')].concat(view.map(r=>[r.cls,seats(r),TYPES[r.qtype]||'',ROLES[r.role]||'',r.done?(r.early?'提早交卷':'完成'):'作答中',r.score,r.s1,r.s2,r.s3,r.secs,r.errors,POL[r.top]||r.topText||'',r.topWhy,r.mine].map(q).join(',')));
+  const lines=[head.join(',')].concat(view.map(r=>[EDN[r.ed||'li'],r.cls,seats(r),TYPES[r.qtype]||'',ROLES[r.role]||'',r.done?(r.early?'提早交卷':'完成'):'作答中',r.score,r.s1,r.s2,r.s3,r.secs,r.errors,POL[r.top]||r.topText||'',r.topWhy,r.mine].map(q).join(',')));
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['﻿'+lines.join('\n')],{type:'text/csv'}));
   a.download='南園里政見探究_'+($('#cls').value||'全部')+'.csv'; a.click();
 }
 $('#go').onclick=load; $('#csv').onclick=csv;
-$('#cls').onchange=load; $('#mode').onchange=load;
+$('#cls').onchange=load; $('#ed').onchange=()=>{ if(lastData) render(lastData.rows||[],lastData.live||[]); }; $('#mode').onchange=load;
 $('#proj').onclick=()=>{ const on=document.body.classList.toggle('proj'); $('#proj').textContent=on?'結束投影模式':'投影模式（隱藏分數）'; };
 setInterval(()=>{ if($('#auto').checked && $('#key').value.trim()) load(); },20000);
 if($('#key').value) load();
