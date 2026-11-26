@@ -370,9 +370,10 @@ function readLogin(){
 }
 function checkResume(){
   const r=readLogin(); const old=!r.err && load(r.cls,r.seat,r.ed);
-  const can=!!(old && old.lv<=3);
+  const can=!!old;
   $('#resumeBox').hidden=!can; $('#start').hidden=can;
-  $('#start').textContent=(old && old.lv>3)?'這組已經完成了，再做一次':'開始探究';
+  $('#resume').textContent=(old && old.lv>3)?'看成績，並重新傳給老師':'繼續上次進度';
+  $('#start').textContent='開始探究';
   $('#lerr').textContent='';
 }
 $('#cls').addEventListener('input',checkResume); $('#seat').addEventListener('input',checkResume);
@@ -838,6 +839,7 @@ function L3(){
 /* ===== 總成績 ===== */
 function result(){
   if(S.l3.order.length) S.l3.s=score3();
+  report();
   const R=ROLES.find(x=>x.id===S.l3.role);
   $('#stage').innerHTML=`<div class="res center">
     <h2 style="font-size:30px;margin:10px 0">${S.early?'已交卷！':'三關完成！'}</h2>
@@ -851,8 +853,10 @@ function result(){
       <li>用三把尺量政見：<b>具體嗎？做得到嗎？查得到嗎？</b></li>
       <li>不同的${E.who}在意不同的事。投票時，每個人要依照自己和社區的需要，自己做判斷。</li></ul></div>
     <p style="font-weight:700">${GAS_URL?'作答已經傳給老師囉。':'請把這個畫面拿給老師看。'}</p>
+    ${GAS_URL?'<button class="big alt" id="resend" style="max-width:360px;margin:6px auto">老師說沒收到？再傳一次</button>':''}
     <button class="big ghost" id="again" style="max-width:360px;margin:10px auto">回到首頁</button>
     <div class="credit">由Zeiyen老師製作</div></div>`;
+  if($('#resend')) $('#resend').onclick=()=>{ report(); toast('已重新傳送給老師。',2000); };
   $('#again').onclick=()=>{ show('login'); if(S&&S.ed) pickEd(S.ed); checkResume(); };
 }
 </script>
