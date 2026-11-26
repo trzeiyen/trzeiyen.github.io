@@ -314,7 +314,18 @@ function base(){ return {game:GAME_ID,ed:S.ed,sid:S.sid,cls:S.cls,seat:S.seat,ma
 function rulersOut(){
   const o={}; Object.keys(S.l3.r).forEach(id=>{ const r=S.l3.r[id]; o[id]={c:r.c||'',f:r.f||'',v:r.v||'',why:(r.why||'').slice(0,200)}; }); return o;
 }
+/* 備援通道：舊版 Apps Script 只認得 han-culture，這裡同時送一份到「漢人文化-成績」工作表（ending 以 NY: 開頭作記號）。
+   Apps Script 更新成含 nanyuan 的新版後，教師後台會改讀正式的「南園里-成績」，這份備援就不會再用到。 */
+function compat(type){
+  const b={game:'han-culture',sid:S.sid,cls:S.cls,seat:S.seat,mates:S.mates,lv:Math.min(4,S.lv),done:S.lv>3};
+  if(type==='live') return post(Object.assign(b,{type:'live'}));
+  const think={mine:S.l3.mine||'',early:S.early?'1':''};
+  Object.keys(S.l3.r).slice(0,8).forEach(id=>{ const r=S.l3.r[id]; think['r_'+id]=[r.c||'',r.f||'',r.v||'',(r.why||'').replace(/\|/g,'/')].join('|').slice(0,200); });
+  post(Object.assign(b,{cleared:cleared(),score:total(),s1:S.l1.s,s2:S.l2.s,s3:S.l3.s,secs:secs(),errors:S.errors,wrongBy:S.wrongBy,
+    sentence:S.l3.topWhy||'',ending:('NY:'+S.ed+':'+(S.l3.role||'')+':'+(S.l3.type||'')).slice(0,40),clues:0,cmp:S.l3.top||'',think}));
+}
 function report(){
+  compat();
   post(Object.assign(base(),{cleared:cleared(),score:total(),s1:S.l1.s,s2:S.l2.s,s3:S.l3.s,secs:secs(),errors:S.errors,wrongBy:S.wrongBy,
     rulers:rulersOut(),top:S.l3.top,topText:S.l3.top&&POL[S.l3.top]?POL[S.l3.top].t:'',topWhy:S.l3.topWhy,mine:S.l3.mine,qtype:S.l3.type,qans:S.l3.qa}));
 }
@@ -323,7 +334,7 @@ function live(force){
   if(!S || S.lv>3 || !$('#game').classList.contains('on')) return;
   const sig=S.sid+'|'+S.lv, now=Date.now();
   if(!force && sig===liveSig && now-liveAt<90000) return;
-  liveSig=sig; liveAt=now; post(Object.assign(base(),{type:'live'}));
+  liveSig=sig; liveAt=now; post(Object.assign(base(),{type:'live'})); compat('live');
 }
 setInterval(live,5000);
 

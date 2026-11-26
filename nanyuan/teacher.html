@@ -163,7 +163,7 @@ const $ = s=>document.querySelector(s);
 const esc = s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const fmt = s=>String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
 let view = [], lastData=null;
-const EDN={li:'里長篇',council:'議員篇',mayor:'市長篇'};
+const EDN={li:'里長篇',council:'議員篇',mayor:'市長篇','?':'—'};
 const seats = r=>[r.seat].concat(r.mates||[]).join('、')+' 號';
 try{ $('#key').value=sessionStorage.getItem('ny-key')||''; }catch(e){}
 
@@ -176,7 +176,17 @@ async function load(){
     const d=await (await fetch(u)).json();
     if(!d.ok){ $('#msg').textContent=d.error==='key'?'密碼不正確（或試算表「設定」B1 還沒填）。':'讀取失敗。'; return; }
     const old=(d.rows||[]).some(r=>'solved' in r||'room' in r)||(d.live||[]).some(l=>'solved' in l);
-    if(old){ $('#msg').textContent='⚠ Apps Script 還是舊版：請把試算表的 Apps Script 換成網站上 qing-escape/Code.gs 的最新版，並到「管理部署作業 → 編輯 → 新版本」部署。換好之前，學生的作答傳不進來。'; render([],[]); return; }
+    if(old){
+      const d2=await (await fetch(GAS_URL+'?game=han-culture&key='+encodeURIComponent(key))).json();
+      const NYC=['608','609','610'];
+      const rows=(d2.rows||[]).filter(r=>/^NY:/.test(r.ending||'')).map(r=>{ const [,ed,role,qtype]=String(r.ending).split(':'); const t=r.think||{}, rulers={};
+        Object.keys(t).filter(k=>/^r_/.test(k)).forEach(k=>{ const [c,f,v,...w]=String(t[k]).split('|'); rulers[k.slice(2)]={c,f,v,why:w.join('|')}; });
+        return {ts:r.ts,sid:r.sid,cls:r.cls,seat:r.seat,mates:r.mates||[],ed:ed||'li',role:role||'',qtype:qtype||'',cleared:r.cleared,done:r.done,early:t.early==='1',
+          score:r.score,s1:r.s1,s2:r.s2,s3:r.s3,secs:r.secs,errors:r.errors,wrongBy:r.wrongBy||{},rulers,top:r.cmp||'',topText:'',topWhy:r.sentence||'',mine:t.mine||''}; });
+      const live=(d2.live||[]).filter(l=>NYC.indexOf(String(l.cls))>=0).map(l=>({sid:l.sid,t:l.t,cls:l.cls,seat:l.seat,mates:l.mates||[],lv:l.lv,status:l.status,role:'',ed:'?'}));
+      $('#msg').textContent='⚠ Apps Script 還是舊版，目前用備援通道顯示（資料暫存在「漢人文化-成績」工作表）。有空時再更新 Code.gs 即可。更新時間 '+new Date().toLocaleTimeString();
+      lastData={rows,live}; render(rows,live); return;
+    }
     $('#msg').textContent='更新時間 '+new Date().toLocaleTimeString();
     lastData=d; render(d.rows||[], d.live||[]);
   }catch(e){ $('#msg').textContent='連不上後台：請確認 Apps Script 已更新到含南園里的新版本。'; }

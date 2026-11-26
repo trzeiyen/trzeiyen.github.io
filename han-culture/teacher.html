@@ -103,6 +103,8 @@ setInterval(()=>{ if($('#auto').checked && $('#key').value) $('#go').click(); },
 try{ const k = localStorage.getItem('qing-teacher-key'); if(k){ $('#key').value = k; $('#go').click(); } }catch(e){}
 
 function render(rows, live){
+  rows = rows.filter(r=>!/^NY:/.test(r.ending||''));            // 〈讀懂選舉公報〉的備援資料，不屬於本工具
+  live = live.filter(l=>!/^6/.test(String(l.cls)));
   const by = {}, mode = $('#mode').value;
   rows.forEach(r=>{ const k=r.cls+'-'+r.seat, o=by[k];
     if(!o || (mode==='best' ? (r.score>o.score || (r.score===o.score && r.ts>o.ts)) : r.ts>o.ts)) by[k]=r; });
