@@ -175,6 +175,8 @@ async function load(){
     const u=GAS_URL+'?game=nanyuan&key='+encodeURIComponent(key)+($('#cls').value?'&cls='+$('#cls').value:'');
     const d=await (await fetch(u)).json();
     if(!d.ok){ $('#msg').textContent=d.error==='key'?'密碼不正確（或試算表「設定」B1 還沒填）。':'讀取失敗。'; return; }
+    const old=(d.rows||[]).some(r=>'solved' in r||'room' in r)||(d.live||[]).some(l=>'solved' in l);
+    if(old){ $('#msg').textContent='⚠ Apps Script 還是舊版：請把試算表的 Apps Script 換成網站上 qing-escape/Code.gs 的最新版，並到「管理部署作業 → 編輯 → 新版本」部署。換好之前，學生的作答傳不進來。'; render([],[]); return; }
     $('#msg').textContent='更新時間 '+new Date().toLocaleTimeString();
     lastData=d; render(d.rows||[], d.live||[]);
   }catch(e){ $('#msg').textContent='連不上後台：請確認 Apps Script 已更新到含南園里的新版本。'; }
