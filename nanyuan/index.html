@@ -103,6 +103,9 @@ main{max-width:1180px;margin:0 auto;padding:16px max(14px,env(safe-area-inset-le
 .ruler h4 span{font-weight:700;font-size:14px;color:var(--ink2)}
 .seg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .seg button{min-height:52px;border:2px solid var(--ink);border-radius:12px;background:#fff;font-weight:700;font-size:16px;padding:4px 6px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{min-height:46px;border:2px solid var(--ink);border-radius:99px;background:#fff;font-weight:700;font-size:15px;padding:4px 14px}
+.chips button.on{background:var(--gold);border-color:var(--ink)}
 .seg button.on{background:var(--blue);color:#fff;border-color:var(--blue)}
 textarea{width:100%;min-height:84px;font:inherit;font-size:19px;padding:10px;border:2px solid var(--ink);border-radius:12px;background:#fff;resize:vertical}
 .pickl{display:grid;gap:8px}
@@ -436,6 +439,8 @@ const RULERS=[
   {k:'v',n:'📏 查得到嗎？',d:'四年後，能不能檢查有沒有做到？',o:['容易檢查','有一點難','很難檢查']}
 ];
 const MINWHY=4;
+/* 理由改成點選（可複選），避免學生打太多字 */
+const WHYS=['有寫出地點（路名、公園名）','有寫出要做什麼、怎麼做','有寫出時間（例如汛期前）','只寫態度，看不出要做什麼','要靠區公所或市政府才做得到','里辦公處自己就能辦','做完以後看得到、數得出來','跟我的角色很有關係','跟我的角色比較沒關係'];
 /* 小測驗：6 題 × 4 選項，每種類型剛好出現 4 次（公平）；不計分、不對應任何候選人 */
 const TYPES={
   kid:{n:'安全守護型',ic:'🛡️',d:'你們最在意大家走在路上安不安全，尤其是孩子上下學。'},
@@ -525,17 +530,19 @@ function L3(){
     const id=st.order[st.i], r=st.r[id]||(st.r[id]={c:'',f:'',v:'',why:''});
     $('#stage').innerHTML=head+`<div class="two"><div>
       <div class="pol"><small>南園里選舉公報・政見 ${st.i+1}／${st.order.length}</small>${esc(POL[id].t)}</div>
-      <div class="task" style="margin:0">想一想：如果你是「${R.n}」，這條政見跟你有沒有關係？<br>三把尺都要量，最後寫一句理由。</div></div>
+      <div class="task" style="margin:0">想一想：如果你是「${R.n}」，這條政見跟你有沒有關係？<br>三把尺都要量，最後點選理由。</div></div>
       <div>${RULERS.map(x=>`<div class="ruler"><h4>${x.n} <span>${x.d}</span></h4><div class="seg">${x.o.map(o=>`<button data-k="${x.k}" data-o="${o}" class="${r[x.k]===o?'on':''}">${o}</button>`).join('')}</div></div>`).join('')}
-      <div class="ruler"><h4>✏️ 理由 <span>選一把尺，說說你為什麼這樣量</span></h4><textarea id="why" placeholder="例如：它有寫地點，所以很具體……">${esc(r.why)}</textarea></div>
+      <div class="ruler"><h4>💡 為什麼這樣量？ <span>點選理由，可以選好幾個</span></h4><div class="chips">${WHYS.map((w,i)=>`<button data-w="${i}" class="${(r.ws||[]).indexOf(i)>=0?'on':''}">${w}</button>`).join('')}</div></div>
       <div class="fb" id="fb"></div>
       <div class="row"><button class="big ghost" id="prev" style="flex:1" ${st.i===0?'disabled':''}>← 上一條</button><button class="big" id="nxr" style="flex:2">${st.i<st.order.length-1?'下一條 →':'量完了，下一步 →'}</button></div></div></div>`;
     document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{ r[b.dataset.k]=b.dataset.o; save(); b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); });
-    $('#why').oninput=e=>{ r.why=e.target.value.slice(0,200); save(); };
+    document.querySelectorAll('.chips button').forEach(b=>b.onclick=()=>{ const i=+b.dataset.w; r.ws=r.ws||[];
+      const k=r.ws.indexOf(i); if(k>=0) r.ws.splice(k,1); else r.ws.push(i); r.ws.sort((a,b)=>a-b);
+      r.why=r.ws.map(n=>WHYS[n]).join('、'); b.classList.toggle('on',k<0); $('#fb').textContent=''; save(); });
     $('#prev').onclick=()=>{ st.i=Math.max(0,st.i-1); save(); L3(); };
     $('#nxr').onclick=()=>{
       if(!(r.c&&r.f&&r.v)){ $('#fb').className='fb warn'; $('#fb').textContent='還有尺沒有量喔！三把尺都要選一個。'; return; }
-      if(r.why.trim().length<MINWHY){ $('#fb').className='fb warn'; $('#fb').textContent='理由再多寫一點點（至少 '+MINWHY+' 個字）。'; return; }
+      if(!(r.ws&&r.ws.length)){ $('#fb').className='fb warn'; $('#fb').textContent='請至少點選一個理由。'; return; }
       if(st.i<st.order.length-1) st.i++; else st.step='top';
       save(); report(); L3(); window.scrollTo(0,0);
     };
