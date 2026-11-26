@@ -103,6 +103,9 @@ main{max-width:1180px;margin:0 auto;padding:16px max(14px,env(safe-area-inset-le
 .ruler h4 span{font-weight:700;font-size:14px;color:var(--ink2)}
 .seg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .seg button{min-height:52px;border:2px solid var(--ink);border-radius:12px;background:#fff;font-weight:700;font-size:16px;padding:4px 6px}
+.tplfill{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:20px;font-weight:700;background:#fff;border:2px solid var(--line);border-radius:12px;padding:10px}
+.tplfill input{width:9em;height:46px;font-size:19px;text-align:center;border:0;border-bottom:3px solid var(--blue);background:#f2f6fb;border-radius:6px}
+.pickl u{text-decoration:none;color:var(--blue)}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chips button{min-height:46px;border:2px solid var(--ink);border-radius:99px;background:#fff;font-weight:700;font-size:15px;padding:4px 14px}
 .chips button.on{background:var(--gold);border-color:var(--ink)}
@@ -511,6 +514,27 @@ function quiz(st){
   $('#useR').onclick=()=>{ st.quizDone=true; setRole(R.id); };
   $('#otherR').onclick=()=>{ st.quizDone=true; st.picking=true; save(); roleScreen(st); };
 }
+/* 選句型、填幾個字：字串是固定文字，{提示} 是要填的空格 */
+const TOP_TPL=['因為我每天都會{做什麼事}，這條跟我最有關係。','因為我最擔心{什麼問題}，這條可以幫上忙。','因為這條寫得很清楚，有寫到{什麼內容}。','因為如果做到了，{什麼地方或誰}會變得更好。'];
+const MINE_TPL=['我會在{哪裡}{做什麼}，{什麼時候}以前完成。','我會每{多久}舉辦一次{什麼活動}，讓{誰}受惠。','我會向區公所爭取{什麼}，在{什麼時候}以前完成。'];
+const BLANK_MAX=12;
+function tplParts(t){ return t.split(/(\{[^}]+\})/).filter(x=>x); }
+function tplText(t,f){ let i=0; return tplParts(t).map(x=>/^\{/.test(x)?(f[i++]||'').trim():x).join(''); }
+function tplFull(t,f){ return tplParts(t).filter(x=>/^\{/.test(x)).every((x,i)=>(f[i]||'').trim().length>0); }
+// box：容器；list：句型；o：{t:句型序號,f:[空格內容]}；onChange(完整句子或'')
+function tplUI(box,list,o,onChange){
+  const draw=()=>{
+    box.innerHTML=`<div class="small" style="font-weight:700;margin-bottom:6px">① 先選一個句型</div>
+      <div class="pickl">${list.map((t,i)=>`<button data-t="${i}" class="${o.t===i?'on':''}">${esc(t).replace(/\{([^}]+)\}/g,'<u>〔$1〕</u>')}</button>`).join('')}</div>
+      ${o.t>=0?`<div class="small" style="font-weight:700;margin:12px 0 6px">② 填空（每格最多 ${BLANK_MAX} 個字）</div>
+      <div class="tplfill">${(()=>{ let i=0; return tplParts(list[o.t]).map(x=>{ if(!/^\{/.test(x)) return `<span>${esc(x)}</span>`; const k=i++;
+        return `<input data-k="${k}" maxlength="${BLANK_MAX}" placeholder="${esc(x.slice(1,-1))}" value="${esc(o.f[k]||'')}" autocomplete="off">`; }).join(''); })()}</div>`:''}`;
+    box.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{ const n=+b.dataset.t; if(n!==o.t){ o.t=n; o.f=[]; } emit(); draw(); });
+    box.querySelectorAll('.tplfill input').forEach(inp=>inp.oninput=()=>{ o.f[+inp.dataset.k]=inp.value.slice(0,BLANK_MAX); emit(); });
+  };
+  const emit=()=>onChange(o.t>=0&&tplFull(list[o.t],o.f)?tplText(list[o.t],o.f):'');
+  draw();
+}
 function rateDone(id){ const r=S.l3.r[id]||{}; return !!(r.c&&r.f&&r.v&&(r.why||'').trim().length>=MINWHY); }
 function score3(){
   const st=S.l3; let s=st.order.filter(rateDone).length*7;
@@ -552,29 +576,31 @@ function L3(){
     $('#stage').innerHTML=head+`<div class="panel q"><h3>如果你是「${R.n}」，這 4 條裡最在意哪一條？</h3>
       <div class="small" style="margin-bottom:8px">沒有標準答案。這裡選的是「跟這個角色最有關係的事」，不是選哪一位候選人。</div>
       <div class="pickl">${st.order.map(id=>`<button data-id="${id}" class="${st.top===id?'on':''}">${esc(POL[id].t)}</button>`).join('')}</div>
-      <h3 style="margin-top:14px">為什麼？</h3><textarea id="tw" placeholder="因為我是${R.n}，所以……">${esc(st.topWhy)}</textarea>
+      <h3 style="margin-top:14px">為什麼？</h3><div id="tw"></div>
       <div class="fb" id="fb"></div>
       <div class="row"><button class="big ghost" id="prev" style="flex:1">← 回去看政見</button><button class="big" id="nxr" style="flex:2">下一步 →</button></div></div>`;
     document.querySelectorAll('.pickl button').forEach(b=>b.onclick=()=>{ st.top=b.dataset.id; save(); document.querySelectorAll('.pickl button').forEach(x=>x.classList.toggle('on',x===b)); });
-    $('#tw').oninput=e=>{ st.topWhy=e.target.value.slice(0,200); save(); };
+    st.topTpl=st.topTpl||{t:-1,f:[]};
+    tplUI($('#tw'),TOP_TPL,st.topTpl,txt=>{ st.topWhy=txt; $('#fb').textContent=''; save(); });
     $('#prev').onclick=()=>{ st.step='rate'; st.i=st.order.length-1; save(); L3(); };
     $('#nxr').onclick=()=>{
       if(!st.top){ $('#fb').className='fb warn'; $('#fb').textContent='先選一條政見。'; return; }
-      if(st.topWhy.trim().length<6){ $('#fb').className='fb warn'; $('#fb').textContent='理由再多寫一點（至少 6 個字）。'; return; }
+      if(!st.topWhy){ $('#fb').className='fb warn'; $('#fb').textContent=st.topTpl.t<0?'請選一個句型。':'空格都要填喔！'; return; }
       st.step='mine'; save(); report(); L3(); window.scrollTo(0,0);
     };
     return;
   }
   // 我的政見
   $('#stage').innerHTML=head+`<div class="panel q"><h3>換你當候選人！</h3>
-    <p style="margin:0 0 8px">如果「${R.n}」要參選里長，請幫他寫一條政見，並試著讓它<b>過得了三把尺</b>：說得出地點或做法、知道誰來做、四年後查得到。</p>
-    <textarea id="mine" placeholder="例如：在○○路口加裝兩盞路燈，一年內完成……">${esc(st.mine)}</textarea>
+    <p style="margin:0 0 8px">如果「${R.n}」要參選里長，請幫他寫一條政見，並試著讓它<b>過得了三把尺</b>：說得出地點或做法、知道誰來做、四年後查得到。選一個句型，把空格填好就可以。</p>
+    <div id="mine"></div>
     <div class="fb" id="fb"></div>
     <div class="row"><button class="big ghost" id="prev" style="flex:1">← 上一步</button><button class="big alt" id="fin" style="flex:2">完成，送給老師 ✔</button></div></div>`;
-  $('#mine').oninput=e=>{ st.mine=e.target.value.slice(0,200); save(); };
+  st.mineTpl=st.mineTpl||{t:-1,f:[]};
+  tplUI($('#mine'),MINE_TPL,st.mineTpl,txt=>{ st.mine=txt; $('#fb').textContent=''; save(); });
   $('#prev').onclick=()=>{ st.step='top'; save(); L3(); };
   $('#fin').onclick=()=>{
-    if(st.mine.trim().length<8){ $('#fb').className='fb warn'; $('#fb').textContent='政見再寫具體一點（至少 8 個字）。'; return; }
+    if(!st.mine){ $('#fb').className='fb warn'; $('#fb').textContent=st.mineTpl.t<0?'請選一個句型。':'空格都要填喔！'; return; }
     st.s=score3(); st.done=true; save(); next();
   };
 }
